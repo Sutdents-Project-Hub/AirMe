@@ -4,7 +4,7 @@
 
 - 本檔適用於整個 `AirMe 空氣健康小管家` repository；子目錄若有更具體的 `AGENTS.md`，只在該範圍內補充本檔。
 - 依序遵守使用者當次指示、本檔、根目錄 `README.md`、`docs/` 與元件 README；內容衝突時先停止並確認。
-- 目前階段：競賽／展示。部署狀態：已規劃，平台尚未確認。
+- 目前階段：`competition`（競賽／展示）。部署狀態：`planned`（Azure 平台已選定，實際資源、權限與部署合約尚未確認）。
 - Git repository 名稱：`AirMe`。全新專案的初始 branch 為 `main`。
 
 - Project slug：`airme`
@@ -33,13 +33,27 @@
 - 主辦方 Azure 訂閱與資源為共用環境，未經確認不得修改或刪除他人資源
 - 初始化不建立外部帳號、Azure 資源、資料庫、部署、remote 或 GitHub repository
 
+### 已確認假設
+
+- `apps/client` 採 Expo Router 與 TypeScript，以單一 client 輸出 iOS、Android 與 Web。
+- `services/api` 採 Azure Functions v4、Node.js 22 與 TypeScript，所有 AI 與政府 API 呼叫都經過後端。
+- 決賽 P0 的個人設定與活動後回饋保存在裝置端，不建立雲端個人資料庫。
+- Azure Static Web Apps、獨立 Azure Functions、Azure OpenAI／Foundry 與 Application Insights 是規劃中的 Azure 目標。
+
+### 未決定事項
+
+- 主辦方允許使用的 Azure OpenAI deployment、RBAC、region、quota 與 rate limit。
+- 團隊尚未指派 Azure 發布、監控與回滾負責人。
+- App 最終交付採 development build、APK、AAB 或 TestFlight。
+- LICENSE 必須等待團隊著作權、競賽規則、資料與素材授權確認。
+
 
 ## 專案事實與邊界
 
 以個人使用為主的跨平台空氣健康 AI 行動助理，結合即時環境資料、最低限度個人情境與官方準則，產生有依據、可解釋且受安全邊界限制的行動方案。
 
-- `apps/airme`：行動應用程式；依 `Expo` 的官方慣例維護，不可把其他元件的秘密或責任移入此處。
-- `apps/api`：後端／API；依 `Azure Functions` 的官方慣例維護，不可把其他元件的秘密或責任移入此處。
+- `apps/client`：同一套 iOS、Android、Web 個人 AirMe；依 `Expo` 的官方慣例維護，不可把其他元件的秘密或責任移入此處，也不可建立教師端或另一套 Web 產品。
+- `services/api`：後端／API；依 `Azure Functions` 的官方慣例維護，不可把其他元件的秘密或責任移入此處。
 
 - Repository 與新專案根目錄名稱維持 `AirMe`；技術資源優先使用 `airme` 或平台既有慣例。
 - 新 component id、路徑與一般文件名使用簡短且能表達責任的 lowercase kebab-case；程式碼內命名遵守各 framework 慣例。
@@ -56,6 +70,7 @@
 - 發現不在範圍內的問題時記錄並回報，不要順手修。
 - 以可觀察結果驗證：優先執行現有的 lint、typecheck、test、build 或實際操作；無法執行時明確回報原因與剩餘風險。
 - 不得聲稱未實際執行的測試、部署、外部操作或人工驗收已完成。
+- 產品範圍以 `docs/product-spec.md` 為基準；架構以 `docs/architecture.md` 為基準；AI 邊界與測試以 `docs/ai-safety-and-evaluation.md` 為基準。變更核心定位或 P0 前必須先更新規格並取得使用者確認。
 
 ## README 與文件同步
 
