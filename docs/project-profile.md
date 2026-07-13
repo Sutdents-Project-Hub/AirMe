@@ -1,7 +1,10 @@
 # 學生專案 Profile
 
+本文件是已驗證 Student Project Profile v1 的人類可讀版本；工作用 JSON 保留在 repository 外，不提交原始需求或群組對話。
+
 ## 基本資訊
 
+- Schema version：`1`
 - Project name：AirMe 空氣健康小管家
 - Repository name：`AirMe`
 - Project slug：`airme`
@@ -9,7 +12,7 @@
 - Product type：`hybrid`
 - Bootstrap mode：`executable`
 - Deployment：`planned`
-- Team collaboration：`true`
+- Team：`true`
 
 ## 摘要
 
@@ -17,8 +20,13 @@
 
 ## 元件
 
-- `airme`：path=`apps/airme`，kind=`app`，framework=`Expo`，package_manager=`npm`，quality=lint
-- `api`：path=`apps/api`，kind=`backend`，framework=`Azure Functions`，package_manager=`npm`，quality=build
+| ID | Path | Kind | Framework | Package manager | Quality commands | Env expected |
+|---|---|---|---|---|---|---|
+| `client` | `apps/client` | `app` | Expo | npm workspace | `test`、`lint`、`typecheck`、`build:web` | `true` |
+| `api` | `services/api` | `backend` | Azure Functions | npm workspace | `test`、`typecheck`、`build`、`evaluate` | `true` |
+| `contracts` | `packages/contracts` | `library` | Zod／TypeScript | npm workspace | `test`、`typecheck`、`build` | `false` |
+
+三個 workspace 共用根目錄 `package-lock.json`。2026-07-13 已完成產品流程、API endpoint、共用 schema、自動化測試與 Web Demo；Azure deployment、真實外部 API 呼叫與實體 Mobile 仍未完成驗證。
 
 ## 功能領域
 
@@ -54,10 +62,11 @@
 - 後端採 Azure Functions v4、Node.js 22 與 TypeScript，所有外部 API 與 AI 呼叫皆經後端
 - 決賽 P0 不包含班級統計、教師工作台、智慧路線、Line Bot、Power BI、Azure Machine Learning 或健康中心串接
 - 目前不自動建立 LICENSE，待確認團隊著作權、競賽規則、資料集與素材授權後再決定
-- Azure Static Web Apps、Azure Functions、Microsoft Foundry／Azure OpenAI 與 Application Insights 為規劃部署目標，但本次初始化只記錄計畫
+- Azure Static Web Apps、Azure Functions、Microsoft Foundry／Azure OpenAI 與 Application Insights 為規劃部署目標；本機實作已完成，但尚未執行雲端部署
 
 ## 未決定事項
 
 - 串接前需向主辦方確認共用 Azure OpenAI deployment 的允許模型、RBAC 權限、速率限制與可用額度
+- 團隊尚未指派 Azure 發布、監控與回滾負責人
 - App 最終交付 APK、Android App Bundle、iOS TestFlight 或現場 Expo development build 的形式仍需在實作階段確認
 - 跨裝置登入與雲端同步涉及未成年人資料與身份驗證，決賽 P0 先不承諾

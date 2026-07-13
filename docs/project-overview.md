@@ -1,54 +1,47 @@
-# 專案範圍與驗收
+# 專案範圍與驗收總覽
 
-## 專案摘要
+## 目標
 
-以個人使用為主的跨平台空氣健康 AI 行動助理，結合即時環境資料、最低限度個人情境與官方準則，產生有依據、可解釋且受安全邊界限制的行動方案。
+在 2026-07-26 決賽前完成一個可實際使用與展示的個人 AirMe：使用者輸入活動情境，系統取得真實環境資料，Azure OpenAI 產生受官方規則約束的行動卡，並能安全追問與回饋。
 
-## 本階段目標
+## P0
 
-- 階段：競賽／展示
-- 使用對象、核心問題與可觀察成果需在開發前確認。
+- 單一 Expo 專案支援 iOS、Android、Web。
+- 個人設定、活動輸入、真實 AQI／天氣、行動卡、追問、五秒回饋。
+- Azure Functions + Azure OpenAI Responses API 真實核心流程。
+- 固定 JSON Schema、領域限制、醫療界線、資料新鮮度與錯誤處理。
+- 30 個 AI／安全測試案例。
+- Azure 部署與清楚標示的離線展示備援；其中離線備援已完成，Azure 部署尚未執行。
 
-## 範圍
+## 非 P0
 
-- 同一套 AirMe 在 iOS、Android 與 Web 提供個人使用流程
-- 最低限度個人敏感條件、常用地點、通勤方式與常見活動設定
-- 取得環境部 AQI 與中央氣象署資料並顯示來源與更新時間
-- 以自然語言描述活動、時間、地點、強度與當下狀況
-- 由 Azure OpenAI 理解個人情境並產生固定格式的行動卡
-- 在空品、活動安全與一般自我保護範圍內追問，離題與醫療診斷必須拒答
-- 活動後五秒回饋與個人紀錄，決賽版不宣稱醫療因果或成熟預測模型
-- 可重播的決賽示範情境與外部服務失敗時的降級展示
-- 每一項功能需有可展示或可測試的完成條件。
+- 教師工作台、班級統計或角色分流。
+- 智慧路線、Line Bot、推播、Power BI、健康中心整合。
+- Azure Machine Learning、個人敏感閾值與疾病／症狀預測。
+- 帳號、跨裝置同步與個人健康資料庫。
+- 以大量圖表或 Azure 服務數量作為作品核心。
 
-## 非本階段範圍
+## 元件
 
-- 決賽日期為 2026-07-26，初始化後必須優先完成一條可現場操作的 Azure AI 核心流程
-- App 與 Web 是同一產品的不同入口，不建立教師端、班級端或角色分流
-- 不得把 Azure OpenAI、環境部或中央氣象署的金鑰放入 App、Web、版本控制或文件
-- 未成年人個人與健康情境採資料最小化；決賽版優先保存在裝置端並只傳送當次推論必要內容
-- AirMe 不是醫療診斷工具，不判定症狀成因，不取代醫師與緊急協助
-- 官方 AQI 與校園活動準則是安全底線，生成式 AI 不得自行發明門檻
-- 主辦方 Azure 訂閱與資源為共用環境，未經確認不得修改或刪除他人資源
-- 初始化不建立外部帳號、Azure 資源、資料庫、部署、remote 或 GitHub repository
-- 未確認的帳號、付款、個資、正式營運、production 資料與外部服務不因構想而自動納入。
-- 未被真實需求使用的元件、共用套件與基礎設施不先建立。
+| 元件 | 路徑 | 現況 | 下一個外部驗收結果 |
+|---|---|---|---|
+| AirMe App／Web | `apps/client` | 完整 Demo、LIVE API client、本機資料與 responsive UI | 實體 iOS／Android與 preview URL 驗證 |
+| Azure Functions API | `services/api` | 四個 endpoint、政府資料 adapter、規則、Azure OpenAI adapter、安全與評估 | 真實 Azure／MOENV／CWA 端到端呼叫 |
+| 共用契約 | `packages/contracts` | Zod runtime schema 與 TypeScript 型別 | 部署前契約相容性複驗 |
 
-## 驗收方式
+## 驗收摘要
 
-- 以主要使用流程、錯誤情境、資料結果與實際執行的品質指令驗收。
-- 無法自動驗證的項目需記錄人工步驟、預期結果與限制。
+- 相同 AQI、不同活動／個人條件，結果不同且理由可追溯。
+- 離題、提示注入與醫療診斷正確拒答。
+- 資料缺失、過期、AI 限流與無效輸出不造成錯誤建議。
+- App／Web、repository 與 log 無真實 secret 或學生個資。
+- 線上 Demo 可證明 Azure 參與核心；fallback 不冒充線上結果。
 
-## 未決定事項
+完整規格見 [產品規格](product-spec.md)，執行時程見 [實作計畫](implementation-plan.md)。
 
-- 串接前需向主辦方確認共用 Azure OpenAI deployment 的允許模型、RBAC 權限、速率限制與可用額度
-- App 最終交付 APK、Android App Bundle、iOS TestFlight 或現場 Expo development build 的形式仍需在實作階段確認
-- 跨裝置登入與雲端同步涉及未成年人資料與身份驗證，決賽 P0 先不承諾
+## 未決事項
 
-## 假設
-
-- 採用 React Native、Expo Router 與 TypeScript，以單一前端專案輸出 iOS、Android 與 Web
-- 後端採 Azure Functions v4、Node.js 22 與 TypeScript，所有外部 API 與 AI 呼叫皆經後端
-- 決賽 P0 不包含班級統計、教師工作台、智慧路線、Line Bot、Power BI、Azure Machine Learning 或健康中心串接
-- 目前不自動建立 LICENSE，待確認團隊著作權、競賽規則、資料集與素材授權後再決定
-- Azure Static Web Apps、Azure Functions、Microsoft Foundry／Azure OpenAI 與 Application Insights 為規劃部署目標，但本次初始化只記錄計畫
+- 主辦方核准的 Azure OpenAI deployment、RBAC、速率與額度。
+- 最終 App 交付格式與決賽設備。
+- 決賽後是否加入帳號與跨裝置同步。
+- 團隊、學校、競賽、資料與素材確認後的 LICENSE 選擇。

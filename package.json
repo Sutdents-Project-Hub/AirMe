@@ -1,0 +1,24 @@
+{
+  "name": "airme-system",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/contracts",
+    "services/api",
+    "apps/client"
+  ],
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "npm run build --workspace @airme/contracts && npm run build --workspace airme-api && npm run build:web --workspace airme",
+    "evaluate": "npm run evaluate --workspace airme-api",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.5",
+    "react-native-screens": "4.25.2"
+  }
+}

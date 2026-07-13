@@ -12,7 +12,7 @@ secrets/
 private/
 
 # Sensitive business or legal material
-contracts/
+/contracts/
 legal/
 quotations/
 
@@ -30,3 +30,11 @@ coverage/
 # IDE
 .idea/
 *.swp
+
+# Local demo captures and generated review artifacts
+tmp/
+work/
+screenshots/
+recordings/
+/output/
+/.playwright-cli/
