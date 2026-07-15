@@ -16,7 +16,7 @@
 
 使用 PostgreSQL 是為了讓 Coolify API container restart 後仍可重用公開環境資料快取，並在不保存使用者內容的前提下協助診斷服務是否健康。它不是個人資料庫。
 
-- migration 是版本化 SQL，放在 `services/api/database/migrations/`。
+- migration 是版本化 SQL，放在 `backend/database/migrations/`。
 - API 只使用 internal Compose network 連線；不對 Internet 公開 `5432`。
 - migration 失敗時 API container 不應啟動為健康狀態。
 - PostgreSQL password、connection URL、dump 與 backup 都是秘密，不能進入 App bundle、repository、截圖或文件。

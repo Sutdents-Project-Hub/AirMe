@@ -14,4 +14,4 @@ recordings
 .env.*
 !.env.example
 !.env.*.example
-services/api/local.settings.json
+backend/local.settings.json

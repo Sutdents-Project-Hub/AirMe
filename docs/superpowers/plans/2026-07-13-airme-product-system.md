@@ -4,7 +4,7 @@
 
 **目標：** 建立可在 iOS、Android、Web 操作的 AirMe P0，以及具安全邊界、政府資料整合、Azure OpenAI adapter、示範降級與自動測試的 Azure Functions API。
 
-**架構：** npm workspaces 管理 `apps/client`、`services/api` 與 `packages/contracts`。共用 Zod 合約限制所有跨邊界資料；API 以純 domain modules 組合規則、環境資料、安全 guard 與 AI adapter，再由 Azure Functions HTTP handlers 暴露端點。client 只保存裝置端偏好與歷史，並透過單一 API client 呼叫後端。
+**架構：** npm workspaces 管理 `app`、`backend` 與 `packages/contracts`。共用 Zod 合約限制所有跨邊界資料；API 以純 domain modules 組合規則、環境資料、安全 guard 與 AI adapter，再由 Azure Functions HTTP handlers 暴露端點。client 只保存裝置端偏好與歷史，並透過單一 API client 呼叫後端。
 
 **技術：** Expo SDK 57、Expo Router、React Native 0.86、TypeScript、Azure Functions v4、Node.js 22、Zod、Vitest、React Native Testing Library、AsyncStorage、Azure Identity、Azure OpenAI Responses API。
 
@@ -20,10 +20,10 @@
 - Create: `packages/contracts/src/index.ts`
 - Create: `packages/contracts/src/schemas.ts`
 - Create: `packages/contracts/src/schemas.test.ts`
-- Modify: `apps/client/package.json`
-- Modify: `services/api/package.json`
-- Remove: `apps/client/package-lock.json`
-- Remove: `services/api/package-lock.json`
+- Modify: `app/package.json`
+- Modify: `backend/package.json`
+- Remove: `app/package-lock.json`
+- Remove: `backend/package-lock.json`
 - Create: `package-lock.json`（由 npm 產生）
 
 **Step 1：建立失敗的合約測試**
@@ -51,18 +51,18 @@ Expected: PASS。
 
 **Step 6：Checkpoint review（不提交 Git）**
 
-Run: `git diff -- package.json packages/contracts apps/client/package.json services/api/package.json`
+Run: `git diff -- package.json packages/contracts app/package.json backend/package.json`
 Expected: 只有 workspace、合約與測試相關變更。
 
 ## Task 2：官方規則引擎與 AI 安全 guard
 
 **Files**
 
-- Create: `services/api/src/domain/rules.ts`
-- Create: `services/api/src/domain/rules.test.ts`
-- Create: `services/api/src/domain/safety.ts`
-- Create: `services/api/src/domain/safety.test.ts`
-- Create: `services/api/src/domain/fixtures.ts`
+- Create: `backend/src/domain/rules.ts`
+- Create: `backend/src/domain/rules.test.ts`
+- Create: `backend/src/domain/safety.ts`
+- Create: `backend/src/domain/safety.test.ts`
+- Create: `backend/src/domain/fixtures.ts`
 
 **Step 1：建立規則引擎失敗測試**
 
@@ -90,14 +90,14 @@ Expected: PASS。
 
 **Files**
 
-- Create: `services/api/src/config.ts`
-- Create: `services/api/src/adapters/environment/types.ts`
-- Create: `services/api/src/adapters/environment/moenv.ts`
-- Create: `services/api/src/adapters/environment/cwa.ts`
-- Create: `services/api/src/adapters/environment/fixture.ts`
-- Create: `services/api/src/adapters/environment/service.ts`
-- Create: `services/api/src/adapters/environment/service.test.ts`
-- Create: `services/api/src/lib/fetch-json.ts`
+- Create: `backend/src/config.ts`
+- Create: `backend/src/adapters/environment/types.ts`
+- Create: `backend/src/adapters/environment/moenv.ts`
+- Create: `backend/src/adapters/environment/cwa.ts`
+- Create: `backend/src/adapters/environment/fixture.ts`
+- Create: `backend/src/adapters/environment/service.ts`
+- Create: `backend/src/adapters/environment/service.test.ts`
+- Create: `backend/src/lib/fetch-json.ts`
 
 **Step 1：建立失敗測試**
 
@@ -121,14 +121,14 @@ Expected: PASS。
 
 **Files**
 
-- Create: `services/api/src/adapters/ai/types.ts`
-- Create: `services/api/src/adapters/ai/azure-openai.ts`
-- Create: `services/api/src/adapters/ai/fixture.ts`
-- Create: `services/api/src/adapters/ai/azure-openai.test.ts`
-- Create: `services/api/src/domain/context-token.ts`
-- Create: `services/api/src/domain/context-token.test.ts`
-- Create: `services/api/src/domain/recommendation.ts`
-- Create: `services/api/src/domain/recommendation.test.ts`
+- Create: `backend/src/adapters/ai/types.ts`
+- Create: `backend/src/adapters/ai/azure-openai.ts`
+- Create: `backend/src/adapters/ai/fixture.ts`
+- Create: `backend/src/adapters/ai/azure-openai.test.ts`
+- Create: `backend/src/domain/context-token.ts`
+- Create: `backend/src/domain/context-token.test.ts`
+- Create: `backend/src/domain/recommendation.ts`
+- Create: `backend/src/domain/recommendation.test.ts`
 
 **Step 1：建立失敗測試**
 
@@ -152,17 +152,17 @@ Expected: PASS。
 
 **Files**
 
-- Create: `services/api/src/http/respond.ts`
-- Create: `services/api/src/http/cors.ts`
-- Create: `services/api/src/functions/health.ts`
-- Create: `services/api/src/functions/environment.ts`
-- Create: `services/api/src/functions/recommendations.ts`
-- Create: `services/api/src/functions/follow-ups.ts`
-- Create: `services/api/src/functions/api.integration.test.ts`
-- Modify: `services/api/src/index.ts`
-- Modify: `services/api/host.json`
-- Modify: `services/api/.env.example`
-- Modify: `services/api/README.md`
+- Create: `backend/src/http/respond.ts`
+- Create: `backend/src/http/cors.ts`
+- Create: `backend/src/functions/health.ts`
+- Create: `backend/src/functions/environment.ts`
+- Create: `backend/src/functions/recommendations.ts`
+- Create: `backend/src/functions/follow-ups.ts`
+- Create: `backend/src/functions/api.integration.test.ts`
+- Modify: `backend/src/index.ts`
+- Modify: `backend/host.json`
+- Modify: `backend/.env.example`
+- Modify: `backend/README.md`
 
 **Step 1：建立失敗的 handler 整合測試**
 
@@ -186,17 +186,17 @@ Expected: PASS，`dist` 產生 functions bundle。
 
 **Files**
 
-- Modify: `apps/client/app.json`
-- Modify: `apps/client/src/app/_layout.tsx`
-- Modify: `apps/client/src/global.css`
-- Create: `apps/client/src/design/tokens.ts`
-- Create: `apps/client/src/components/ui/*`
-- Create: `apps/client/src/state/app-provider.tsx`
-- Create: `apps/client/src/storage/local-store.ts`
-- Create: `apps/client/src/storage/local-store.test.ts`
-- Create: `apps/client/src/api/client.ts`
-- Create: `apps/client/src/api/client.test.ts`
-- Create: `apps/client/src/navigation/main-tabs.tsx`
+- Modify: `app/app.json`
+- Modify: `app/src/app/_layout.tsx`
+- Modify: `app/src/global.css`
+- Create: `app/src/design/tokens.ts`
+- Create: `app/src/components/ui/*`
+- Create: `app/src/state/app-provider.tsx`
+- Create: `app/src/storage/local-store.ts`
+- Create: `app/src/storage/local-store.test.ts`
+- Create: `app/src/api/client.ts`
+- Create: `app/src/api/client.test.ts`
+- Create: `app/src/navigation/main-tabs.tsx`
 
 **Step 1：以 UI Skills 產生產品設計系統建議**
 
@@ -224,14 +224,14 @@ Expected: PASS。
 
 **Files**
 
-- Create: `apps/client/src/app/onboarding.tsx`
-- Modify: `apps/client/src/app/index.tsx`
-- Create: `apps/client/src/components/profile-form.tsx`
-- Create: `apps/client/src/components/environment-hero.tsx`
-- Create: `apps/client/src/components/activity-composer.tsx`
-- Create: `apps/client/src/components/source-disclosure.tsx`
-- Create: `apps/client/src/features/onboarding/profile-form.test.tsx`
-- Create: `apps/client/src/features/home/activity-composer.test.tsx`
+- Create: `app/src/app/onboarding.tsx`
+- Modify: `app/src/app/index.tsx`
+- Create: `app/src/components/profile-form.tsx`
+- Create: `app/src/components/environment-hero.tsx`
+- Create: `app/src/components/activity-composer.tsx`
+- Create: `app/src/components/source-disclosure.tsx`
+- Create: `app/src/features/onboarding/profile-form.test.tsx`
+- Create: `app/src/features/home/activity-composer.test.tsx`
 
 **Step 1：建立元件失敗測試**
 
@@ -255,16 +255,16 @@ Expected: PASS。
 
 **Files**
 
-- Create: `apps/client/src/app/recommendation.tsx`
-- Create: `apps/client/src/app/history.tsx`
-- Create: `apps/client/src/app/settings.tsx`
-- Create: `apps/client/src/components/action-card.tsx`
-- Create: `apps/client/src/components/follow-up-panel.tsx`
-- Create: `apps/client/src/components/feedback-sheet.tsx`
-- Create: `apps/client/src/components/history-list.tsx`
-- Create: `apps/client/src/features/recommendation/action-card.test.tsx`
-- Create: `apps/client/src/features/recommendation/follow-up-panel.test.tsx`
-- Create: `apps/client/src/features/feedback/feedback-sheet.test.tsx`
+- Create: `app/src/app/recommendation.tsx`
+- Create: `app/src/app/history.tsx`
+- Create: `app/src/app/settings.tsx`
+- Create: `app/src/components/action-card.tsx`
+- Create: `app/src/components/follow-up-panel.tsx`
+- Create: `app/src/components/feedback-sheet.tsx`
+- Create: `app/src/components/history-list.tsx`
+- Create: `app/src/features/recommendation/action-card.test.tsx`
+- Create: `app/src/features/recommendation/follow-up-panel.test.tsx`
+- Create: `app/src/features/feedback/feedback-sheet.test.tsx`
 
 **Step 1：建立元件失敗測試**
 
@@ -288,9 +288,9 @@ Expected: PASS。
 
 **Files**
 
-- Create: `services/api/evaluation/cases.json`
-- Create: `services/api/src/evaluation/run-evaluation.ts`
-- Create: `services/api/src/evaluation/run-evaluation.test.ts`
+- Create: `backend/evaluation/cases.json`
+- Create: `backend/src/evaluation/run-evaluation.ts`
+- Create: `backend/src/evaluation/run-evaluation.test.ts`
 - Create: `tests/e2e/airme-demo.spec.ts`
 - Create: `playwright.config.ts`
 - Modify: `package.json`
@@ -317,8 +317,8 @@ Expected: 30/30 安全案例通過，Web 主流程通過。
 **Files**
 
 - Modify: `README.md`
-- Modify: `apps/client/README.md`
-- Modify: `services/api/README.md`
+- Modify: `app/README.md`
+- Modify: `backend/README.md`
 - Modify: `docs/architecture.md`
 - Modify: `docs/product-spec.md`
 - Modify: `docs/ai-safety-and-evaluation.md`
@@ -336,7 +336,7 @@ Expected: 30/30 安全案例通過，Web 主流程通過。
 
 **Step 2：從乾淨依賴狀態驗證**
 
-Run: `rm -rf node_modules apps/client/node_modules services/api/node_modules packages/contracts/node_modules && npm ci`
+Run: `rm -rf node_modules app/node_modules backend/node_modules packages/contracts/node_modules && npm ci`
 Expected: 單一 root lockfile 可完整重建依賴。
 
 **Step 3：執行完整品質門檻**

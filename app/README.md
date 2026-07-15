@@ -1,6 +1,6 @@
 # AirMe App／Web
 
-同一套 Expo Router + TypeScript client 輸出 iOS、Android 與 Web。預設 `DEMO` 模式可以離線重播完整競賽流程；`LIVE` 模式只透過 `services/api` 呼叫外部服務。
+同一套 Expo Router + TypeScript client 輸出 iOS、Android 與 Web。預設 `DEMO` 模式可以離線重播完整競賽流程；`LIVE` 模式只透過 `backend` 呼叫外部服務。
 
 ## 已實作
 
@@ -46,7 +46,7 @@ npm run typecheck --workspace airme
 npm run build:web --workspace airme
 ```
 
-`build:web` 產生 `apps/client/dist/`。Web static export 與瀏覽器核心 Demo 已驗證；實體 iOS／Android 尚未驗證。
+`build:web` 產生 `app/dist/`。Web static export 與瀏覽器核心 Demo 已驗證；實體 iOS／Android 尚未驗證。
 
 ## 設定
 
@@ -63,4 +63,4 @@ npm run build:web --workspace airme
 - `src/api/`：共用契約驗證的 API client。
 - `src/components/`：設計系統與產品元件。
 
-部署與外部服務限制見 [部署計畫](../../docs/deployment.md) 與 [系統架構](../../docs/architecture.md)。
+部署與外部服務限制見 [部署計畫](../docs/deployment.md) 與 [系統架構](../docs/architecture.md)。

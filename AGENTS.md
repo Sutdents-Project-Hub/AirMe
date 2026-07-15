@@ -38,8 +38,8 @@
 
 ### 已確認假設
 
-- `apps/client` 採 Expo Router 與 TypeScript，以單一 client 輸出 iOS、Android 與 Web。
-- `services/api` 採 Fastify、Node.js 22 與 TypeScript，所有 AI 與政府 API 呼叫都經過後端。
+- `app` 採 Expo Router 與 TypeScript，以單一 client 輸出 iOS、Android 與 Web。
+- `backend` 採 Fastify、Node.js 22 與 TypeScript，所有 AI 與政府 API 呼叫都經過後端。
 - 決賽 P0 的個人設定與活動後回饋保存在裝置端；PostgreSQL 只保存環境快取與匿名技術事件，不建立個人資料庫。
 - Coolify、VPS、PostgreSQL 與量界智算是規劃部署目標。
 
@@ -55,9 +55,9 @@
 
 以個人使用為主的跨平台空氣健康 AI 行動助理，結合即時環境資料、最低限度個人情境與官方準則，產生有依據、可解釋且受安全邊界限制的行動方案。
 
-- `apps/client`：同一套 iOS、Android、Web 個人 AirMe；依 `Expo` 的官方慣例維護，不可把其他元件的秘密或責任移入此處，也不可建立教師端或另一套 Web 產品。
-- `services/api`：後端／API；依 Node.js／Fastify 與 PostgreSQL migration 慣例維護，不可把其他元件的秘密或責任移入此處。
-- `structure_exception`：保留既有 npm workspace 的 `apps/client/`、`services/api/` 與 `packages/contracts/`；各 workspace 本身就是 component root，manifest 直接位於該根目錄，不得增加 project-name 或 framework-name wrapper。這是既有專案例外，不是新專案預設。
+- `app`：同一套 iOS、Android、Web 個人 AirMe；依 `Expo` 的官方慣例維護，不可把其他元件的秘密或責任移入此處，也不可建立教師端或另一套 Web 產品。
+- `backend`：後端／API；依 Node.js／Fastify 與 PostgreSQL migration 慣例維護，不可把其他元件的秘密或責任移入此處。
+- 專案結構採公司慣例的固定 component roots：`app/`、`backend/` 與 `packages/contracts/`；各 workspace 本身就是 component root，manifest 直接位於該根目錄，不得增加 project-name 或 framework-name wrapper。
 - Expo、Fastify、Node.js 22 與 npm workspace 是已實作選型；除非另行核准遷移，不為了套用公司新專案基線而改成其他 framework、runtime 或 package manager。
 
 - Repository 與新專案根目錄名稱維持 `AirMe`；技術資源優先使用 `airme` 或平台既有慣例。
@@ -83,7 +83,7 @@
 - 使用者當次明確要求即代表目前敘述方向已獲核准；一般範圍內實作與文件同步不需額外等待批准。只有結果會實質改變架構、權限／安全、保存資料、破壞性行為、外部服務／成本／授權、production／部署、核心 P0 或競賽驗收時才停止確認。
 - 實作前辨識受影響的權威文件，完成前在同一任務同步；文件同步是完成條件，不是之後再補的工作。
 - 產品定位、P0／非 P0、需求與驗收更新 `docs/product-spec.md`、`docs/requirements.md`、`docs/project-overview.md`、`docs/acceptance.md`；能力狀態或專案分類改變時同步 `docs/project-capabilities.md` 與 `docs/project-profile.md`。
-- 元件邊界、資料、安全、AI 行為、政府資料源或外部整合更新 `docs/architecture.md`、`docs/data-and-storage.md`、`docs/security-and-privacy.md`、`docs/ai-safety-and-evaluation.md`、`docs/integrations.md` 及受影響的 `apps/client/README.md`／`services/api/README.md`。
+- 元件邊界、資料、安全、AI 行為、政府資料源或外部整合更新 `docs/architecture.md`、`docs/data-and-storage.md`、`docs/security-and-privacy.md`、`docs/ai-safety-and-evaluation.md`、`docs/integrations.md` 及受影響的 `app/README.md`／`backend/README.md`。
 - 啟動、指令、環境變數、Compose、部署或 rollback 改變時，更新根 `README.md`、元件 README、`.env.example` 與 `docs/deployment.md` 中實際受影響的文件。
 - 競賽故事、Demo、可重播情境、證據或限制改變時，更新 `docs/competition.md`、`docs/acceptance.md` 與實際仍作為執行依據的 `docs/implementation-plan.md`。
 - 優先更新既有權威文件，不為了形式新增空 Markdown；不把規劃、假設或未執行結果寫成已實作或已驗證。

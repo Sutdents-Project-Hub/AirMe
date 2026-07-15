@@ -19,7 +19,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: services/api/Dockerfile
+      dockerfile: backend/Dockerfile
     environment:
       NODE_ENV: production
       HOST: 0.0.0.0
@@ -51,7 +51,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: apps/client/Dockerfile
+      dockerfile: app/Dockerfile
       args:
         EXPO_PUBLIC_API_BASE_URL: /api
         EXPO_PUBLIC_API_TIMEOUT_MS: ${EXPO_PUBLIC_API_TIMEOUT_MS:-10000}

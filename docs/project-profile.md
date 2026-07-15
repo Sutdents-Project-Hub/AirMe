@@ -17,9 +17,9 @@
 - Deployment：`planned`
 - Team：`true`
 
-## 結構與技術例外
+## 結構與技術決策
 
-- `structure_exception`：保留新版固定 component root 規則前已建立的 npm workspace 路徑 `apps/client/`、`services/api/` 與 `packages/contracts/`。既有 build、Compose、workspace scripts 與文件均依賴這些路徑，不進行只為改名的搬移。
+- `structure_exception`：無。npm workspace 採固定 component roots：`app/`、`backend/` 與 `packages/contracts/`。
 - Framework root 證據：三個 workspace 的 `package.json` 皆直接位於各 component 根目錄，依賴鎖定由 repository 根目錄 `package-lock.json` 統一管理，沒有額外 project-name／framework-name wrapper 或巢狀 `.git/`。
 - `technology_source`：`existing-project`。Expo、Fastify、Node.js 22 與 npm workspace 是競賽需求下已實作且可驗證的選型；公司基線只作未指定技術之新專案預設，不自動觸發遷移。
 
@@ -31,8 +31,8 @@
 
 | ID | Path | Kind | Framework | Package manager | Quality commands | Env expected |
 |---|---|---|---|---|---|---|
-| `client` | `apps/client` | `app` | Expo | npm workspace | `test`、`lint`、`typecheck`、`build:web` | `true` |
-| `api` | `services/api` | `backend` | Node.js／Fastify | npm workspace | `test`、`typecheck`、`build`、`evaluate`、`db:migrate` | `true` |
+| `client` | `app` | `app` | Expo | npm workspace | `test`、`lint`、`typecheck`、`build:web` | `true` |
+| `api` | `backend` | `backend` | Node.js／Fastify | npm workspace | `test`、`typecheck`、`build`、`evaluate`、`db:migrate` | `true` |
 | `contracts` | `packages/contracts` | `library` | Zod／TypeScript | npm workspace | `test`、`typecheck`、`build` | `false` |
 
 三個 workspace 共用根目錄 `package-lock.json`。產品流程、API endpoint、共用 schema、自動化測試、Web Demo、Coolify Compose 與 PostgreSQL migration 已完成；實際 VPS、真實外部 API 呼叫與實體 Mobile 仍未完成驗證。

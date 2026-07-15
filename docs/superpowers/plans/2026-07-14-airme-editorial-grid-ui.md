@@ -13,7 +13,7 @@
 - 固定亮色編輯方格主題：珊瑚紅、亮黃、青綠、天藍、奶油白與炭黑。
 - 所有作用中卡片使用 2–3 px 炭黑框與 4–6 px 無模糊硬陰影；互動目標至少 44 × 44 pt。
 - Web、iOS、Android 共用同一套元件與產品流程；不得建立 Web 專屬角色或第二套產品。
-- 不修改 `services/api`、`packages/contracts`、資料 Schema、Azure、外部 API、安全規則或裝置端資料行為。
+- 不修改 `backend`、`packages/contracts`、資料 Schema、Azure、外部 API、安全規則或裝置端資料行為。
 - 不將參考圖或其品牌素材加入 repository。
 - 不新增 UI framework、字型套件或圖樣依賴；圖樣以跨平台 React Native 元件完成。
 - 未經使用者另行明確要求，不 stage、不 commit、不 push。
@@ -22,25 +22,25 @@
 
 ## File Structure
 
-- Create `apps/client/src/components/ui/pattern-surface.tsx`: 跨平台 grid、dots、stripes 背景圖樣。
-- Create `apps/client/src/features/design/editorial-grid.test.tsx`: 驗證固定色票、卡片框線、圖樣可存取性與按鈕狀態。
-- Modify `apps/client/src/design/tokens.ts`: 固定亮色 palette、字體、圓角、外框與硬陰影 token。
-- Modify `apps/client/src/global.css`: Web 背景、focus、selection 與 reduced-motion。
-- Modify `apps/client/src/app/_layout.tsx`: 固定 light StatusBar。
-- Modify `apps/client/src/components/ui/{screen,card,app-button,app-text,chip}.tsx`: 全域 UI primitives。
-- Modify `apps/client/src/components/{app-header,bottom-nav,page-shell}.tsx`: 桌面頂部導覽與手機底部導覽。
-- Modify `apps/client/src/app/{index,onboarding,recommendation,history,settings}.tsx`: 五個作用中頁面的版面層級。
-- Modify `apps/client/src/components/{environment-hero,activity-composer,profile-form,action-card,follow-up-panel,feedback-panel,history-list,source-disclosure}.tsx`: 產品卡片與狀態樣式。
-- Modify `apps/client/README.md`: 將舊有 light／dark 敘述更新為固定亮色編輯方格主題。
+- Create `app/src/components/ui/pattern-surface.tsx`: 跨平台 grid、dots、stripes 背景圖樣。
+- Create `app/src/features/design/editorial-grid.test.tsx`: 驗證固定色票、卡片框線、圖樣可存取性與按鈕狀態。
+- Modify `app/src/design/tokens.ts`: 固定亮色 palette、字體、圓角、外框與硬陰影 token。
+- Modify `app/src/global.css`: Web 背景、focus、selection 與 reduced-motion。
+- Modify `app/src/app/_layout.tsx`: 固定 light StatusBar。
+- Modify `app/src/components/ui/{screen,card,app-button,app-text,chip}.tsx`: 全域 UI primitives。
+- Modify `app/src/components/{app-header,bottom-nav,page-shell}.tsx`: 桌面頂部導覽與手機底部導覽。
+- Modify `app/src/app/{index,onboarding,recommendation,history,settings}.tsx`: 五個作用中頁面的版面層級。
+- Modify `app/src/components/{environment-hero,activity-composer,profile-form,action-card,follow-up-panel,feedback-panel,history-list,source-disclosure}.tsx`: 產品卡片與狀態樣式。
+- Modify `app/README.md`: 將舊有 light／dark 敘述更新為固定亮色編輯方格主題。
 - Modify `docs/superpowers/specs/2026-07-14-airme-editorial-grid-ui-design.md`: 實作完成後將狀態更新為已實作並記錄驗證。
 
 ### Task 1: Lock the editorial design system with tests
 
 **Files:**
-- Create: `apps/client/src/features/design/editorial-grid.test.tsx`
-- Modify: `apps/client/src/design/tokens.ts`
-- Modify: `apps/client/src/global.css`
-- Modify: `apps/client/src/app/_layout.tsx`
+- Create: `app/src/features/design/editorial-grid.test.tsx`
+- Modify: `app/src/design/tokens.ts`
+- Modify: `app/src/global.css`
+- Modify: `app/src/app/_layout.tsx`
 
 **Interfaces:**
 - Produces: `palette`, `borders`, `shadows`, `radii`, `spacing`, `typography`, and `usePalette()` consumed by every UI component.
@@ -113,13 +113,13 @@ Expected: token test PASS and TypeScript exits 0.
 ### Task 2: Build reusable patterns and editorial primitives
 
 **Files:**
-- Create: `apps/client/src/components/ui/pattern-surface.tsx`
-- Modify: `apps/client/src/features/design/editorial-grid.test.tsx`
-- Modify: `apps/client/src/components/ui/screen.tsx`
-- Modify: `apps/client/src/components/ui/card.tsx`
-- Modify: `apps/client/src/components/ui/app-button.tsx`
-- Modify: `apps/client/src/components/ui/app-text.tsx`
-- Modify: `apps/client/src/components/ui/chip.tsx`
+- Create: `app/src/components/ui/pattern-surface.tsx`
+- Modify: `app/src/features/design/editorial-grid.test.tsx`
+- Modify: `app/src/components/ui/screen.tsx`
+- Modify: `app/src/components/ui/card.tsx`
+- Modify: `app/src/components/ui/app-button.tsx`
+- Modify: `app/src/components/ui/app-text.tsx`
+- Modify: `app/src/components/ui/chip.tsx`
 
 **Interfaces:**
 - Produces: `PatternSurface({ pattern, color, children, style })`, where `pattern` is `'grid' | 'dots' | 'stripes' | 'none'`.
@@ -164,10 +164,10 @@ Expected: all selected tests PASS.
 ### Task 3: Implement responsive navigation and shell
 
 **Files:**
-- Modify: `apps/client/src/components/app-header.tsx`
-- Modify: `apps/client/src/components/bottom-nav.tsx`
-- Modify: `apps/client/src/components/page-shell.tsx`
-- Create: `apps/client/src/features/design/navigation.test.tsx`
+- Modify: `app/src/components/app-header.tsx`
+- Modify: `app/src/components/bottom-nav.tsx`
+- Modify: `app/src/components/page-shell.tsx`
+- Create: `app/src/features/design/navigation.test.tsx`
 
 **Interfaces:**
 - `AppHeader({ demoMode })` keeps its current public prop.
@@ -197,14 +197,14 @@ Expected: navigation tests PASS and TypeScript exits 0.
 ### Task 4: Redesign onboarding and home
 
 **Files:**
-- Modify: `apps/client/src/app/onboarding.tsx`
-- Modify: `apps/client/src/app/index.tsx`
-- Modify: `apps/client/src/components/profile-form.tsx`
-- Modify: `apps/client/src/components/environment-hero.tsx`
-- Modify: `apps/client/src/components/activity-composer.tsx`
-- Modify: `apps/client/src/components/source-disclosure.tsx`
-- Modify: `apps/client/src/features/onboarding/profile-form.test.tsx`
-- Modify: `apps/client/src/features/home/activity-composer.test.tsx`
+- Modify: `app/src/app/onboarding.tsx`
+- Modify: `app/src/app/index.tsx`
+- Modify: `app/src/components/profile-form.tsx`
+- Modify: `app/src/components/environment-hero.tsx`
+- Modify: `app/src/components/activity-composer.tsx`
+- Modify: `app/src/components/source-disclosure.tsx`
+- Modify: `app/src/features/onboarding/profile-form.test.tsx`
+- Modify: `app/src/features/home/activity-composer.test.tsx`
 
 **Interfaces:**
 - All existing submit callbacks, labels, field values, accessibility labels, max lengths, DEMO indicators and source timestamps remain unchanged.
@@ -237,16 +237,16 @@ Expected: all tests PASS and the previously asserted submit payloads remain iden
 ### Task 5: Redesign recommendation, history and settings
 
 **Files:**
-- Modify: `apps/client/src/app/recommendation.tsx`
-- Modify: `apps/client/src/app/history.tsx`
-- Modify: `apps/client/src/app/settings.tsx`
-- Modify: `apps/client/src/components/action-card.tsx`
-- Modify: `apps/client/src/components/follow-up-panel.tsx`
-- Modify: `apps/client/src/components/feedback-panel.tsx`
-- Modify: `apps/client/src/components/history-list.tsx`
-- Modify: `apps/client/src/features/recommendation/action-card.test.tsx`
-- Modify: `apps/client/src/features/recommendation/follow-up-panel.test.tsx`
-- Modify: `apps/client/src/features/feedback/feedback-sheet.test.tsx`
+- Modify: `app/src/app/recommendation.tsx`
+- Modify: `app/src/app/history.tsx`
+- Modify: `app/src/app/settings.tsx`
+- Modify: `app/src/components/action-card.tsx`
+- Modify: `app/src/components/follow-up-panel.tsx`
+- Modify: `app/src/components/feedback-panel.tsx`
+- Modify: `app/src/components/history-list.tsx`
+- Modify: `app/src/features/recommendation/action-card.test.tsx`
+- Modify: `app/src/features/recommendation/follow-up-panel.test.tsx`
+- Modify: `app/src/features/feedback/feedback-sheet.test.tsx`
 
 **Interfaces:**
 - Preserve `ActionCard({ recommendation })`, `FollowUpPanel({ onAsk })`, `FeedbackPanel(...)`, and `HistoryList({ items })` signatures.
@@ -279,7 +279,7 @@ Expected: all client tests PASS with no changed product behavior.
 ### Task 6: Documentation, build and visual verification
 
 **Files:**
-- Modify: `apps/client/README.md`
+- Modify: `app/README.md`
 - Modify: `docs/superpowers/specs/2026-07-14-airme-editorial-grid-ui-design.md`
 
 **Interfaces:**
@@ -293,7 +293,7 @@ Replace the client README statement `light／dark theme` with `固定亮色編�
 
 Run: `npm run test --workspace airme && npm run lint --workspace airme && npm run typecheck --workspace airme && npm run build:web --workspace airme`
 
-Expected: all commands exit 0 and `apps/client/dist/` is regenerated.
+Expected: all commands exit 0 and `app/dist/` is regenerated.
 
 - [x] **Step 3: Verify the browser at required widths**
 
@@ -307,6 +307,6 @@ Serve the Web build and verify:
 
 - [x] **Step 4: Inspect final diff without staging**
 
-Run: `git status --short && git diff --check && git diff -- apps/client docs/superpowers`
+Run: `git status --short && git diff --check && git diff -- app docs/superpowers`
 
 Expected: only scoped UI, test and documentation changes; no secrets, environment files, contracts, business documents, generated credentials or unrelated edits. Do not stage or commit.

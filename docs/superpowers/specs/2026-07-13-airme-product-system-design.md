@@ -24,14 +24,14 @@ AirMe 是同時支援 iOS、Android 與 Web 的個人空氣健康行動助理。
 
 ## 3. 系統範圍
 
-### 3.1 `apps/client`
+### 3.1 `app`
 
 - Expo Router + TypeScript 的單一跨平台 client。
 - 提供初次設定、今日環境、活動輸入、行動卡、追問、回饋、紀錄、設定與示範模式。
 - 個人偏好與回饋預設只存在裝置端。
 - 前端只知道 API base URL，不保存或呼叫 Azure OpenAI、環境部、中央氣象署的秘密。
 
-### 3.2 `services/api`
+### 3.2 `backend`
 
 - Azure Functions v4 + Node.js 22 + TypeScript。
 - 集中處理政府開放資料、官方規則、Azure OpenAI、輸入與輸出驗證、CORS、逾時與錯誤降級。

@@ -4,17 +4,17 @@
 
 | 能力 | 實作位置 | 驗證方式 |
 |---|---|---|
-| 跨平台產品 UI | `apps/client/src/app`、`src/components` | Web export、手機／桌面瀏覽器操作 |
-| 本機個人資料 | `apps/client/src/storage/local-store.ts` | storage tests、清除流程 |
-| 離線競賽 Demo | `apps/client/src/demo` | 完整瀏覽器流程 |
+| 跨平台產品 UI | `app/src/app`、`src/components` | Web export、手機／桌面瀏覽器操作 |
+| 本機個人資料 | `app/src/storage/local-store.ts` | storage tests、清除流程 |
+| 離線競賽 Demo | `app/src/demo` | 完整瀏覽器流程 |
 | 前後端契約 | `packages/contracts` | runtime schema + tests |
-| 政府資料標準化 | `services/api/src/adapters/environment` | fixture／adapter tests |
-| 官方安全底線 | `services/api/src/domain/rules.ts` | 單元與 orchestration tests |
-| 安全領域守門 | `services/api/src/domain/safety.ts` | 醫療、緊急、離題、注入測試 |
-| 量界智算 adapter | `services/api/src/adapters/ai/liangjie.ts` | mock／fixture tests；live 未驗證 |
-| Fastify API | `services/api/src/server.ts`、`src/http` | handler tests 與 fixture HTTP smoke |
-| PostgreSQL migration | `services/api/database/migrations`、`src/database` | Compose schema 解析；實際 DB 未驗證 |
-| 固定安全評估 | `services/api/evaluation/cases.json` | 30/30 evaluation |
+| 政府資料標準化 | `backend/src/adapters/environment` | fixture／adapter tests |
+| 官方安全底線 | `backend/src/domain/rules.ts` | 單元與 orchestration tests |
+| 安全領域守門 | `backend/src/domain/safety.ts` | 醫療、緊急、離題、注入測試 |
+| 量界智算 adapter | `backend/src/adapters/ai/liangjie.ts` | mock／fixture tests；live 未驗證 |
+| Fastify API | `backend/src/server.ts`、`src/http` | handler tests 與 fixture HTTP smoke |
+| PostgreSQL migration | `backend/database/migrations`、`src/database` | Compose schema 解析；實際 DB 未驗證 |
+| 固定安全評估 | `backend/evaluation/cases.json` | 30/30 evaluation |
 
 ## 有程式碼但需外部環境驗證
 

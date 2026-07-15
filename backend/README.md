@@ -54,8 +54,8 @@ npm run build --workspace airme-api
 DATABASE_URL=postgresql://... npm run db:migrate --workspace airme-api
 ```
 
-資料庫不保存個人設定、活動文字、症狀、回饋、完整 prompt、context token 或模型完整輸出。詳見 [資料與儲存](../../docs/data-and-storage.md)。
+資料庫不保存個人設定、活動文字、症狀、回饋、完整 prompt、context token 或模型完整輸出。詳見 [資料與儲存](../docs/data-and-storage.md)。
 
 ## 容器
 
-`Dockerfile` 會建置 shared contracts 與 API，container command 先跑 migration 再啟動 Fastify。根目錄 [docker-compose.yml](../../docker-compose.yml) 是 Coolify 的三服務定義；部署程序見 [部署計畫](../../docs/deployment.md)。
+`Dockerfile` 會建置 shared contracts 與 API，container command 先跑 migration 再啟動 Fastify。根目錄 [docker-compose.yml](../docker-compose.yml) 是 Coolify 的三服務定義；部署程序見 [部署計畫](../docs/deployment.md)。

@@ -88,15 +88,15 @@ AirMe 的安全目標不是保證模型永遠正確，而是讓錯誤可被限�
 - Latency：資料取得、模型與總回應時間的 P50／P95。
 - Fallback integrity：備援是否清楚標示，是否避免冒充線上 AI 結果。
 
-已在 `services/api/evaluation/cases.json` 建立 30 個固定案例：8 個一般、5 個敏感、5 個資料品質、4 個醫療、3 個緊急、2 個離題與 3 個提示注入。`npm run evaluate` 會執行相同的安全分類與規則核心；目前 fixture 評估為 30/30。這不是 live 模型品質證明，取得量界 token 與 model ID 後仍須以實際模型重跑並人工檢查 grounding、延遲與內容過濾。
+已在 `backend/evaluation/cases.json` 建立 30 個固定案例：8 個一般、5 個敏感、5 個資料品質、4 個醫療、3 個緊急、2 個離題與 3 個提示注入。`npm run evaluate` 會執行相同的安全分類與規則核心；目前 fixture 評估為 30/30。這不是 live 模型品質證明，取得量界 token 與 model ID 後仍須以實際模型重跑並人工檢查 grounding、延遲與內容過濾。
 
 ## 10. 實作對應
 
-- `services/api/src/domain/rules.ts`：AQI、敏感條件、活動強度、缺失與 stale 的決定性風險底線。
-- `services/api/src/domain/safety.ts`：緊急、提示注入、醫療、允許領域與離題分類；順序以緊急為最高優先。
-- `services/api/src/adapters/ai/liangjie.ts`：OpenAI 相容 Chat Completions、JSON object、Zod 後驗證與 provider 錯誤遮蔽。
-- `services/api/src/recommendation`：模型結果驗證、醫療因果偵測與不可降低風險。
-- `services/api/src/follow-up`：短效 context token、固定拒答與安全降級。
+- `backend/src/domain/rules.ts`：AQI、敏感條件、活動強度、缺失與 stale 的決定性風險底線。
+- `backend/src/domain/safety.ts`：緊急、提示注入、醫療、允許領域與離題分類；順序以緊急為最高優先。
+- `backend/src/adapters/ai/liangjie.ts`：OpenAI 相容 Chat Completions、JSON object、Zod 後驗證與 provider 錯誤遮蔽。
+- `backend/src/recommendation`：模型結果驗證、醫療因果偵測與不可降低風險。
+- `backend/src/follow-up`：短效 context token、固定拒答與安全降級。
 - `packages/contracts`：所有公開輸入／輸出的 runtime schema。
 
 目前已驗證 fixture、mock 與程式規則；尚未把 30 案例送入真實量界模型，因此 live Schema 成功率、grounding defect rate 與 P50／P95 仍待測。

@@ -37,14 +37,14 @@ AirMe 讓使用者用自然語言描述想做的活動，再把 AQI、天氣、�
 
 ```text
 AirMe/
-├── apps/client/             # Expo Router：iOS／Android／Web 與 Nginx Docker image
-├── services/api/            # Node.js + Fastify：資料、規則、AI、安全與 PostgreSQL migration
+├── app/             # Expo Router：iOS／Android／Web 與 Nginx Docker image
+├── backend/            # Node.js + Fastify：資料、規則、AI、安全與 PostgreSQL migration
 ├── packages/contracts/      # 前後端共用 Zod 資料契約
 ├── docker-compose.yml       # Coolify Compose：Web、API、PostgreSQL
 └── docs/                    # 產品、架構、安全、競賽與部署文件
 ```
 
-`apps/client/`、`services/api/` 與 `packages/contracts/` 是本專案既有 npm workspace 的 `structure_exception`。每個目錄本身就是 component root，`package.json` 直接位於根目錄；不得再建立 project-name／framework-name wrapper。新學生專案仍以 `app/`、`backend/`、`packages/` 等固定 root 為預設。
+本專案採固定 component roots：Expo 直接位於 `app/`、Fastify 直接位於 `backend/`，共用契約位於 `packages/contracts/`。每個 workspace 的 `package.json` 直接位於 component 根目錄，不增加 project-name、framework-name 或其他分類包層。
 
 ```mermaid
 flowchart LR
@@ -83,7 +83,7 @@ AI_MODE=fixture DATABASE_REQUIRED=false npm run start --workspace airme-api
 npm run start --workspace airme
 ```
 
-前端預設 API 是 `http://localhost:3000/api`；若 API 使用其他 port，請在 `apps/client/.env` 設定 `EXPO_PUBLIC_API_BASE_URL`。預設 Demo 模式不需要 API key，也不會把 fixture 說成即時資料。
+前端預設 API 是 `http://localhost:3000/api`；若 API 使用其他 port，請在 `app/.env` 設定 `EXPO_PUBLIC_API_BASE_URL`。預設 Demo 模式不需要 API key，也不會把 fixture 說成即時資料。
 
 ## 品質與評估
 
@@ -106,7 +106,7 @@ npm run evaluate
 
 ## 環境變數
 
-安全範例位於 [apps/client/.env.example](apps/client/.env.example) 與 [services/api/.env.example](services/api/.env.example)。
+安全範例位於 [app/.env.example](app/.env.example) 與 [backend/.env.example](backend/.env.example)。
 
 前端只有非秘密設定：
 

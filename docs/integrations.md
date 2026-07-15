@@ -5,7 +5,7 @@
 - 用途：活動意圖理解、情境組合、結構化行動卡與限定追問。
 - 介面：OpenAI 相容 `POST /v1/chat/completions`，API 以 `Authorization: Bearer <token>` 呼叫。
 - 設定：`LIANGJIE_AI_BASE_URL`、`LIANGJIE_AI_MODEL`、`LIANGJIE_AI_API_KEY`、`LIANGJIE_AI_JSON_MODE`。
-- 實作：`services/api/src/adapters/ai/liangjie.ts`；模型 ID 一律由環境變數指定，不寫死在程式。
+- 實作：`backend/src/adapters/ai/liangjie.ts`；模型 ID 一律由環境變數指定，不寫死在程式。
 - 結構化輸出：請求 JSON object，並在 system prompt 要求單一 JSON；無論 provider 是否接受 JSON mode，後端都以 Zod 重新驗證。輸出無效、逾時或失敗時不回傳 provider 原文，改採安全 fixture 降級。
 - 限制：不給模型任何 secret、資料庫權限、任意 web search、工具使用權或醫療判斷權。
 - 部署前必驗證：實際 model ID、JSON mode 相容性、429、timeout、延遲與 token 額度。
@@ -30,7 +30,7 @@
 ## PostgreSQL
 
 - 用途：跨 API restart 的 AQI／天氣短期快取，以及不含 payload 的技術事件。
-- migration：`services/api/database/migrations/`；由 `npm run db:migrate --workspace airme-api` 執行。
+- migration：`backend/database/migrations/`；由 `npm run db:migrate --workspace airme-api` 執行。
 - 不保存：帳號、IP、個人設定、活動文字、症狀、回饋、完整 prompt、context token、模型回應或精確位置。
 - Compose 內部 service 名稱：`postgres`；資料 volume：`airme-postgres`。不公開資料庫 port。
 

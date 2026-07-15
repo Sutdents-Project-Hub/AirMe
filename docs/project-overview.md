@@ -23,9 +23,9 @@
 
 | 元件 | 路徑 | 現況 | 下一個外部驗收結果 |
 |---|---|---|---|
-| AirMe App／Web | `apps/client` | 完整 Demo、LIVE API client、本機資料、responsive UI、Nginx image | Coolify preview URL／實體 iOS、Android |
-| Fastify API | `services/api` | 四 endpoint、政府資料 adapter、規則、量界 adapter、安全與評估 | 真實量界／MOENV／CWA／PostgreSQL 端到端呼叫 |
-| PostgreSQL | `services/api/database` | 快取、匿名事件與 versioned migration | Coolify volume、backup、restore 驗證 |
+| AirMe App／Web | `app` | 完整 Demo、LIVE API client、本機資料、responsive UI、Nginx image | Coolify preview URL／實體 iOS、Android |
+| Fastify API | `backend` | 四 endpoint、政府資料 adapter、規則、量界 adapter、安全與評估 | 真實量界／MOENV／CWA／PostgreSQL 端到端呼叫 |
+| PostgreSQL | `backend/database` | 快取、匿名事件與 versioned migration | Coolify volume、backup、restore 驗證 |
 | 共用契約 | `packages/contracts` | Zod runtime schema 與 TypeScript 型別 | 部署前契約相容性複驗 |
 
 ## 驗收摘要

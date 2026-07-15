@@ -2,8 +2,8 @@
 
 ## 1. 技術選型
 
-- `apps/client`：React Native + Expo Router + TypeScript，單一專案輸出 iOS、Android 與 Web。
-- `services/api`：Node.js 22 + Fastify + TypeScript，作為唯一可信任後端。
+- `app`：React Native + Expo Router + TypeScript，單一專案輸出 iOS、Android 與 Web。
+- `backend`：Node.js 22 + Fastify + TypeScript，作為唯一可信任後端。
 - `packages/contracts`：Zod runtime schema 與前後端共用型別。
 - 部署：自有 VPS 上的 Coolify，使用 repository 根目錄 Compose 建立 Web、API、PostgreSQL。
 - AI：量界智算的 OpenAI 相容 Chat Completions API。
@@ -11,18 +11,18 @@
 
 Expo 仍適合決賽的單一跨平台產品；Fastify 讓 API 在 VPS 容器中以固定 port 常駐。這不會把 AI 或政府 API key 移進前端。
 
-`apps/client/`、`services/api/` 與 `packages/contracts/` 是保留的既有 npm workspace 結構例外；各目錄本身就是 component root，manifest 直接位於根目錄。後續不增加 project-name／framework-name wrapper，新元件才依新版固定 component root 規則選擇路徑。
+`app/`、`backend/` 與 `packages/contracts/` 是固定 npm workspace component roots；manifest 直接位於各 component 根目錄。後續不增加 project-name、framework-name 或其他分類包層。
 
 ## 2. 元件邊界
 
-### `apps/client`
+### `app`
 
 - 唯一產品前端，負責 UI、裝置端個人設定、回饋與離線 fixture。
 - Web image 以 Nginx 提供靜態輸出，並把 `/api/*` 反向代理到 API container。
 - 不持有 API key、資料庫帳密或任何伺服器端秘密。
 - 個人設定、回饋與歷史仍只保留在裝置端。
 
-### `services/api`
+### `backend`
 
 - 驗證輸入、取得環境資料、套用官方規則、呼叫量界智算、驗證模型輸出與簽發短效追問 token。
 - Fastify 以 `/api` 路由提供 API；不回傳 provider body、stack trace 或秘密。
@@ -66,7 +66,7 @@ Web 的正式 build 以 `EXPO_PUBLIC_API_BASE_URL=/api` 產生。瀏覽器請求
 
 ## 5. PostgreSQL schema
 
-`services/api/database/migrations/001-operational-data.sql` 建立：
+`backend/database/migrations/001-operational-data.sql` 建立：
 
 | Table | 內容 | 明確不保存 |
 |---|---|---|
@@ -91,7 +91,7 @@ Web 的正式 build 以 `EXPO_PUBLIC_API_BASE_URL=/api` 產生。瀏覽器請求
 - 本機與 container runtime：Node.js 22。
 - API build：`npm run build --workspace airme-api`；啟動：`npm run start --workspace airme-api`。
 - migration：`npm run db:migrate --workspace airme-api`。
-- Web build：`npm run build:web --workspace airme`，輸出 `apps/client/dist/`。
+- Web build：`npm run build:web --workspace airme`，輸出 `app/dist/`。
 - Coolify：匯入根目錄 `docker-compose.yml`，公開網域設定到 `web:80`。
 - `api` 只以 Compose internal network 暴露 `3000`，避免資料庫與 API port 直接公開。
 

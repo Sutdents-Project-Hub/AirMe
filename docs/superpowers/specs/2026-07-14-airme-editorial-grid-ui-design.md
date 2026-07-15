@@ -2,7 +2,7 @@
 
 > 日期：2026-07-14
 > 狀態：已實作；Web 自動與瀏覽器驗證完成，實體 iOS／Android 待驗證
-> 適用範圍：`apps/client` 的 Web、iOS 與 Android 前端
+> 適用範圍：`app` 的 Web、iOS 與 Android 前端
 
 ## 1. 目標
 
@@ -27,7 +27,7 @@
 
 ### 3.1 全域設計 token
 
-在既有 `apps/client/src/design/tokens.ts` 集中定義：
+在既有 `app/src/design/tokens.ts` 集中定義：
 
 - 品牌色、背景色、文字色、風險色與各自的前景色。
 - 3 px 標準外框與不同用途的硬陰影位移。
@@ -117,11 +117,11 @@
 
 ## 8. 實作邊界
 
-本次會修改 `apps/client` 的設計 token、共用 UI 元件、導覽與五個作用中頁面及其產品元件。必要時新增一個跨平台圖樣背景元件。
+本次會修改 `app` 的設計 token、共用 UI 元件、導覽與五個作用中頁面及其產品元件。必要時新增一個跨平台圖樣背景元件。
 
 本次不修改：
 
-- `services/api`、`packages/contracts` 或任何資料 Schema。
+- `backend`、`packages/contracts` 或任何資料 Schema。
 - Azure、政府 API、環境變數、部署或 remote。
 - 產品規格中的功能集合、AI 安全規則與醫療界線。
 - 未被作用中路由使用的 Expo starter 範例元件，除非 lint 或 build 顯示它們阻礙本次變更。

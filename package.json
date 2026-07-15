@@ -4,8 +4,8 @@
   "private": true,
   "workspaces": [
     "packages/contracts",
-    "services/api",
-    "apps/client"
+    "backend",
+    "app"
   ],
   "engines": {
     "node": "22.x"
