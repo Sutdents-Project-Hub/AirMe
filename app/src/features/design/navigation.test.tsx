@@ -36,8 +36,9 @@ describe('responsive AirMe navigation', () => {
     );
 
     expect(screen.getByRole('button', { name: '今日' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: '活動紀錄' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: '設定' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '路線規劃' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Air 日誌' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '我的 AirMe' })).toBeTruthy();
     expect(screen.queryByRole('tablist')).toBeNull();
   });
 
@@ -51,6 +52,6 @@ describe('responsive AirMe navigation', () => {
     );
 
     expect(screen.getByRole('tablist')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: '活動紀錄' })).toBeNull();
+    expect(screen.getByRole('tab', { name: '路線' })).toBeTruthy();
   });
 });

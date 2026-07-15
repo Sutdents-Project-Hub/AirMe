@@ -1,12 +1,34 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  ActivityIntentResponseSchema,
   ApiErrorSchema,
   EnvironmentSnapshotSchema,
   FollowUpRequestSchema,
   RecommendationRequestSchema,
   RecommendationResponseSchema,
 } from './schemas.js';
+
+describe('activity intent contract', () => {
+  it('keeps clarification to a single explicit question', () => {
+    expect(
+      ActivityIntentResponseSchema.safeParse({
+        intent: {
+          activity: '跑步',
+          time: '下午四點',
+          location: '操場',
+          intensity: 'vigorous',
+          durationMinutes: null,
+          currentCondition: '鼻子有點塞',
+          userGoal: '完成 1600 公尺',
+        },
+        missingField: 'duration',
+        clarificationQuestion: '這次預計活動多久？',
+        provenance: { aiMode: 'fixture' },
+      }).success,
+    ).toBe(true);
+  });
+});
 
 const environment = {
   location: { name: '高雄市前鎮區', latitude: 22.6, longitude: 120.31 },

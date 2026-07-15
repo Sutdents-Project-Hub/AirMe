@@ -36,15 +36,15 @@ export function Card({
 const styles = StyleSheet.create({
   card: {
     borderRadius: radii.lg,
-    borderWidth: borders.thick,
+    borderWidth: borders.thin,
     ...Platform.select({
-      web: { boxShadow: `${shadows.offset.width}px ${shadows.offset.height}px 0 ${shadows.color}` },
+      web: { boxShadow: `0 14px 38px ${shadows.color}` },
       default: {
-        elevation: 5,
+        elevation: 3,
         shadowColor: shadows.color,
         shadowOffset: shadows.offset,
         shadowOpacity: 1,
-        shadowRadius: 0,
+        shadowRadius: 18,
       },
     }),
     padding: spacing.lg,

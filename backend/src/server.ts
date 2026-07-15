@@ -41,17 +41,17 @@ export function createServer(input: { handlers: ApiHandlers; store: OperationalS
 
   register('GET', '/api/health', input.handlers.health);
   register('GET', '/api/environment', input.handlers.environment);
+  register('POST', '/api/activity-intents', input.handlers.activityIntents);
   register('POST', '/api/recommendations', input.handlers.recommendations);
   register('POST', '/api/follow-ups', input.handlers.followUps);
 
   server.addHook('onResponse', async (request, reply) => {
     const route = request.routeOptions.url ?? '';
     if (!input.store || !route.startsWith('/api/')) return;
-    const requestId = request.headers['x-request-id'] || crypto.randomUUID();
-    const normalizedRequestId = Array.isArray(requestId) ? requestId[0] : requestId;
+    const normalizedRequestId = crypto.randomUUID();
     await input.store
       .recordRequestEvent({
-        requestId: normalizedRequestId.slice(0, 128),
+        requestId: normalizedRequestId,
         route,
         statusCode: reply.statusCode,
         durationMs: reply.elapsedTime ?? 0,

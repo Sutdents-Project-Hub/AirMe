@@ -1,7 +1,9 @@
 import {
   ActionCardDraftSchema,
+  ActivityIntentSchema,
   FollowUpDraftSchema,
   type ActionCardDraft,
+  type ActivityIntent,
   type FollowUpDraft,
 } from '@airme/contracts';
 
@@ -75,6 +77,23 @@ export class LiangjieAiAdapter implements AiAdapter {
       },
     });
     return parseJson(content, ActionCardDraftSchema);
+  }
+
+  async parseActivityIntent(activityText: string): Promise<ActivityIntent> {
+    const content = await this.complete({
+      activityText,
+      instruction: '只擷取使用者明示的內容；不知道就使用 null 或 unspecified，不得猜測。',
+      outputShape: {
+        activity: 'string',
+        time: 'string | null',
+        location: 'string | null',
+        intensity: 'light | moderate | vigorous | unspecified',
+        durationMinutes: 'integer | null',
+        currentCondition: 'string | null',
+        userGoal: 'string | null',
+      },
+    });
+    return parseJson(content, ActivityIntentSchema);
   }
 
   async answerFollowUp(input: {

@@ -29,6 +29,13 @@ function inferIntensity(text: string): ActivityIntensity {
   return 'light';
 }
 
+function confirmedIntensity(request: RecommendationRequest): ActivityIntensity {
+  const value = request.confirmedIntent?.intensity;
+  return value === 'vigorous' || value === 'moderate' || value === 'light'
+    ? value
+    : inferIntensity(request.activityText);
+}
+
 function hasUnsafeClaim(draft: ActionCardDraft): boolean {
   return [
     draft.headline,
@@ -50,7 +57,7 @@ export class RecommendationService {
     const environment = await this.options.getEnvironment(request.location, request.dataMode);
     const rules = evaluateActivityRules({
       aqi: environment.airQuality.aqi,
-      activityIntensity: inferIntensity(request.activityText),
+      activityIntensity: confirmedIntensity(request),
       ageGroup: request.profile.ageGroup,
       sensitiveConditions: request.profile.sensitiveConditions,
       stale: environment.sources.some((source) => source.stale),

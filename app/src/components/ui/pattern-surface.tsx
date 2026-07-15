@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   pattern: {
     bottom: 0,
     left: 0,
-    opacity: 0.12,
+    opacity: 0.035,
     pointerEvents: 'none',
     position: 'absolute',
     right: 0,

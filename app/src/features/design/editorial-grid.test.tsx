@@ -8,30 +8,29 @@ import { Card } from '../../components/ui/card';
 import { PatternSurface } from '../../components/ui/pattern-surface';
 import { borders, lightPalette, shadows } from '../../design/tokens';
 
-describe('editorial grid design system', () => {
-  it('uses the approved reference palette and hard geometry', () => {
-    expect(lightPalette.background).toBe('#FFF9EC');
-    expect(lightPalette.coral).toBe('#F75B4B');
-    expect(lightPalette.yellow).toBe('#FFD447');
-    expect(lightPalette.teal).toBe('#08A6A6');
-    expect(lightPalette.sky).toBe('#5BC0EB');
-    expect(lightPalette.ink).toBe('#292827');
-    expect(borders.thick).toBe(3);
-    expect(shadows.offset).toEqual({ width: 5, height: 5 });
+describe('green and white design system', () => {
+  it('uses the approved calm green palette and soft geometry', () => {
+    expect(lightPalette.background).toBe('#F4FBF7');
+    expect(lightPalette.primary).toBe('#237A50');
+    expect(lightPalette.accentSoft).toBe('#DDF4E7');
+    expect(lightPalette.sky).toBe('#BCEACC');
+    expect(lightPalette.ink).toBe('#173B2A');
+    expect(borders.thick).toBe(1);
+    expect(shadows.offset).toEqual({ width: 0, height: 8 });
   });
 
-  it('applies the thick card frame and keeps decorative patterns out of accessibility', () => {
+  it('applies a subtle card frame and keeps decorative patterns out of accessibility', () => {
     render(
       <PatternSurface pattern="grid">
         <Card testID="editorial-card" />
       </PatternSurface>,
     );
 
-    expect(getComputedStyle(screen.getByTestId('editorial-card')).borderWidth).toBe('3px');
+    expect(getComputedStyle(screen.getByTestId('editorial-card')).borderWidth).toBe('1px');
     expect(screen.getByTestId('pattern-grid').getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('keeps disabled editorial actions explicit to assistive technology', () => {
+  it('keeps disabled actions explicit to assistive technology', () => {
     render(<AppButton label="測試按鈕" onPress={vi.fn()} disabled />);
 
     expect(screen.getByRole('button', { name: '測試按鈕' }).getAttribute('aria-disabled')).toBe(

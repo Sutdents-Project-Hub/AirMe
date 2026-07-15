@@ -7,6 +7,7 @@
 - 設定：`LIANGJIE_AI_BASE_URL`、`LIANGJIE_AI_MODEL`、`LIANGJIE_AI_API_KEY`、`LIANGJIE_AI_JSON_MODE`。
 - 實作：`backend/src/adapters/ai/liangjie.ts`；模型 ID 一律由環境變數指定，不寫死在程式。
 - 結構化輸出：請求 JSON object，並在 system prompt 要求單一 JSON；無論 provider 是否接受 JSON mode，後端都以 Zod 重新驗證。輸出無效、逾時或失敗時不回傳 provider 原文，改採安全 fixture 降級。
+- `POST /api/activity-intents` 先要求量界只擷取使用者明示的活動欄位；未知值必須為 `null`／`unspecified`。Demo 或量界失敗時使用清楚標示的本機保守解析。
 - 限制：不給模型任何 secret、資料庫權限、任意 web search、工具使用權或醫療判斷權。
 - 部署前必驗證：實際 model ID、JSON mode 相容性、429、timeout、延遲與 token 額度。
 
@@ -33,6 +34,12 @@
 - migration：`backend/database/migrations/`；由 `npm run db:migrate --workspace airme-api` 執行。
 - 不保存：帳號、IP、個人設定、活動文字、症狀、回饋、完整 prompt、context token、模型回應或精確位置。
 - Compose 內部 service 名稱：`postgres`；資料 volume：`airme-postgres`。不公開資料庫 port。
+
+## 路線與外部地圖
+
+- 目前沒有 Google Routes、Mapbox 或其他 route provider 的 API 整合、金鑰、帳務或沿途空品資料。
+- Client 只產生使用者可見的 Google Maps Directions URL；使用者明示點擊後才離開 AirMe 查看路線，AirMe 不讀回距離、時間或路徑。
+- 因此路線頁必須標示資料不足，不得稱為 Live 路線比較；未來若導入 provider，須先新增後端 adapter、timeout、provenance、attribution、成本與隱私驗收。
 
 ## 官方規則
 

@@ -15,19 +15,19 @@ body,
 
 body {
   margin: 0;
-  background: #fff9ec;
-  color: #292827;
+  background: #f4fbf7;
+  color: #173b2a;
   font-family: "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 *:focus-visible {
-  outline: 3px solid #292827;
+  outline: 3px solid #237a50;
   outline-offset: 3px;
 }
 
 ::selection {
-  background: #ffd447;
-  color: #292827;
+  background: #bceacc;
+  color: #173b2a;
 }
 
 @media (prefers-reduced-motion: reduce) {

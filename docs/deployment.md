@@ -79,7 +79,8 @@ EXPO_PUBLIC_API_BASE_URL=https://<your-domain>/api npm run build:web --workspace
 ## 上線驗收與觀測
 
 - `/api/health`：確認 API 及必要 PostgreSQL 連線；不要公開 `/api` container port。
-- Web：檢查首頁、設定、fixture／live 標籤、推薦、追問、回饋與資料清除。
+- Web：檢查個人檔案、首頁理解確認、路線資料不足、Air 日誌、fixture／live 標籤、推薦、追問、回饋與資料清除。
+- API：除既有 health／environment／recommendations／follow-ups 外，驗證 `POST /api/activity-intents` 不寫入 request body，live／fixture provenance 正確。
 - Live：確認量界模型 ID、JSON output、429、timeout、無效輸出與 provider 失敗都不會洩漏 provider body。
 - Data：確認環境部／中央氣象署來源、時間、stale 與 partial／fixture 狀態。
 - Database：確認僅出現 `environment_cache`、`service_events` 與 `schema_migrations`；抽查不得有 activity text、profile、prompt、模型全文或 IP。

@@ -8,10 +8,11 @@
 |---|---|---|
 | `GET` | `/api/health` | 服務／必要資料庫摘要，不洩漏設定或 provider 細節 |
 | `GET` | `/api/environment` | AQI／天氣、來源、時間與降級狀態 |
+| `POST` | `/api/activity-intents` | 不持久化的活動意圖擷取；只回一個最重要澄清問題 |
 | `POST` | `/api/recommendations` | 規則底線 + 量界／fixture AI + 結構化行動卡 |
 | `POST` | `/api/follow-ups` | 原情境內追問；固定拒答／緊急處理 |
 
-輸入與輸出由 `packages/contracts` 的 Zod schema 驗證。模型輸出不得降低程式規則風險，provider 錯誤、stack trace、endpoint 與 secret 不會出現在公開回應。
+輸入與輸出由 `packages/contracts` 的 Zod schema 驗證。已確認的活動強度會送入規則引擎，模型輸出不得降低程式規則風險。活動文字只在請求記憶體處理；provider 錯誤、stack trace、endpoint 與 secret 不會出現在公開回應。
 
 ## 本機執行
 

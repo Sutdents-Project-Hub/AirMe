@@ -1,8 +1,11 @@
 import {
+  ActivityIntentResponseSchema,
   ApiErrorSchema,
   EnvironmentSnapshotSchema,
   FollowUpResponseSchema,
   RecommendationResponseSchema,
+  type ActivityIntentRequest,
+  type ActivityIntentResponse,
   type DataMode,
   type EnvironmentSnapshot,
   type ErrorCode,
@@ -35,6 +38,7 @@ interface AirMeApiOptions {
 }
 
 export interface AirMeApi {
+  understandActivity(request: ActivityIntentRequest): Promise<ActivityIntentResponse>;
   getEnvironment(location: Location, mode: DataMode): Promise<EnvironmentSnapshot>;
   createRecommendation(request: RecommendationRequest): Promise<RecommendationResponse>;
   followUp(request: FollowUpRequest): Promise<FollowUpResponse>;
@@ -90,6 +94,17 @@ export function createAirMeApi(options: AirMeApiOptions): AirMeApi {
   }
 
   return {
+    understandActivity(request) {
+      return call(
+        'activity-intents',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(request),
+        },
+        ActivityIntentResponseSchema,
+      );
+    },
     getEnvironment(location, mode) {
       const query = new URLSearchParams({
         name: location.name,

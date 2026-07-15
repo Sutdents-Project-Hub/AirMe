@@ -1,5 +1,6 @@
 import type {
   ActionCardDraft,
+  ActivityIntent,
   EnvironmentSnapshot,
   FollowUpDraft,
   RecommendationRequest,
@@ -17,6 +18,7 @@ export interface ActionCardAiInput {
 export interface AiAdapter {
   readonly mode: 'live' | 'fixture';
   createActionCard(input: ActionCardAiInput): Promise<ActionCardDraft>;
+  parseActivityIntent?(activityText: string): Promise<ActivityIntent>;
   answerFollowUp?(input: {
     question: string;
     context: RecommendationContext;

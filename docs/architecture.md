@@ -17,21 +17,21 @@ Expo 仍適合決賽的單一跨平台產品；Fastify 讓 API 在 VPS 容器中
 
 ### `app`
 
-- 唯一產品前端，負責 UI、裝置端個人設定、回饋與離線 fixture。
+- 唯一產品前端，負責淺綠白 UI、輸入式裝置端個人檔案、Air 日誌、安全路線交接、回饋與離線 fixture。
 - Web image 以 Nginx 提供靜態輸出，並把 `/api/*` 反向代理到 API container。
 - 不持有 API key、資料庫帳密或任何伺服器端秘密。
-- 個人設定、回饋與歷史仍只保留在裝置端。
+- 裝置暱稱、受控個人設定、回饋與日誌只保留在裝置端；個人描述原稿及路線起終點不持久化。
 
 ### `backend`
 
-- 驗證輸入、取得環境資料、套用官方規則、呼叫量界智算、驗證模型輸出與簽發短效追問 token。
+- 驗證輸入、以不持久化 endpoint 擷取活動意圖、取得環境資料、套用官方規則、呼叫量界智算、驗證模型輸出與簽發短效追問 token。
 - Fastify 以 `/api` 路由提供 API；不回傳 provider body、stack trace 或秘密。
 - migration 由 `npm run db:migrate --workspace airme-api` 執行；容器啟動時會先執行 migration。
 - 對 PostgreSQL 的存取只限環境快取、`service_events` 技術事件與 readiness check。
 
 ### `packages/contracts`
 
-- 定義個人設定、粗略地點、環境來源、行動卡、追問、錯誤、回饋與歷史紀錄的 runtime schema。
+- 定義個人設定、粗略地點、活動意圖／澄清、環境來源、行動卡、追問、錯誤、回饋與 Air 日誌摘要的 runtime schema。
 - 由 App 與 API 共同使用，避免只共享 TypeScript 型別卻在 runtime 接受無效資料。
 
 ## 3. Coolify P0 拓樸
@@ -56,13 +56,14 @@ Web 的正式 build 以 `EXPO_PUBLIC_API_BASE_URL=/api` 產生。瀏覽器請求
 
 ## 4. 資料流與安全界線
 
-1. Client 以共用 schema 建立 `RecommendationRequest`，只傳當次推論需要的活動、粗略地點與受控 profile 標籤。
-2. API 驗證欄位、長度、列舉與座標精度，然後進行領域／醫療／緊急守門。
+1. Client 先以 `POST /api/activity-intents` 取得結構化理解；Demo 使用同契約的可重播解析。使用者確認後才建立含 `confirmedIntent` 的 `RecommendationRequest`。
+2. API 驗證欄位、長度、列舉與座標精度，進行領域／醫療／緊急守門；意圖請求及推薦請求都不持久化。
 3. API 取得 AQI、天氣；PostgreSQL 先提供可用快取，外部成功回應才覆寫快取。
-4. 程式規則依環境、活動強度與敏感標籤建立不可降低的 risk floor。
+4. 程式規則依環境、已確認活動強度與敏感標籤建立不可降低的 risk floor。
 5. 量界 adapter 以 `POST /v1/chat/completions`、Bearer key、可設定模型與 JSON object 請求產生草稿。
 6. API 以 Zod 驗證草稿、禁止醫療因果，並以程式規則強制最小風險；失敗時改用清楚標示的 fixture 安全降級。
-7. API 不保存 request body、個人 profile、活動文字、回饋、context token 或模型完整回應；只寫入快取與匿名技術事件。
+7. API 不保存 request body、個人 profile、活動文字、回饋、路線、context token 或模型完整回應；`service_events` request ID 一律由伺服器產生 UUID，只寫入快取與匿名技術事件。
+8. Air 日誌由 client 將確認後的 activity／time／duration／intensity 與環境／建議摘要持久化；明確排除 currentCondition 與自由文字原稿。
 
 ## 5. PostgreSQL schema
 
@@ -81,6 +82,7 @@ Web 的正式 build 以 `EXPO_PUBLIC_API_BASE_URL=/api` 產生。瀏覽器請求
 |---|---|---|
 | `GET` | `/api/health` | 不回傳配置的 API／資料庫 readiness |
 | `GET` | `/api/environment` | AQI、天氣、來源、時間與降級狀態 |
+| `POST` | `/api/activity-intents` | 活動結構化理解、最多一個澄清問題與 AI／fixture provenance |
 | `POST` | `/api/recommendations` | 規則底線 + AI／fixture 行動卡 |
 | `POST` | `/api/follow-ups` | 原情境內追問；離題、醫療與緊急固定處理 |
 

@@ -1,4 +1,6 @@
 import type {
+  ActivityIntent,
+  ActivityIntentResponse,
   EnvironmentSnapshot,
   Feedback,
   FollowUpResponse,
@@ -20,9 +22,11 @@ import {
   createDemoRecommendation,
   DEMO_ENVIRONMENT,
 } from '../demo/demo-fixture';
+import { parseActivityIntentLocally } from '../features/assistant/activity-intent';
 import {
   localStore,
   type LocalState,
+  type DeviceProfile,
   type createLocalStore,
   DEFAULT_LOCAL_STATE,
 } from '../storage/local-store';
@@ -38,9 +42,10 @@ interface AppContextValue {
   environment: EnvironmentSnapshot | null;
   currentRecommendation: RecommendationResponse | null;
   error: string | null;
-  saveOnboarding(profile: Profile, location: Location): Promise<void>;
+  saveOnboarding(profile: Profile, location: Location, deviceProfile: DeviceProfile): Promise<void>;
   refreshEnvironment(): Promise<void>;
-  createRecommendation(activityText: string): Promise<RecommendationResponse | null>;
+  understandActivity(activityText: string): Promise<ActivityIntentResponse | null>;
+  createRecommendation(activityText: string, intent: ActivityIntent): Promise<RecommendationResponse | null>;
   askFollowUp(question: string): Promise<FollowUpResponse>;
   submitFeedback(input: Omit<Feedback, 'id' | 'createdAt'>): Promise<void>;
   setDemoMode(value: boolean): Promise<void>;
@@ -79,14 +84,34 @@ export function AppProvider({
     };
   }, [store]);
 
-  const saveOnboarding = async (profile: Profile, location: Location) => {
+  const saveOnboarding = async (profile: Profile, location: Location, deviceProfile: DeviceProfile) => {
     setBusy(true);
     setError(null);
     try {
-      await store.saveProfile(profile);
+      await store.saveProfile(profile, deviceProfile);
       const state = await store.setSavedLocation(location);
       setLocal(state);
       if (state.demoMode) setEnvironment({ ...DEMO_ENVIRONMENT, location });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const understandActivity = async (activityText: string) => {
+    setBusy(true);
+    setError(null);
+    try {
+      return local.demoMode
+        ? parseActivityIntentLocally(activityText)
+        : await api.understandActivity({
+            activityText,
+            locale: 'zh-TW',
+            timeZone: 'Asia/Taipei',
+            dataMode: 'live',
+          });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : '無法整理活動內容。');
+      return null;
     } finally {
       setBusy(false);
     }
@@ -108,7 +133,7 @@ export function AppProvider({
     }
   };
 
-  const createRecommendation = async (activityText: string) => {
+  const createRecommendation = async (activityText: string, intent: ActivityIntent) => {
     if (!local.profile || !local.savedLocation) return null;
     setBusy(true);
     setError(null);
@@ -118,6 +143,7 @@ export function AppProvider({
         profile: local.profile,
         location: local.savedLocation,
         demoMode: local.demoMode,
+        confirmedIntent: intent,
       });
       const response = local.demoMode
         ? createDemoRecommendation(request)
@@ -125,7 +151,7 @@ export function AppProvider({
       setCurrentRecommendation(response);
       setEnvironment(response.actionCard.environment);
       const state = await store.addHistory(
-        toHistoryItem(response, activityText, local.savedLocation),
+        toHistoryItem(response, intent, local.savedLocation),
       );
       setLocal(state);
       return response;
@@ -178,6 +204,7 @@ export function AppProvider({
         error,
         saveOnboarding,
         refreshEnvironment,
+        understandActivity,
         createRecommendation,
         askFollowUp,
         submitFeedback,

@@ -9,6 +9,7 @@ import { readApiConfig } from './config';
 import { PostgresStore } from './database/postgres-store';
 import type { OperationalStore } from './database/types';
 import { ContextTokenService } from './domain/context-token';
+import { ActivityIntentService } from './domain/activity-intent';
 import { FollowUpService } from './domain/follow-up';
 import { RecommendationService } from './domain/recommendation';
 import { createApiHandlers } from './http/handlers';
@@ -64,12 +65,14 @@ export function createApplication(): AirMeApplication {
     contextTokens,
   });
   const followUpService = new FollowUpService({ contextTokens, ai });
+  const activityIntentService = new ActivityIntentService(ai);
 
   return {
     store,
     handlers: createApiHandlers({
       allowedOrigins: config.allowedOrigins,
       getEnvironment: (location, mode) => environmentService.getSnapshot(location, mode),
+      understandActivity: (request) => activityIntentService.understand(request),
       createRecommendation: (request) => recommendationService.create(request),
       answerFollowUp: (request) => followUpService.answer(request),
       isReady: async () => !config.databaseRequired || (await store?.isHealthy()) === true,

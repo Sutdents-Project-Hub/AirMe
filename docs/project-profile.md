@@ -35,7 +35,7 @@
 | `api` | `backend` | `backend` | Node.js／Fastify | npm workspace | `test`、`typecheck`、`build`、`evaluate`、`db:migrate` | `true` |
 | `contracts` | `packages/contracts` | `library` | Zod／TypeScript | npm workspace | `test`、`typecheck`、`build` | `false` |
 
-三個 workspace 共用根目錄 `package-lock.json`。產品流程、API endpoint、共用 schema、自動化測試、Web Demo、Coolify Compose 與 PostgreSQL migration 已完成；實際 VPS、真實外部 API 呼叫與實體 Mobile 仍未完成驗證。
+三個 workspace 共用根目錄 `package-lock.json`。輸入式個人檔案、活動理解確認、Air 日誌、安全路線交接、五個 API endpoint、共用 schema、自動化測試、Web Demo、Coolify Compose 與 PostgreSQL migration 已完成；實際 VPS、真實外部 API 呼叫、即時 route provider 與實體 Mobile 仍未完成驗證。
 
 ## 功能領域
 
@@ -46,6 +46,8 @@
 - 由量界智算理解個人情境並產生固定格式的行動卡
 - 在空品、活動安全與一般自我保護範圍內追問，離題與醫療診斷必須拒答
 - 活動後五秒回饋與個人紀錄，決賽版不宣稱醫療因果或成熟預測模型
+- 使用者確認的活動結構化理解、整合活動／環境／建議／回饋的 Air 日誌
+- 起終點不持久化的路線交接；沒有 provider 時明確顯示無法分辨沿途空品差異
 - 可重播的決賽示範情境與外部服務失敗時的降級展示
 
 ## 專案限制
@@ -69,7 +71,7 @@
 
 - 採用 React Native、Expo Router 與 TypeScript，以單一前端專案輸出 iOS、Android 與 Web
 - 後端採 Fastify、Node.js 22 與 TypeScript，所有外部 API 與 AI 呼叫皆經後端
-- 決賽 P0 不包含班級統計、教師工作台、智慧路線、Line Bot、推播、Power BI 或健康中心串接
+- 決賽 P0 不包含班級統計、教師工作台、正式登入／同步、即時 route provider／完整導航、Line Bot、推播、Power BI 或健康中心串接
 - 目前不自動建立 LICENSE，待確認團隊著作權、競賽規則、資料集與素材授權後再決定
 - Coolify、VPS、PostgreSQL 與量界智算為規劃部署目標；本機實作已完成，但尚未執行 production 部署
 

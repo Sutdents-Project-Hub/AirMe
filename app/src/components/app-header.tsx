@@ -6,8 +6,9 @@ import { AppText } from './ui/app-text';
 
 const NAV_ITEMS = [
   { href: '/' as Href, label: '今日' },
-  { href: '/history' as Href, label: '活動紀錄' },
-  { href: '/settings' as Href, label: '設定' },
+  { href: '/routes' as Href, label: '路線規劃' },
+  { href: '/history' as Href, label: 'Air 日誌' },
+  { href: '/settings' as Href, label: '我的 AirMe' },
 ];
 
 export function AppHeader({ demoMode }: { demoMode: boolean }) {
@@ -18,13 +19,13 @@ export function AppHeader({ demoMode }: { demoMode: boolean }) {
   const desktop = width >= 900;
 
   return (
-    <View style={[styles.header, { borderBottomColor: palette.ink }]}>
+      <View style={[styles.header, { borderBottomColor: palette.ink }]}>
       <View style={styles.brand}>
         <View
           style={[
             styles.mark,
             styles.markShadow,
-            { backgroundColor: palette.surface, borderColor: palette.ink },
+            { backgroundColor: palette.accentSoft, borderColor: palette.border },
           ]}>
           <AppText variant="title-small" weight="900">
             A
@@ -53,8 +54,8 @@ export function AppHeader({ demoMode }: { demoMode: boolean }) {
                 style={({ pressed }) => [
                   styles.navItem,
                   {
-                    backgroundColor: selected ? palette.yellow : 'transparent',
-                    borderColor: selected ? palette.ink : 'transparent',
+                    backgroundColor: selected ? palette.accentSoft : 'transparent',
+                    borderColor: 'transparent',
                     opacity: pressed ? 0.68 : 1,
                   },
                 ]}>
@@ -70,8 +71,8 @@ export function AppHeader({ demoMode }: { demoMode: boolean }) {
         style={[
           styles.mode,
           {
-            backgroundColor: demoMode ? palette.yellow : palette.teal,
-            borderColor: palette.ink,
+            backgroundColor: demoMode ? palette.warningSoft : palette.accentSoft,
+            borderColor: demoMode ? palette.warningSoft : palette.accentSoft,
           },
         ]}>
         <AppText variant="caption" weight="800">
@@ -85,7 +86,7 @@ export function AppHeader({ demoMode }: { demoMode: boolean }) {
 const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
-    borderBottomWidth: borders.thick,
+    borderBottomWidth: borders.thin,
     flexDirection: 'row',
     gap: spacing.lg,
     justifyContent: 'space-between',
@@ -96,20 +97,20 @@ const styles = StyleSheet.create({
   mark: {
     alignItems: 'center',
     borderRadius: radii.pill,
-    borderWidth: borders.thick,
+    borderWidth: borders.thin,
     height: 40,
     justifyContent: 'center',
     width: 40,
   },
   markShadow: {
     ...Platform.select({
-      web: { boxShadow: `4px 4px 0 ${shadows.color}` },
+      web: { boxShadow: `0 8px 20px ${shadows.color}` },
       default: {
         elevation: 4,
         shadowColor: shadows.color,
-        shadowOffset: { height: 4, width: 4 },
+        shadowOffset: shadows.offset,
         shadowOpacity: 1,
-        shadowRadius: 0,
+        shadowRadius: 12,
       },
     }),
   },
@@ -123,6 +124,7 @@ const styles = StyleSheet.create({
   navItem: {
     borderRadius: radii.pill,
     borderWidth: borders.thin,
+    flexShrink: 0,
     minHeight: 44,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,

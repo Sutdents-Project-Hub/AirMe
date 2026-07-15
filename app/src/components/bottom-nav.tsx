@@ -8,8 +8,9 @@ import { AppText } from './ui/app-text';
 
 const ITEMS = [
   { href: '/' as Href, label: '今日', icon: 'weather-windy' as const },
-  { href: '/history' as Href, label: '紀錄', icon: 'history' as const },
-  { href: '/settings' as Href, label: '設定', icon: 'tune-variant' as const },
+  { href: '/routes' as Href, label: '路線', icon: 'map-marker-path' as const },
+  { href: '/history' as Href, label: '日誌', icon: 'book-open-variant' as const },
+  { href: '/settings' as Href, label: '我的', icon: 'account-circle-outline' as const },
 ];
 
 export function BottomNav() {
@@ -29,7 +30,7 @@ export function BottomNav() {
         styles.container,
         {
           backgroundColor: palette.surface,
-          borderColor: palette.ink,
+          borderColor: palette.border,
           left: (width - navWidth) / 2,
           paddingBottom: Math.max(insets.bottom, spacing.sm),
           width: navWidth,
@@ -47,20 +48,20 @@ export function BottomNav() {
             style={({ pressed }) => [
               styles.item,
               {
-                backgroundColor: selected ? palette.yellow : 'transparent',
-                borderColor: selected ? palette.ink : 'transparent',
+                backgroundColor: selected ? palette.accentSoft : 'transparent',
+                borderColor: 'transparent',
                 opacity: pressed ? 0.7 : 1,
               },
             ]}>
             <MaterialCommunityIcons
               name={item.icon}
-              color={selected ? palette.ink : palette.textMuted}
+              color={selected ? palette.primary : palette.textMuted}
               size={22}
             />
             <AppText
               variant="caption"
               weight={selected ? '800' : '600'}
-              style={{ color: selected ? palette.ink : palette.textMuted }}>
+              style={{ color: selected ? palette.primary : palette.textMuted }}>
               {item.label}
             </AppText>
           </Pressable>
@@ -74,20 +75,20 @@ const styles = StyleSheet.create({
   container: {
     alignSelf: 'center',
     borderRadius: radii.lg,
-    borderWidth: borders.thick,
+    borderWidth: borders.thin,
     bottom: spacing.md,
     flexDirection: 'row',
     gap: spacing.sm,
     padding: spacing.sm,
     position: 'absolute',
     ...Platform.select({
-      web: { boxShadow: `5px 5px 0 ${shadows.color}` },
+      web: { boxShadow: `0 12px 32px ${shadows.color}` },
       default: {
-        elevation: 6,
+        elevation: 4,
         shadowColor: shadows.color,
         shadowOffset: shadows.offset,
         shadowOpacity: 1,
-        shadowRadius: 0,
+        shadowRadius: 18,
       },
     }),
   },

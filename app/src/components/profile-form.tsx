@@ -1,219 +1,307 @@
 import type { Location, Profile } from '@airme/contracts';
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { StyleSheet, TextInput, View } from 'react-native';
 
-import { spacing, usePalette } from '../design/tokens';
+import { spacing, typography, usePalette } from '../design/tokens';
+import {
+  createManualLocation,
+  ACTIVITY_LABEL,
+  parseProfileDescription,
+  type ProfileUnderstanding,
+} from '../features/profile/profile-parser';
+import type { DeviceProfile } from '../storage/local-store';
 import { AppButton } from './ui/app-button';
 import { AppText } from './ui/app-text';
 import { Card } from './ui/card';
-import { Chip } from './ui/chip';
-
-const LOCATIONS: Location[] = [
-  { name: '高科大第一校區周邊', latitude: 22.754, longitude: 120.335 },
-  { name: '高科大建工校區周邊', latitude: 22.651, longitude: 120.328 },
-  { name: '高雄市前鎮區', latitude: 22.6, longitude: 120.31 },
-];
 
 interface ProfileFormProps {
-  onSubmit: (value: { profile: Profile; location: Location }) => void;
+  onSubmit: (value: {
+    profile: Profile;
+    location: Location;
+    deviceProfile: DeviceProfile;
+  }) => void;
   submitting: boolean;
+  initialName?: string;
 }
 
-export function ProfileForm({ onSubmit, submitting }: ProfileFormProps) {
+const AGE_LABEL: Record<Profile['ageGroup'], string> = {
+  child: '12 歲以下',
+  teen: '13–17 歲',
+  adult: '18 歲以上',
+};
+
+const COMMUTE_LABEL: Record<Profile['commuteMode'], string> = {
+  walk: '步行',
+  bike: '單車',
+  'public-transit': '大眾運輸',
+  car: '汽車',
+  scooter: '機車',
+};
+
+const CONDITION_LABEL: Record<Profile['sensitiveConditions'][number], string> = {
+  'respiratory-sensitive': '呼吸道較敏感',
+  'cardiovascular-sensitive': '心血管較敏感',
+  'allergy-sensitive': '容易受過敏原影響',
+};
+
+export function ProfileForm({ onSubmit, submitting, initialName = '' }: ProfileFormProps) {
   const palette = usePalette();
-  const [ageGroup, setAgeGroup] = useState<Profile['ageGroup'] | null>(null);
-  const [sensitive, setSensitive] = useState<Profile['sensitiveConditions']>([]);
-  const [commuteMode, setCommuteMode] = useState<Profile['commuteMode'] | null>(null);
-  const [activities, setActivities] = useState<NonNullable<Profile['commonActivities']>>([]);
-  const [location, setLocation] = useState<Location | null>(null);
+  const [displayName, setDisplayName] = useState(initialName);
+  const [description, setDescription] = useState('');
+  const [locationName, setLocationName] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
+  const [understanding, setUnderstanding] = useState<ProfileUnderstanding | null>(null);
+  const manualLocation = useMemo(
+    () => createManualLocation({ name: locationName, latitude, longitude }),
+    [latitude, locationName, longitude],
+  );
+  const resolvedLocation = understanding?.location ?? manualLocation;
+  const complete =
+    understanding &&
+    understanding.missing.every((field) => field === 'location') &&
+    displayName.trim().length > 0 &&
+    resolvedLocation;
 
-  const toggleSensitive = (value: Profile['sensitiveConditions'][number]) => {
-    setSensitive((current) =>
-      current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
-    );
-  };
-  const toggleActivity = (value: NonNullable<Profile['commonActivities']>[number]) => {
-    setActivities((current) =>
-      current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
-    );
-  };
+  if (understanding) {
+    const profile = understanding.profile;
+    return (
+      <View style={styles.container}>
+        <Card style={{ backgroundColor: palette.accentSoft }}>
+          <AppText variant="body-small" weight="800" tone="accent">
+            AIRME 已整理
+          </AppText>
+          <AppText variant="title" weight="800">
+            這是我理解的你
+          </AppText>
+          <AppText tone="muted">
+            請確認後再儲存；剛才輸入的原始自我描述不會寫入裝置。
+          </AppText>
+        </Card>
 
-  const complete = () => {
-    if (!ageGroup || !commuteMode || !location) return;
-    onSubmit({
-      profile: { ageGroup, sensitiveConditions: sensitive, commuteMode, commonActivities: activities },
-      location,
-    });
-  };
+        <Card>
+          <SummaryRow label="裝置暱稱" value={displayName.trim()} />
+          <SummaryRow label="年齡層" value={AGE_LABEL[profile.ageGroup]} />
+          <SummaryRow label="通勤" value={COMMUTE_LABEL[profile.commuteMode]} />
+          <SummaryRow
+            label="空品敏感條件"
+            value={
+              profile.sensitiveConditions.length
+                ? profile.sensitiveConditions.map((item) => CONDITION_LABEL[item]).join('、')
+                : '未提及'
+            }
+          />
+          <SummaryRow
+            label="常見活動"
+            value={
+              profile.commonActivities?.length
+                ? profile.commonActivities.map((item) => ACTIVITY_LABEL[item]).join('、')
+                : '未提及'
+            }
+          />
+          <SummaryRow label="常用區域" value={resolvedLocation?.name ?? '尚未完成'} />
+        </Card>
+
+        {understanding.missing.some((field) => field !== 'location') ? (
+          <Card style={{ backgroundColor: palette.warningSoft }}>
+            <AppText weight="800">還需要補一句</AppText>
+            <AppText>
+              {understanding.missing.includes('ageGroup') ? '請在描述中加入年齡或年齡層。' : ''}
+              {understanding.missing.includes('commuteMode') ? '請在描述中加入最常用的通勤方式。' : ''}
+            </AppText>
+          </Card>
+        ) : null}
+
+        {!understanding.location ? (
+          <Card>
+            <AppText variant="title-small" weight="800">
+              輸入常用區域座標
+            </AppText>
+            <AppText variant="body-small" tone="muted">
+              只保存區域級座標到三位小數，不需要住址。可從地圖長按位置查看座標。
+            </AppText>
+            <TextField
+              label="區域名稱"
+              value={locationName}
+              onChangeText={setLocationName}
+              placeholder="例如：楠梓區住家周邊"
+            />
+            <View style={styles.coordinateRow}>
+              <View style={styles.coordinateField}>
+                <TextField
+                  label="緯度"
+                  value={latitude}
+                  onChangeText={setLatitude}
+                  placeholder="22.754"
+                  keyboardType="decimal-pad"
+                />
+              </View>
+              <View style={styles.coordinateField}>
+                <TextField
+                  label="經度"
+                  value={longitude}
+                  onChangeText={setLongitude}
+                  placeholder="120.335"
+                  keyboardType="decimal-pad"
+                />
+              </View>
+            </View>
+          </Card>
+        ) : null}
+
+        <View style={styles.actions}>
+          <AppButton label="返回修改描述" onPress={() => setUnderstanding(null)} variant="ghost" />
+          <AppButton
+            label={submitting ? '正在建立個人檔案' : '確認並建立我的 AirMe'}
+            onPress={() => {
+              if (!complete) return;
+              onSubmit({
+                profile,
+                location: resolvedLocation,
+                deviceProfile: { displayName: displayName.trim() },
+              });
+            }}
+            disabled={!complete}
+            loading={submitting}
+          />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Card
-        pattern="dots"
-        patternColor={palette.ink}
-        style={{ backgroundColor: palette.teal, borderColor: palette.ink }}>
-        <AppText variant="title-small" weight="700">
-          只留下真正會影響建議的資料
+      <Card style={{ backgroundColor: palette.accentSoft }}>
+        <AppText variant="title-small" weight="800">
+          免登入，只建立這台裝置的個人檔案
         </AppText>
-        <AppText variant="body-small" style={{ color: palette.ink }}>
-          這些設定只保存在這台裝置；AirMe 不收集姓名、學號、聯絡方式或醫療診斷。
+        <AppText variant="body-small" tone="muted">
+          不收 Email、密碼、學號或病歷；沒有雲端帳號與跨裝置同步。
         </AppText>
       </Card>
 
-      <Field step="STEP 01" title="你的年齡層" hint="用來套用適齡的活動安全提醒">
-        <Chip
-          label="13–18 歲"
-          selected={ageGroup === 'teen'}
-          onPress={() => setAgeGroup('teen')}
-          accessibilityLabel="年齡層：13–18 歲"
+      <Card>
+        <TextField
+          label="希望 AirMe 怎麼稱呼你？"
+          value={displayName}
+          onChangeText={setDisplayName}
+          placeholder="暱稱即可，不必使用真名"
+          maxLength={24}
         />
-        <Chip
-          label="18 歲以上"
-          selected={ageGroup === 'adult'}
-          onPress={() => setAgeGroup('adult')}
-          accessibilityLabel="年齡層：18 歲以上"
-        />
-      </Field>
-
-      <Field step="STEP 02" title="空品敏感條件（可複選）" hint="不需要輸入病名或症狀細節">
-        <Chip
-          label="呼吸道較敏感"
-          selected={sensitive.includes('respiratory-sensitive')}
-          onPress={() => toggleSensitive('respiratory-sensitive')}
-          accessibilityLabel="敏感條件：呼吸道較敏感"
-        />
-        <Chip
-          label="心血管較敏感"
-          selected={sensitive.includes('cardiovascular-sensitive')}
-          onPress={() => toggleSensitive('cardiovascular-sensitive')}
-          accessibilityLabel="敏感條件：心血管較敏感"
-        />
-        <Chip
-          label="容易受過敏原影響"
-          selected={sensitive.includes('allergy-sensitive')}
-          onPress={() => toggleSensitive('allergy-sensitive')}
-          accessibilityLabel="敏感條件：容易受過敏原影響"
-        />
-      </Field>
-
-      <Field step="STEP 03" title="最常用的通勤方式">
-        <Chip
-          label="步行"
-          selected={commuteMode === 'walk'}
-          onPress={() => setCommuteMode('walk')}
-          accessibilityLabel="通勤方式：步行"
-        />
-        <Chip
-          label="單車"
-          selected={commuteMode === 'bike'}
-          onPress={() => setCommuteMode('bike')}
-          accessibilityLabel="通勤方式：單車"
-        />
-        <Chip
-          label="大眾運輸"
-          selected={commuteMode === 'public-transit'}
-          onPress={() => setCommuteMode('public-transit')}
-          accessibilityLabel="通勤方式：大眾運輸"
-        />
-        <Chip
-          label="機車"
-          selected={commuteMode === 'scooter'}
-          onPress={() => setCommuteMode('scooter')}
-          accessibilityLabel="通勤方式：機車"
-        />
-      </Field>
-
-      <Field step="STEP 04" title="常見活動（可複選）">
-        <Chip
-          label="慢跑"
-          selected={activities.includes('run')}
-          onPress={() => toggleActivity('run')}
-          accessibilityLabel="常見活動：慢跑"
-        />
-        <Chip
-          label="散步"
-          selected={activities.includes('walk')}
-          onPress={() => toggleActivity('walk')}
-          accessibilityLabel="常見活動：散步"
-        />
-        <Chip
-          label="球類"
-          selected={activities.includes('ball-sports')}
-          onPress={() => toggleActivity('ball-sports')}
-          accessibilityLabel="常見活動：球類"
-        />
-      </Field>
-
-      <Field
-        step="STEP 05"
-        title="常用地點"
-        hint="只保存區域級、三位小數座標，不建立位置軌跡">
-        {LOCATIONS.map((item) => (
-          <Chip
-            key={item.name}
-            label={item.name}
-            selected={location?.name === item.name}
-            onPress={() => setLocation(item)}
-            accessibilityLabel={`常用地點：${item.name}`}
+        <View style={styles.field}>
+          <AppText weight="700">用一句話介紹你的日常</AppText>
+          <AppText variant="body-small" tone="muted">
+            請包含年齡、通勤方式、常見活動、空品敏感狀況與常用區域。
+          </AppText>
+          <TextInput
+            accessibilityLabel="個人日常描述"
+            maxLength={600}
+            multiline
+            onChangeText={setDescription}
+            placeholder="例如：我 15 歲，平常騎單車到高科大第一校區，鼻子容易受空品影響，放學會跑步。"
+            placeholderTextColor={palette.textMuted}
+            style={[
+              styles.textarea,
+              { backgroundColor: palette.surface, borderColor: palette.border, color: palette.text },
+            ]}
+            textAlignVertical="top"
+            value={description}
           />
-        ))}
-      </Field>
+          <AppText variant="caption" tone="muted" style={styles.counter}>
+            {description.length} / 600
+          </AppText>
+        </View>
+        <AppButton
+          label="讓 AirMe 整理我的設定"
+          onPress={() => setUnderstanding(parseProfileDescription(description))}
+          disabled={displayName.trim().length === 0 || description.trim().length < 8}
+        />
+      </Card>
+    </View>
+  );
+}
 
-      <AppButton
-        label={submitting ? '正在儲存設定' : '完成設定'}
-        accessibilityLabel={submitting ? '正在儲存設定' : '完成設定'}
-        onPress={complete}
-        disabled={!ageGroup || !commuteMode || !location}
-        loading={submitting}
-        variant="secondary"
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  const palette = usePalette();
+  return (
+    <View style={[styles.summaryRow, { borderBottomColor: palette.border }]}>
+      <AppText variant="body-small" tone="muted" style={styles.summaryLabel}>
+        {label}
+      </AppText>
+      <AppText weight="700" style={styles.summaryValue}>
+        {value}
+      </AppText>
+    </View>
+  );
+}
+
+function TextField({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  maxLength,
+  keyboardType,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  placeholder: string;
+  maxLength?: number;
+  keyboardType?: 'default' | 'decimal-pad';
+}) {
+  const palette = usePalette();
+  return (
+    <View style={styles.field}>
+      <AppText weight="700">{label}</AppText>
+      <TextInput
+        accessibilityLabel={label}
+        keyboardType={keyboardType}
+        maxLength={maxLength}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={palette.textMuted}
+        style={[
+          styles.input,
+          { backgroundColor: palette.surface, borderColor: palette.border, color: palette.text },
+        ]}
+        value={value}
       />
     </View>
   );
 }
 
-function Field({
-  step,
-  title,
-  hint,
-  children,
-}: {
-  step: string;
-  title: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  const palette = usePalette();
-  return (
-    <Card style={{ borderColor: palette.ink }}>
-      <View style={styles.fieldHeading}>
-        <View style={[styles.step, { backgroundColor: palette.coral, borderColor: palette.ink }]}>
-          <AppText variant="caption" weight="900" style={{ color: palette.surface }}>
-            {step}
-          </AppText>
-        </View>
-        <AppText variant="title-small" weight="700">
-          {title}
-        </AppText>
-        {hint ? (
-          <AppText variant="body-small" tone="muted">
-            {hint}
-          </AppText>
-        ) : null}
-      </View>
-      <View style={styles.chips}>{children}</View>
-    </Card>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { gap: spacing.xl },
-  fieldHeading: { gap: spacing.sm },
-  step: {
-    alignSelf: 'flex-start',
-    borderRadius: 6,
-    borderWidth: 2,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+  field: { gap: spacing.sm },
+  input: {
+    borderRadius: 14,
+    borderWidth: 1,
+    fontFamily: typography.family,
+    fontSize: typography.size.body,
+    minHeight: 52,
+    paddingHorizontal: spacing.lg,
   },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  textarea: {
+    borderRadius: 16,
+    borderWidth: 1,
+    fontFamily: typography.family,
+    fontSize: typography.size.body,
+    lineHeight: typography.lineHeight.body,
+    minHeight: 168,
+    padding: spacing.lg,
+  },
+  counter: { alignSelf: 'flex-end' },
+  summaryRow: {
+    alignItems: 'flex-start',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.lg,
+    paddingBottom: spacing.md,
+  },
+  summaryLabel: { width: 108 },
+  summaryValue: { flex: 1 },
+  coordinateRow: { flexDirection: 'row', gap: spacing.md },
+  coordinateField: { flex: 1 },
+  actions: { gap: spacing.md },
 });

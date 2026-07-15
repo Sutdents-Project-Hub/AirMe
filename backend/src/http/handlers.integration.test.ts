@@ -70,6 +70,20 @@ function createHandlers(overrides: Record<string, unknown> = {}) {
   return createApiHandlers({
     allowedOrigins: ['http://localhost:8081'],
     getEnvironment: vi.fn().mockResolvedValue(environment),
+    understandActivity: vi.fn().mockResolvedValue({
+      intent: {
+        activity: '跑步',
+        time: '下午四點',
+        location: '操場',
+        intensity: 'moderate',
+        durationMinutes: 30,
+        currentCondition: null,
+        userGoal: null,
+      },
+      missingField: null,
+      clarificationQuestion: null,
+      provenance: { aiMode: 'fixture' },
+    }),
     createRecommendation: vi.fn().mockResolvedValue(recommendation),
     answerFollowUp: vi.fn().mockResolvedValue(followUp),
     requestId: () => 'req_http',
@@ -106,6 +120,23 @@ describe('AirMe HTTP handlers', () => {
 
     expect(response.status).toBe(200);
     expect(response.jsonBody).toEqual(environment);
+  });
+
+  it('returns a validated activity understanding without persisting it', async () => {
+    const response = await createHandlers().activityIntents(
+      request({
+        method: 'POST',
+        body: JSON.stringify({
+          activityText: '下午四點想在操場跑步 30 分鐘',
+          locale: 'zh-TW',
+          timeZone: 'Asia/Taipei',
+          dataMode: 'fixture',
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.jsonBody).toMatchObject({ intent: { activity: '跑步' } });
   });
 
   it('rejects an invalid recommendation payload with a stable error', async () => {

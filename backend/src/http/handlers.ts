@@ -1,8 +1,11 @@
 import {
+  ActivityIntentRequestSchema,
   DataModeSchema,
   FollowUpRequestSchema,
   LocationSchema,
   RecommendationRequestSchema,
+  type ActivityIntentRequest,
+  type ActivityIntentResponse,
   type EnvironmentSnapshot,
   type FollowUpRequest,
   type FollowUpResponse,
@@ -24,6 +27,7 @@ export interface ApiRequest {
 
 interface ApiHandlerDependencies {
   allowedOrigins: string[];
+  understandActivity: (request: ActivityIntentRequest) => Promise<ActivityIntentResponse>;
   getEnvironment: (
     location: RecommendationRequest['location'],
     mode: RecommendationRequest['dataMode'],
@@ -37,6 +41,7 @@ interface ApiHandlerDependencies {
 export interface ApiHandlers {
   health(request: ApiRequest): Promise<HttpResponse>;
   environment(request: ApiRequest): Promise<HttpResponse>;
+  activityIntents(request: ApiRequest): Promise<HttpResponse>;
   recommendations(request: ApiRequest): Promise<HttpResponse>;
   followUps(request: ApiRequest): Promise<HttpResponse>;
 }
@@ -123,6 +128,12 @@ export function createApiHandlers(deps: ApiHandlerDependencies): ApiHandlers {
         });
         const mode = DataModeSchema.parse(query.get('mode') ?? 'live');
         return jsonResponse(200, await deps.getEnvironment(location, mode), headers);
+      }),
+    activityIntents: (request) =>
+      execute(request, async (headers) => {
+        if (request.method.toUpperCase() !== 'POST') throw new ZodError([]);
+        const parsed = ActivityIntentRequestSchema.parse(await readJson(request));
+        return jsonResponse(200, await deps.understandActivity(parsed), headers);
       }),
     recommendations: (request) =>
       execute(request, async (headers) => {

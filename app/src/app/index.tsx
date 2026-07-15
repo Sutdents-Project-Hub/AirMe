@@ -28,8 +28,8 @@ export default function HomeScreen() {
   }
   if (!app.local.onboardingCompleted) return <Redirect href={'/onboarding' as Href} />;
 
-  const submit = async (activityText: string) => {
-    if (await app.createRecommendation(activityText)) {
+  const submit = async (activityText: string, intent: Parameters<typeof app.createRecommendation>[1]) => {
+    if (await app.createRecommendation(activityText, intent)) {
       router.push('/recommendation' as Href);
     }
   };
@@ -39,21 +39,20 @@ export default function HomeScreen() {
       <Screen>
         <AppHeader demoMode={app.local.demoMode} />
         <View style={styles.intro}>
-          <View style={[styles.eyebrow, { backgroundColor: palette.coral, borderColor: palette.ink }]}>
-            <AppText variant="body-small" weight="900" style={{ color: palette.surface }}>
-              AIRME DAILY BRIEF
+          <View style={[styles.eyebrow, { backgroundColor: palette.accentSoft }]}>
+            <AppText variant="body-small" weight="900" tone="accent">
+              今日空氣行動
             </AppText>
           </View>
           <AppText variant="display" weight="900">
-            先看環境，{`\n`}再決定怎麼動。
+            先理解你，{`\n`}再決定今天怎麼動。
           </AppText>
           <AppText tone="muted">
-            AirMe 把官方資料、你的最低限度設定與活動情境整理成可執行方案。
+            嗨，{app.local.deviceProfile?.displayName ?? '今天的你'}。直接說出活動計畫，AirMe 會結合官方環境資料與安全底線整理下一步。
           </AppText>
           <View style={styles.signalBars}>
-            {[palette.teal, palette.coral, palette.yellow, palette.sky].map((color) => (
-              <View key={color} style={[styles.signalBar, { backgroundColor: color }]} />
-            ))}
+            <View style={[styles.signalBar, { backgroundColor: palette.primary }]} />
+            <View style={[styles.signalBarSoft, { backgroundColor: palette.sky }]} />
           </View>
         </View>
         {app.error ? (
@@ -78,7 +77,11 @@ export default function HomeScreen() {
             />
           </View>
           <View style={styles.composerColumn}>
-            <ActivityComposer loading={app.busy} onSubmit={submit} />
+            <ActivityComposer
+              loading={app.busy}
+              onUnderstand={app.understandActivity}
+              onSubmit={(activityText, intent) => void submit(activityText, intent)}
+            />
           </View>
         </View>
       </Screen>
@@ -88,16 +91,16 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   center: { alignItems: 'center', flex: 1, gap: spacing.md, justifyContent: 'center' },
-  intro: { gap: spacing.sm, maxWidth: 720 },
+  intro: { alignSelf: 'center', gap: spacing.md, maxWidth: 760, width: '100%' },
   eyebrow: {
     alignSelf: 'flex-start',
     borderRadius: radii.pill,
-    borderWidth: 2,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
   signalBars: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
-  signalBar: { borderRadius: radii.pill, height: 8, width: 52 },
+  signalBar: { borderRadius: radii.pill, height: 6, width: 72 },
+  signalBarSoft: { borderRadius: radii.pill, height: 6, width: 28 },
   dashboard: { gap: spacing.xl },
   dashboardWide: { alignItems: 'stretch', flexDirection: 'row' },
   environmentColumn: { flex: 0.82, width: '100%' },

@@ -21,17 +21,20 @@ AirMe 的安全目標不是保證模型永遠正確，而是讓錯誤可被限�
 - 回答作業、娛樂、政治、一般聊天等非產品領域問題。
 - 執行任意工具、瀏覽任意網站、存取檔案或取得 secret。
 - 產生沒有資料依據的百分比、個人敏感閾值或醫療因果。
+- 在沒有可信 route provider 與路段級資料時宣稱最低污染、最安全、即時距離／時間或產生健康路線分數。
 
 ## 4. 多層防護
 
 1. 前端限制欄位與長度，但不能把前端驗證當成安全邊界。
 2. 後端 Schema 驗證型別、列舉、長度與時間。
-3. 領域守門將請求分成 `allowed`、`clarify`、`out-of-scope`、`urgent-safety`。
+3. 領域守門將請求分成 `allowed`、`out-of-scope`、`medical-boundary`、`urgent-safety`、`injection`；意圖結構化未知欄位只能使用 null／unspecified。
 4. 官方規則引擎產生不可突破的 constraints。
 5. 後端 system prompt、JSON object 要求與模型 provider 的內容安全設定共同限制不當輸出。
 6. OpenAI 相容 Chat Completions 的 JSON object 回應，仍必須由後端 Zod schema 強制驗證。
 7. 後處理驗證理由是否只引用存在的事實、門檻是否符合規則、是否包含禁止語句。
 8. 失敗時不顯示原始模型答案，只回傳安全錯誤或保守結果。
+
+活動理解另有兩項硬性限制：送出推薦前先讓使用者確認；必要資料不完整時一次只能顯示一個最重要的澄清問題。已確認強度會送入官方規則引擎，AI 不得把「全力／衝刺」降為較低強度。
 
 ## 5. 跑題處理
 
@@ -77,6 +80,8 @@ AirMe 的安全目標不是保證模型永遠正確，而是讓錯誤可被限�
 | 虛構資料要求 | 要求假裝 AQI 是 30 | 不替換真實資料 |
 | 模型無效 JSON | Schema 不符 | 不顯示原文，回 `AI_INVALID_OUTPUT` |
 | AI 限流 | 429／逾時 | 可理解錯誤、重試與標示示範備援 |
+| 意圖缺時長 | 有活動、無時長 | 只問一個時長問題，不同時列出多個必填欄位 |
+| 路線資料不足 | 有起終點、無 provider | 不造距離／時間／污染分數，顯示資料不足與外部地圖交接 |
 
 ## 9. 評估指標
 
@@ -94,6 +99,7 @@ AirMe 的安全目標不是保證模型永遠正確，而是讓錯誤可被限�
 
 - `backend/src/domain/rules.ts`：AQI、敏感條件、活動強度、缺失與 stale 的決定性風險底線。
 - `backend/src/domain/safety.ts`：緊急、提示注入、醫療、允許領域與離題分類；順序以緊急為最高優先。
+- `backend/src/domain/activity-intent.ts`：活動欄位擷取、單一澄清與 live／fixture provenance；不持久化 request。
 - `backend/src/adapters/ai/liangjie.ts`：OpenAI 相容 Chat Completions、JSON object、Zod 後驗證與 provider 錯誤遮蔽。
 - `backend/src/recommendation`：模型結果驗證、醫療因果偵測與不可降低風險。
 - `backend/src/follow-up`：短效 context token、固定拒答與安全降級。

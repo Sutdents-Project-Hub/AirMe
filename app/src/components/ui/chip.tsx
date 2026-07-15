@@ -21,15 +21,15 @@ export function Chip({ label, selected, onPress, accessibilityLabel }: ChipProps
       style={({ pressed }) => [
         styles.chip,
         {
-          backgroundColor: selected ? palette.yellow : palette.surface,
-          borderColor: palette.ink,
+          backgroundColor: selected ? palette.accentSoft : palette.surface,
+          borderColor: selected ? palette.primary : palette.border,
           opacity: pressed ? 0.72 : 1,
         },
       ]}>
       <AppText
         variant="body-small"
         weight={selected ? '700' : '500'}
-        style={{ color: palette.ink }}>
+        style={{ color: selected ? palette.primary : palette.text }}>
         {label}
       </AppText>
     </Pressable>

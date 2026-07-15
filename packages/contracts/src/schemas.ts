@@ -50,6 +50,40 @@ export const ProfileSchema = z
   })
   .strict();
 
+export const ActivityIntentSchema = z
+  .object({
+    activity: z.string().trim().min(1).max(80),
+    time: z.string().trim().min(1).max(80).nullable(),
+    location: z.string().trim().min(1).max(120).nullable(),
+    intensity: z.enum(['light', 'moderate', 'vigorous', 'unspecified']),
+    durationMinutes: z.number().int().min(1).max(720).nullable(),
+    currentCondition: z.string().trim().min(1).max(160).nullable(),
+    userGoal: z.string().trim().min(1).max(160).nullable(),
+  })
+  .strict();
+
+export const ActivityIntentRequestSchema = z
+  .object({
+    activityText: z.string().trim().min(2).max(800),
+    locale: z.literal('zh-TW'),
+    timeZone: z.string().trim().min(1).max(80),
+    dataMode: DataModeSchema.default('live'),
+  })
+  .strict();
+
+export const ActivityIntentResponseSchema = z
+  .object({
+    intent: ActivityIntentSchema,
+    missingField: z.enum(['activity', 'time', 'location', 'intensity', 'duration']).nullable(),
+    clarificationQuestion: z.string().trim().min(1).max(180).nullable(),
+    provenance: z
+      .object({
+        aiMode: z.enum(['live', 'fixture']),
+      })
+      .strict(),
+  })
+  .strict();
+
 export const RecommendationRequestSchema = z
   .object({
     activityText: z.string().trim().min(2).max(800),
@@ -58,6 +92,7 @@ export const RecommendationRequestSchema = z
     locale: z.literal('zh-TW'),
     timeZone: z.string().trim().min(1).max(80),
     dataMode: DataModeSchema.default('live'),
+    confirmedIntent: ActivityIntentSchema.optional(),
   })
   .strict();
 
@@ -203,6 +238,15 @@ export const RecommendationHistoryItemSchema = z
     riskLevel: RiskLevelSchema,
     headline: z.string().trim().min(1).max(180),
     provenance: ProvenanceModeSchema,
+    activity: z.string().trim().min(1).max(80).optional(),
+    activityTime: z.string().trim().min(1).max(80).optional(),
+    durationMinutes: z.number().int().min(1).max(720).optional(),
+    intensity: z.enum(['light', 'moderate', 'vigorous', 'unspecified']).optional(),
+    aqi: z.number().int().min(0).max(500).optional(),
+    aqiCategory: AqiCategorySchema.optional(),
+    weatherSummary: z.string().trim().min(1).max(160).optional(),
+    recommendedPlanSummary: z.string().trim().min(1).max(240).optional(),
+    rulesVersion: z.string().trim().min(1).max(80).optional(),
   })
   .strict();
 
@@ -211,6 +255,9 @@ export type ProvenanceMode = z.infer<typeof ProvenanceModeSchema>;
 export type RiskLevel = z.infer<typeof RiskLevelSchema>;
 export type Location = z.infer<typeof LocationSchema>;
 export type Profile = z.infer<typeof ProfileSchema>;
+export type ActivityIntent = z.infer<typeof ActivityIntentSchema>;
+export type ActivityIntentRequest = z.infer<typeof ActivityIntentRequestSchema>;
+export type ActivityIntentResponse = z.infer<typeof ActivityIntentResponseSchema>;
 export type RecommendationRequest = z.infer<typeof RecommendationRequestSchema>;
 export type EnvironmentSnapshot = z.infer<typeof EnvironmentSnapshotSchema>;
 export type ActionCard = z.infer<typeof ActionCardSchema>;

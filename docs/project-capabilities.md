@@ -4,15 +4,18 @@
 
 | 能力 | 實作位置 | 驗證方式 |
 |---|---|---|
-| 跨平台產品 UI | `app/src/app`、`src/components` | Web export、手機／桌面瀏覽器操作 |
-| 本機個人資料 | `app/src/storage/local-store.ts` | storage tests、清除流程 |
+| 淺綠白跨平台產品 UI | `app/src/app`、`src/components`、`src/design` | Web export、桌面瀏覽器操作、responsive 元件測試 |
+| 輸入式本機個人檔案 | `app/src/features/profile`、`src/storage/local-store.ts` | parser、migration、清除流程測試 |
+| 活動理解確認 | `backend/src/domain/activity-intent.ts`、`app/src/components/activity-composer.tsx` | fixture／live 契約、單一澄清與元件測試 |
+| 整合 Air 日誌 | `app/src/components/history-list.tsx`、`src/state/app-model.ts` | 環境／建議／feedback join 與去識別測試 |
+| 安全路線交接 | `app/src/app/routes.tsx`、`src/components/route-planner.tsx` | 資料不足、無虛構 metrics 與瀏覽器頁面驗證 |
 | 離線競賽 Demo | `app/src/demo` | 完整瀏覽器流程 |
 | 前後端契約 | `packages/contracts` | runtime schema + tests |
 | 政府資料標準化 | `backend/src/adapters/environment` | fixture／adapter tests |
 | 官方安全底線 | `backend/src/domain/rules.ts` | 單元與 orchestration tests |
 | 安全領域守門 | `backend/src/domain/safety.ts` | 醫療、緊急、離題、注入測試 |
 | 量界智算 adapter | `backend/src/adapters/ai/liangjie.ts` | mock／fixture tests；live 未驗證 |
-| Fastify API | `backend/src/server.ts`、`src/http` | handler tests 與 fixture HTTP smoke |
+| Fastify API | `backend/src/server.ts`、`src/http` | 五 endpoint handler tests 與 Docker fixture image |
 | PostgreSQL migration | `backend/database/migrations`、`src/database` | Compose schema 解析；實際 DB 未驗證 |
 | 固定安全評估 | `backend/evaluation/cases.json` | 30/30 evaluation |
 
@@ -27,8 +30,8 @@
 ## 尚未建立且不是本次已完成範圍
 
 - VPS／Coolify application、production secret、production URL、CI/CD、remote 或 GitHub repository。
-- 帳號、雲端個人資料庫、跨裝置同步、教師／班級功能。
-- Push notification、地圖、智慧路線、健康預測或醫療串接。
+- 正式登入、雲端個人資料庫、跨裝置同步、教師／班級功能。
+- Push notification、內嵌地圖、即時 route provider／街道級污染路線、健康預測或醫療串接。
 
 ## 競賽展示建議
 

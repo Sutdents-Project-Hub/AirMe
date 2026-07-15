@@ -54,6 +54,43 @@ const response = {
 afterEach(() => vi.useRealTimers());
 
 describe('AirMe API client', () => {
+  it('validates a structured activity understanding response', async () => {
+    let capturedUrl = '';
+    const api = createAirMeApi({
+      baseUrl: 'http://localhost:7071/api',
+      timeoutMs: 1_000,
+      fetcher: vi.fn(async (url) => {
+        capturedUrl = String(url);
+        return new Response(
+          JSON.stringify({
+            intent: {
+              activity: '跑步',
+              time: '下午四點',
+              location: '操場',
+              intensity: 'moderate',
+              durationMinutes: 30,
+              currentCondition: null,
+              userGoal: null,
+            },
+            missingField: null,
+            clarificationQuestion: null,
+            provenance: { aiMode: 'fixture' },
+          }),
+          { status: 200 },
+        );
+      }),
+    });
+
+    const result = await api.understandActivity({
+      activityText: '下午四點想跑步 30 分鐘',
+      locale: 'zh-TW',
+      timeZone: 'Asia/Taipei',
+      dataMode: 'fixture',
+    });
+
+    expect(capturedUrl).toBe('http://localhost:7071/api/activity-intents');
+    expect(result.intent.activity).toBe('跑步');
+  });
   it('normalizes the base URL and validates a recommendation response', async () => {
     let capturedUrl = '';
     const api = createAirMeApi({

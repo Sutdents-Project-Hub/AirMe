@@ -26,11 +26,11 @@ export function AppButton({
   const palette = usePalette();
   const backgroundColor =
     variant === 'primary'
-      ? palette.coral
+      ? palette.primary
       : variant === 'danger'
         ? palette.destructive
         : variant === 'secondary'
-          ? palette.yellow
+          ? palette.accentSoft
           : palette.surface;
   const textColor =
     variant === 'primary' || variant === 'danger' ? palette.onPrimary : palette.text;
@@ -47,7 +47,7 @@ export function AppButton({
         styles.shadow,
         {
           backgroundColor,
-          borderColor: palette.ink,
+          borderColor: variant === 'ghost' ? palette.border : backgroundColor,
           opacity: disabled ? 0.48 : pressed ? 0.78 : 1,
         },
         pressed && styles.pressed,
@@ -66,25 +66,25 @@ const styles = StyleSheet.create({
   button: {
     minHeight: 48,
     borderRadius: radii.pill,
-    borderWidth: borders.thick,
+    borderWidth: borders.thin,
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
   shadow: {
     ...Platform.select({
-      web: { boxShadow: `4px 4px 0 ${shadows.color}` },
+      web: { boxShadow: `0 8px 22px ${shadows.color}` },
       default: {
         elevation: 4,
         shadowColor: shadows.color,
-        shadowOffset: { height: 4, width: 4 },
+        shadowOffset: shadows.offset,
         shadowOpacity: 1,
-        shadowRadius: 0,
+        shadowRadius: 12,
       },
     }),
   },
   pressed: {
-    transform: [{ translateX: 3 }, { translateY: 3 }],
+    transform: [{ scale: 0.985 }],
   },
   content: {
     alignItems: 'center',

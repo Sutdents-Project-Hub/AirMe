@@ -3,7 +3,6 @@ import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { spacing, usePalette } from '../../design/tokens';
-import { PatternSurface } from './pattern-surface';
 
 interface ScreenProps {
   scroll?: boolean;
@@ -20,11 +19,9 @@ export function Screen({ children, scroll = true, maxWidth = 1120 }: PropsWithCh
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]} edges={['top']}>
-      <PatternSurface
-        pattern="grid"
-        patternColor={palette.teal}
-        style={[styles.patternSurface, { backgroundColor: palette.background }]}
-        contentStyle={styles.patternContent}>
+      <View style={[styles.patternSurface, { backgroundColor: palette.background }]}>
+        <View pointerEvents="none" style={[styles.glowTop, { backgroundColor: palette.accentSoft }]} />
+        <View pointerEvents="none" style={[styles.glowBottom, { backgroundColor: palette.sky }]} />
         {scroll ? (
           <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
             {content}
@@ -32,7 +29,7 @@ export function Screen({ children, scroll = true, maxWidth = 1120 }: PropsWithCh
         ) : (
           content
         )}
-      </PatternSurface>
+      </View>
     </SafeAreaView>
   );
 }
@@ -40,7 +37,6 @@ export function Screen({ children, scroll = true, maxWidth = 1120 }: PropsWithCh
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   patternSurface: { flex: 1 },
-  patternContent: { flex: 1 },
   scroll: { flexGrow: 1 },
   content: {
     alignSelf: 'center',
@@ -49,5 +45,23 @@ const styles = StyleSheet.create({
     paddingBottom: 104,
     paddingTop: spacing.lg,
     width: '100%',
+  },
+  glowTop: {
+    borderRadius: 999,
+    height: 420,
+    opacity: 0.58,
+    position: 'absolute',
+    right: -160,
+    top: -190,
+    width: 420,
+  },
+  glowBottom: {
+    borderRadius: 999,
+    bottom: -220,
+    height: 380,
+    left: -190,
+    opacity: 0.24,
+    position: 'absolute',
+    width: 380,
   },
 });

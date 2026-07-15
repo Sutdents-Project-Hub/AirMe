@@ -36,6 +36,26 @@ function historyItem(index: number): RecommendationHistoryItem {
 }
 
 describe('local store', () => {
+  it('migrates version 1 state without deleting existing history', async () => {
+    const legacy = {
+      version: 1,
+      profile,
+      savedLocation: null,
+      onboardingCompleted: true,
+      history: [historyItem(1)],
+      feedback: [],
+      demoMode: true,
+    };
+    const store = createLocalStore(
+      memoryStorage({ 'airme.local-state': JSON.stringify(legacy) }),
+    );
+
+    const state = await store.load();
+
+    expect(state.version).toBe(2);
+    expect(state.history).toHaveLength(1);
+    expect(state.deviceProfile).toBeNull();
+  });
   it('returns a safe default for first launch or corrupt data', async () => {
     expect(await createLocalStore(memoryStorage()).load()).toEqual(DEFAULT_LOCAL_STATE);
     expect(

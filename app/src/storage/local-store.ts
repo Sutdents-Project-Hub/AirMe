@@ -13,15 +13,36 @@ import { z } from 'zod';
 
 const STORAGE_KEY = 'airme.local-state';
 
+const DeviceProfileSchema = z
+  .object({
+    displayName: z.string().trim().min(1).max(24),
+  })
+  .strict();
+
+export type DeviceProfile = z.infer<typeof DeviceProfileSchema>;
+
 export interface KeyValueStorage {
   getItem(key: string): Promise<string | null>;
   setItem(key: string, value: string): Promise<void>;
   removeItem(key: string): Promise<void>;
 }
 
-const LocalStateSchema = z
+const LegacyLocalStateSchema = z
   .object({
     version: z.literal(1),
+    profile: ProfileSchema.nullable(),
+    savedLocation: LocationSchema.nullable(),
+    onboardingCompleted: z.boolean(),
+    history: z.array(RecommendationHistoryItemSchema).max(20),
+    feedback: z.array(FeedbackSchema).max(50),
+    demoMode: z.boolean(),
+  })
+  .strict();
+
+const LocalStateSchema = z
+  .object({
+    version: z.literal(2),
+    deviceProfile: DeviceProfileSchema.nullable(),
     profile: ProfileSchema.nullable(),
     savedLocation: LocationSchema.nullable(),
     onboardingCompleted: z.boolean(),
@@ -34,7 +55,8 @@ const LocalStateSchema = z
 export type LocalState = z.infer<typeof LocalStateSchema>;
 
 export const DEFAULT_LOCAL_STATE: LocalState = {
-  version: 1,
+  version: 2,
+  deviceProfile: null,
   profile: null,
   savedLocation: null,
   onboardingCompleted: false,
@@ -44,7 +66,19 @@ export const DEFAULT_LOCAL_STATE: LocalState = {
 };
 
 function freshDefault(): LocalState {
-  return { ...DEFAULT_LOCAL_STATE, history: [], feedback: [] };
+  return { ...DEFAULT_LOCAL_STATE, deviceProfile: null, history: [], feedback: [] };
+}
+
+function migrate(value: unknown): LocalState | null {
+  const current = LocalStateSchema.safeParse(value);
+  if (current.success) return current.data;
+  const legacy = LegacyLocalStateSchema.safeParse(value);
+  if (!legacy.success) return null;
+  return LocalStateSchema.parse({
+    ...legacy.data,
+    version: 2,
+    deviceProfile: null,
+  });
 }
 
 export function createLocalStore(storage: KeyValueStorage = AsyncStorage) {
@@ -52,8 +86,7 @@ export function createLocalStore(storage: KeyValueStorage = AsyncStorage) {
     const raw = await storage.getItem(STORAGE_KEY);
     if (!raw) return freshDefault();
     try {
-      const parsed = LocalStateSchema.safeParse(JSON.parse(raw));
-      return parsed.success ? parsed.data : freshDefault();
+      return migrate(JSON.parse(raw)) ?? freshDefault();
     } catch {
       return freshDefault();
     }
@@ -67,10 +100,11 @@ export function createLocalStore(storage: KeyValueStorage = AsyncStorage) {
 
   return {
     load,
-    async saveProfile(profile: Profile): Promise<LocalState> {
+    async saveProfile(profile: Profile, deviceProfile?: DeviceProfile): Promise<LocalState> {
       const current = await load();
       return write({
         ...current,
+        deviceProfile: deviceProfile ? DeviceProfileSchema.parse(deviceProfile) : current.deviceProfile,
         profile: ProfileSchema.parse(profile),
         onboardingCompleted: true,
       });

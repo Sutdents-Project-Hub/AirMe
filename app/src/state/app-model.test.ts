@@ -14,7 +14,12 @@ const recommendation = {
   actionCard: {
     riskLevel: 'high',
     headline: '建議改成較短、較低強度方案。',
-    provenance: { overall: 'fixture' },
+    recommendedPlan: { intensity: '改成低強度。' },
+    environment: {
+      airQuality: { aqi: 118, category: 'unhealthy-sensitive' },
+      weather: { summary: '多雲' },
+    },
+    provenance: { overall: 'fixture', rulesVersion: 'moe-school-aqi-2026.1' },
   },
   requestId: 'req_test',
 } as RecommendationResponse;
@@ -42,7 +47,15 @@ describe('app model transforms', () => {
   it('stores only a de-identified recommendation summary in history', () => {
     const history = toHistoryItem(
       recommendation,
-      '下午四點想慢跑 30 分鐘，補上不需要保存的更多文字',
+      {
+        activity: '跑步',
+        time: '下午四點',
+        location: '操場',
+        intensity: 'moderate',
+        durationMinutes: 30,
+        currentCondition: '鼻子很塞',
+        userGoal: null,
+      },
       location,
       '2026-07-13T02:00:00.000Z',
     );
@@ -54,5 +67,7 @@ describe('app model transforms', () => {
       provenance: 'fixture',
     });
     expect(history).not.toHaveProperty('contextToken');
+    expect(history.activitySummary).toBe('跑步 · 下午四點 · 30 分鐘');
+    expect(JSON.stringify(history)).not.toContain('鼻子很塞');
   });
 });

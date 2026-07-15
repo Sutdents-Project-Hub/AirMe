@@ -23,13 +23,13 @@ export default function SettingsScreen() {
       <Screen maxWidth={1000}>
         <AppHeader demoMode={app.local.demoMode} />
         <View style={styles.hero}>
-          <View style={[styles.eyebrow, { backgroundColor: palette.teal, borderColor: palette.ink }]}>
-            <AppText variant="body-small" weight="900">
-              CONTROL DESK
+          <View style={[styles.eyebrow, { backgroundColor: palette.accentSoft }]}>
+            <AppText variant="body-small" weight="900" tone="accent">
+              我的 AirMe
             </AppText>
           </View>
           <AppText variant="display" weight="900">
-            你決定模式，{`\n`}也決定留下什麼。
+            這是你的裝置檔案，{`\n`}資料去留由你決定。
           </AppText>
         </View>
         <View style={styles.grid}>
@@ -59,7 +59,10 @@ export default function SettingsScreen() {
             patternColor={palette.teal}
             style={wide ? styles.cardWide : styles.cardNarrow}>
             <AppText variant="title-small" weight="800">
-              個人設定摘要
+              此裝置個人檔案
+            </AppText>
+            <AppText weight="700">
+              {app.local.deviceProfile?.displayName ?? '尚未設定暱稱'}
             </AppText>
             <AppText tone="muted">
               常用地點：{app.local.savedLocation?.name ?? '尚未設定'}
@@ -69,7 +72,7 @@ export default function SettingsScreen() {
               {app.local.history.length} 筆
             </AppText>
             <AppButton
-              label="重新設定個人偏好"
+              label="編輯個人檔案"
               onPress={() => router.push('/onboarding' as Href)}
               variant="secondary"
             />
@@ -82,9 +85,9 @@ export default function SettingsScreen() {
               { backgroundColor: palette.teal, borderColor: palette.ink },
             ]}>
             <AppText variant="title-small" weight="800">
-              隱私與安全邊界
+              免登入的隱私邊界
             </AppText>
-            <AppText>• 個人設定、活動摘要與回饋預設只在這台裝置。</AppText>
+            <AppText>• 沒有 Email、密碼或雲端帳號；個人檔案、日誌與回饋只在這台裝置。</AppText>
             <AppText>• Live 模式只把當次推論必要內容送往 AirMe 後端。</AppText>
             <AppText>• AirMe 不做醫療診斷、不判定症狀原因，也不取代緊急協助。</AppText>
           </Card>
@@ -127,7 +130,6 @@ const styles = StyleSheet.create({
   eyebrow: {
     alignSelf: 'flex-start',
     borderRadius: radii.pill,
-    borderWidth: 2,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
