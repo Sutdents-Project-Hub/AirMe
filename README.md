@@ -5,6 +5,17 @@
 
 AirMe 讓使用者用自然語言描述想做的活動，再把 AQI、天氣、最低限度個人敏感條件與官方安全底線，整理成可執行、可解釋且受安全邊界限制的個人行動卡。
 
+## 命名對照
+
+| 用途 | 名稱 |
+|---|---|
+| GitHub repository／本機根資料夾 | `AirMe` |
+| Project slug／Coolify project | `airme` |
+| 本機 Docker Compose project | `airme` |
+| Coolify services | `airme-web`、`airme-api`、`airme-postgres` |
+
+主要 `docker-compose.yml` 明確設定 `name: airme`；Compose services 使用 `web`、`api`、`postgres` 且不設定 `container_name`。
+
 它不是醫療診斷工具，也不是通用聊天機器人。官方門檻由程式規則控制，AI 不能降低安全底線、發明門檻或判定症狀成因。
 
 ## 目前可操作的產品
@@ -128,6 +139,19 @@ Request／response 型別由 `packages/contracts` 共用；HTTP 錯誤使用穩�
 此 repository 根目錄的 [docker-compose.yml](docker-compose.yml) 定義 `web`、`api`、`postgres` 三個服務。Coolify 將公開網域指向 `web:80`；Nginx 會把同源 `/api/*` 反向代理到 API 容器，因此 Web 不必設定公開 API 網域或 CORS。
 
 部署前只需在 Coolify 填入必要的 PostgreSQL 密碼、context signing secret、量界與政府 API key，然後依 [部署計畫](docs/deployment.md) 完成第一次 migration、health check 與線上驗收。沒有 production URL、CI/CD、remote、release 或實際 VPS 部署已被宣稱完成。
+
+本機 Docker fixture 測試使用同一個 Compose 專案的三個服務，不會碰觸其他專案：
+
+```bash
+cp .env.local.example .env.local
+docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml up --build -d
+```
+
+完成後開啟 `http://localhost:8080`；停止時只停止 AirMe：
+
+```bash
+docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml down
+```
 
 ## 隱私與安全
 

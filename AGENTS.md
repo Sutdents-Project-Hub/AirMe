@@ -8,6 +8,9 @@
 - Git repository 名稱：`AirMe`。全新專案的初始 branch 為 `main`。
 
 - Project slug：`airme`
+- 本機 Docker Compose project：`airme`；主要 `docker-compose.yml` 必須明確設定頂層 `name: airme`。
+- Coolify project：`airme`；Coolify services：`airme-web`、`airme-api`、`airme-postgres`。
+- Compose services 使用 `web`、`api`、`postgres`，不設定 `container_name`；容器名稱由 Compose project 與 service role 產生。
 - 產品型態：`hybrid`
 - Bootstrap 模式：`executable`
 

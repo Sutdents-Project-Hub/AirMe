@@ -8,6 +8,9 @@
 - Project name：AirMe 空氣健康小管家
 - Repository name：`AirMe`
 - Project slug：`airme`
+- Local Docker Compose project：`airme`
+- Coolify project：`airme`
+- Coolify services：`airme-web`、`airme-api`、`airme-postgres`
 - Stage：`competition`
 - Product type：`hybrid`
 - Bootstrap mode：`executable`

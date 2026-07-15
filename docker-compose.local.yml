@@ -1,0 +1,12 @@
+services:
+  api:
+    environment:
+      AI_MODE: fixture
+      DATABASE_REQUIRED: "true"
+      MOENV_API_KEY: ""
+      CWA_API_KEY: ""
+      ALLOWED_ORIGINS: http://localhost:8080
+
+  web:
+    ports:
+      - "8080:80"

@@ -4,6 +4,14 @@
 
 部署目標為自有 VPS 的 Coolify。repository 已包含可部署的 `docker-compose.yml`、兩個 Dockerfile 與 PostgreSQL migration，但尚未建立 VPS、Coolify app、網域、production secret、備份或 production URL。
 
+## 命名契約
+
+- Repository／本機根資料夾：`AirMe`
+- Project slug／Coolify project：`airme`
+- 本機 Docker Compose project：`airme`（`docker-compose.yml` 頂層 `name: airme`）
+- Coolify services：`airme-web`、`airme-api`、`airme-postgres`
+- Compose services：`web`、`api`、`postgres`；不設定 `container_name`
+
 ## Compose 拓樸
 
 | Service | Image／責任 | 網路與資料 |
@@ -44,7 +52,19 @@ Web 的 `EXPO_PUBLIC_API_BASE_URL` 在 Docker build 時固定為 `/api`。所以
 
 Compose 會用資料庫的 `POSTGRES_*` 設定自動組成 API 連線。若改用 Coolify 獨立的 PostgreSQL service，請在 API 設定 `DATABASE_URL`，或完整提供 `DATABASE_HOST`、`DATABASE_PORT`、`DATABASE_NAME`、`DATABASE_USER`、`DATABASE_PASSWORD`；此時必須調整 Compose 的 `postgres` 服務與 `depends_on`，不要同時留下兩套不一致資料庫。
 
-`AI_MODE=live` 與 `DATABASE_REQUIRED=true` 已在 Compose 固定。若要在本機測試，使用 `AI_MODE=fixture DATABASE_REQUIRED=false`，不要把 fixture 設定誤帶到正式 Coolify app。
+`AI_MODE=live` 與 `DATABASE_REQUIRED=true` 已在 Compose 固定。本機 fixture 同樣維持 `DATABASE_REQUIRED=true`，以驗證 PostgreSQL migration 與匿名技術事件記錄；不要把 fixture 設定誤帶到正式 Coolify app。
+
+## 本機 Docker fixture 測試
+
+`docker-compose.local.yml` 是本機覆蓋檔：它只把 API 切換為 fixture、停用政府 API key，並公開 `web:80` 到 `localhost:8080`。與主 Compose 合併後只會在 `airme` Compose project 建立 `web`、`api`、`postgres` 三個 containers；不會停止、重建或使用其他 Compose 專案的 containers。
+
+```bash
+cp .env.local.example .env.local
+docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml up --build -d
+docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml ps
+```
+
+測試網址是 `http://localhost:8080`，API health 是 `http://localhost:8080/api/health`。停止本機 AirMe stack 時使用同一組檔案執行 `down`；除非你刻意要清除 fixture 資料庫，否則不要加 `-v`。
 
 ## 原生 App 設定
 

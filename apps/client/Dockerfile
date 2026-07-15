@@ -1,11 +1,18 @@
-FROM node:22-alpine AS build
+FROM node:22-bookworm-slim AS build
 
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY packages/contracts/package.json packages/contracts/package.json
 COPY apps/client/package.json apps/client/package.json
 COPY services/api/package.json services/api/package.json
-RUN npm ci
+ARG TARGETARCH
+RUN npm ci \
+  && case "$TARGETARCH" in \
+    amd64) lightningcss_package=lightningcss-linux-x64-gnu ;; \
+    arm64) lightningcss_package=lightningcss-linux-arm64-gnu ;; \
+    *) echo "Unsupported build architecture: $TARGETARCH" >&2; exit 1 ;; \
+  esac \
+  && npm install --no-save --package-lock=false --ignore-scripts "$lightningcss_package@1.32.0"
 
 COPY packages/contracts packages/contracts
 COPY apps/client apps/client
