@@ -10,6 +10,7 @@ describe('FeedbackPanel', () => {
     const onSubmit = vi.fn();
     render(<FeedbackPanel recommendationId="req_test" onSubmit={onSubmit} submitted={false} />);
 
+    expect(screen.getByText('5 SECOND CHECK-IN')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '活動完成：是' }));
     fireEvent.click(screen.getByRole('button', { name: '活動後感受：差不多' }));
     fireEvent.click(screen.getByRole('button', { name: '儲存活動回饋' }));

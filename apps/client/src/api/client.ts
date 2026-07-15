@@ -125,6 +125,6 @@ export function createAirMeApi(options: AirMeApiOptions): AirMeApi {
 }
 
 export const airMeApi = createAirMeApi({
-  baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:7071/api',
+  baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3000/api',
   timeoutMs: Number(process.env.EXPO_PUBLIC_API_TIMEOUT_MS) || 10_000,
 });

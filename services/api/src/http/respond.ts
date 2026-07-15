@@ -1,11 +1,16 @@
-import type { HttpResponseInit } from '@azure/functions';
 import { ApiErrorSchema, type ErrorCode } from '@airme/contracts';
+
+export interface HttpResponse {
+  status: number;
+  jsonBody?: unknown;
+  headers: Record<string, string>;
+}
 
 export function jsonResponse(
   status: number,
   jsonBody: unknown,
   headers: Record<string, string>,
-): HttpResponseInit {
+): HttpResponse {
   return { status, jsonBody, headers };
 }
 
@@ -16,7 +21,7 @@ export function errorResponse(input: {
   retryable: boolean;
   requestId: string;
   headers: Record<string, string>;
-}): HttpResponseInit {
+}): HttpResponse {
   return jsonResponse(
     input.status,
     ApiErrorSchema.parse({

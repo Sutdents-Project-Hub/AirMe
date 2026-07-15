@@ -1,9 +1,9 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { usePathname, useRouter, type Href } from 'expo-router';
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { radii, spacing, usePalette } from '../design/tokens';
+import { borders, radii, shadows, spacing, usePalette } from '../design/tokens';
 import { AppText } from './ui/app-text';
 
 const ITEMS = [
@@ -18,7 +18,9 @@ export function BottomNav() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const navWidth = Math.min(width - spacing.xl * 2, 480);
+  if (width >= 900) return null;
+
+  const navWidth = Math.min(width - spacing.lg * 2, 480);
 
   return (
     <View
@@ -27,7 +29,7 @@ export function BottomNav() {
         styles.container,
         {
           backgroundColor: palette.surface,
-          borderColor: palette.border,
+          borderColor: palette.ink,
           left: (width - navWidth) / 2,
           paddingBottom: Math.max(insets.bottom, spacing.sm),
           width: navWidth,
@@ -44,17 +46,21 @@ export function BottomNav() {
             onPress={() => router.replace(item.href)}
             style={({ pressed }) => [
               styles.item,
-              { backgroundColor: selected ? palette.accentSoft : 'transparent', opacity: pressed ? 0.7 : 1 },
+              {
+                backgroundColor: selected ? palette.yellow : 'transparent',
+                borderColor: selected ? palette.ink : 'transparent',
+                opacity: pressed ? 0.7 : 1,
+              },
             ]}>
             <MaterialCommunityIcons
               name={item.icon}
-              color={selected ? palette.accent : palette.textMuted}
+              color={selected ? palette.ink : palette.textMuted}
               size={22}
             />
             <AppText
               variant="caption"
               weight={selected ? '800' : '600'}
-              style={{ color: selected ? palette.accent : palette.textMuted }}>
+              style={{ color: selected ? palette.ink : palette.textMuted }}>
               {item.label}
             </AppText>
           </Pressable>
@@ -68,12 +74,30 @@ const styles = StyleSheet.create({
   container: {
     alignSelf: 'center',
     borderRadius: radii.lg,
-    borderWidth: 1,
+    borderWidth: borders.thick,
     bottom: spacing.md,
     flexDirection: 'row',
     gap: spacing.sm,
     padding: spacing.sm,
     position: 'absolute',
+    ...Platform.select({
+      web: { boxShadow: `5px 5px 0 ${shadows.color}` },
+      default: {
+        elevation: 6,
+        shadowColor: shadows.color,
+        shadowOffset: shadows.offset,
+        shadowOpacity: 1,
+        shadowRadius: 0,
+      },
+    }),
   },
-  item: { alignItems: 'center', borderRadius: radii.md, flex: 1, gap: 2, minHeight: 52, justifyContent: 'center' },
+  item: {
+    alignItems: 'center',
+    borderRadius: radii.md,
+    borderWidth: borders.thin,
+    flex: 1,
+    gap: 2,
+    justifyContent: 'center',
+    minHeight: 52,
+  },
 });

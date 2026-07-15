@@ -10,6 +10,7 @@ describe('ActivityComposer', () => {
     const onSubmit = vi.fn();
     render(<ActivityComposer loading={false} onSubmit={onSubmit} />);
 
+    expect(screen.getByText('AIRME ACTION LAB')).toBeTruthy();
     const submit = screen.getByRole('button', { name: '產生我的行動卡' });
     expect(submit.getAttribute('aria-disabled')).toBe('true');
     fireEvent.change(screen.getByLabelText('描述你的活動'), {

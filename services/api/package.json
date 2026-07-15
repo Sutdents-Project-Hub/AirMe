@@ -1,8 +1,8 @@
 {
   "name": "airme-api",
   "version": "1.0.0",
-  "description": "AirMe 的 Azure Functions TypeScript 後端骨架。",
-  "main": "dist/src/functions/*.js",
+  "description": "AirMe 的 Node.js + Fastify API，供 Coolify 部署使用。",
+  "main": "dist/src/server.js",
   "scripts": {
     "build": "npm run clean && tsc",
     "evaluate": "npm run build && node dist/src/evaluation/run-evaluation.js evaluation/cases.json",
@@ -11,18 +11,20 @@
     "watch": "tsc -w",
     "clean": "rimraf dist",
     "prestart": "npm run build",
-    "start": "func start"
+    "start": "node dist/src/server.js",
+    "db:migrate": "node dist/src/database/migrate.js"
   },
   "dependencies": {
     "@airme/contracts": "*",
-    "@azure/functions": "^4.0.0",
-    "@azure/identity": "^4.13.1",
+    "fastify": "^5.10.0",
+    "pg": "^8.22.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "22.x",
-    "typescript": "^5.0.0",
+    "@types/pg": "^8.20.0",
     "rimraf": "^5.0.0",
+    "typescript": "^5.0.0",
     "vitest": "^4.1.10"
   },
   "private": true,

@@ -1,7 +1,5 @@
-import type { HttpRequest } from '@azure/functions';
-
 export function corsHeaders(
-  request: HttpRequest,
+  request: { headers: Headers },
   allowedOrigins: string[],
 ): Record<string, string> {
   const origin = request.headers.get('origin');

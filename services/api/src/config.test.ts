@@ -14,4 +14,19 @@ describe('readApiConfig', () => {
   it('requires a configured context secret in live mode', () => {
     expect(() => readApiConfig({ AI_MODE: 'live' })).toThrow('CONTEXT_SIGNING_SECRET_REQUIRED');
   });
+
+  it('builds a safely encoded PostgreSQL URL from Coolify-style settings', () => {
+    const config = readApiConfig({
+      AI_MODE: 'fixture',
+      DATABASE_HOST: 'postgres',
+      DATABASE_PORT: '5432',
+      DATABASE_NAME: 'airme',
+      DATABASE_USER: 'airme',
+      DATABASE_PASSWORD: 'safe password/with symbols',
+    });
+
+    expect(config.databaseUrl).toBe(
+      'postgresql://airme:safe%20password%2Fwith%20symbols@postgres:5432/airme',
+    );
+  });
 });

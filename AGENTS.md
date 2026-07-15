@@ -4,7 +4,7 @@
 
 - 本檔適用於整個 `AirMe 空氣健康小管家` repository；子目錄若有更具體的 `AGENTS.md`，只在該範圍內補充本檔。
 - 依序遵守使用者當次指示、本檔、根目錄 `README.md`、`docs/` 與元件 README；內容衝突時先停止並確認。
-- 目前階段：`competition`（競賽／展示）。部署狀態：`planned`（Azure 平台已選定，實際資源、權限與部署合約尚未確認）。
+- 目前階段：`competition`（競賽／展示）。部署狀態：`planned`（目標為自有 VPS 的 Coolify；實際 VPS、網域、權限與部署合約尚未確認）。
 - Git repository 名稱：`AirMe`。全新專案的初始 branch 為 `main`。
 
 - Project slug：`airme`
@@ -17,33 +17,33 @@
 - 最低限度個人敏感條件、常用地點、通勤方式與常見活動設定
 - 取得環境部 AQI 與中央氣象署資料並顯示來源與更新時間
 - 以自然語言描述活動、時間、地點、強度與當下狀況
-- 由 Azure OpenAI 理解個人情境並產生固定格式的行動卡
+- 由量界智算理解個人情境並產生固定格式的行動卡
 - 在空品、活動安全與一般自我保護範圍內追問，離題與醫療診斷必須拒答
 - 活動後五秒回饋與個人紀錄，決賽版不宣稱醫療因果或成熟預測模型
 - 可重播的決賽示範情境與外部服務失敗時的降級展示
 
 ### 專案限制
 
-- 決賽日期為 2026-07-26，初始化後必須優先完成一條可現場操作的 Azure AI 核心流程
+- 決賽日期為 2026-07-26，必須優先完成一條可現場操作的量界智算 AI 核心流程
 - App 與 Web 是同一產品的不同入口，不建立教師端、班級端或角色分流
-- 不得把 Azure OpenAI、環境部或中央氣象署的金鑰放入 App、Web、版本控制或文件
+- 不得把量界智算、PostgreSQL、環境部或中央氣象署的秘密放入 App、Web、版本控制或文件
 - 未成年人個人與健康情境採資料最小化；決賽版優先保存在裝置端並只傳送當次推論必要內容
 - AirMe 不是醫療診斷工具，不判定症狀成因，不取代醫師與緊急協助
 - 官方 AQI 與校園活動準則是安全底線，生成式 AI 不得自行發明門檻
-- 主辦方 Azure 訂閱與資源為共用環境，未經確認不得修改或刪除他人資源
-- 初始化不建立外部帳號、Azure 資源、資料庫、部署、remote 或 GitHub repository
+- 未經確認不得修改或刪除 VPS、Coolify 或 PostgreSQL 中其他專案的資源
+- 初始化不建立外部帳號、資料庫、部署、remote 或 GitHub repository
 
 ### 已確認假設
 
 - `apps/client` 採 Expo Router 與 TypeScript，以單一 client 輸出 iOS、Android 與 Web。
-- `services/api` 採 Azure Functions v4、Node.js 22 與 TypeScript，所有 AI 與政府 API 呼叫都經過後端。
-- 決賽 P0 的個人設定與活動後回饋保存在裝置端，不建立雲端個人資料庫。
-- Azure Static Web Apps、獨立 Azure Functions、Azure OpenAI／Foundry 與 Application Insights 是規劃中的 Azure 目標。
+- `services/api` 採 Fastify、Node.js 22 與 TypeScript，所有 AI 與政府 API 呼叫都經過後端。
+- 決賽 P0 的個人設定與活動後回饋保存在裝置端；PostgreSQL 只保存環境快取與匿名技術事件，不建立個人資料庫。
+- Coolify、VPS、PostgreSQL 與量界智算是規劃部署目標。
 
 ### 未決定事項
 
-- 主辦方允許使用的 Azure OpenAI deployment、RBAC、region、quota 與 rate limit。
-- 團隊尚未指派 Azure 發布、監控與回滾負責人。
+- 量界智算可用模型、額度、rate limit 與 JSON mode 相容性。
+- 團隊尚未指派 VPS／Coolify 發布、監控、備份與回滾負責人。
 - App 最終交付採 development build、APK、AAB 或 TestFlight。
 - LICENSE 必須等待團隊著作權、競賽規則、資料與素材授權確認。
 
@@ -53,7 +53,7 @@
 以個人使用為主的跨平台空氣健康 AI 行動助理，結合即時環境資料、最低限度個人情境與官方準則，產生有依據、可解釋且受安全邊界限制的行動方案。
 
 - `apps/client`：同一套 iOS、Android、Web 個人 AirMe；依 `Expo` 的官方慣例維護，不可把其他元件的秘密或責任移入此處，也不可建立教師端或另一套 Web 產品。
-- `services/api`：後端／API；依 `Azure Functions` 的官方慣例維護，不可把其他元件的秘密或責任移入此處。
+- `services/api`：後端／API；依 Node.js／Fastify 與 PostgreSQL migration 慣例維護，不可把其他元件的秘密或責任移入此處。
 
 - Repository 與新專案根目錄名稱維持 `AirMe`；技術資源優先使用 `airme` 或平台既有慣例。
 - 新 component id、路徑與一般文件名使用簡短且能表達責任的 lowercase kebab-case；程式碼內命名遵守各 framework 慣例。

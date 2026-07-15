@@ -9,9 +9,16 @@
 - 資料來源、觀測／發布時間、fixture／live／partial／stale 狀態。
 - 受限追問、醫療／離題／緊急情境處理。
 - 五秒回饋與最多 20 筆歷史紀錄。
-- 手機與桌面 responsive layout、light／dark theme、鍵盤 focus 與 44pt 觸控目標。
+- 手機與桌面 responsive layout、固定亮色編輯方格主題、鍵盤 focus 與 44pt 觸控目標。
 
-個人設定、歷史與回饋使用 AsyncStorage，只保存在裝置端；前端不直接呼叫 Azure OpenAI、環境部或中央氣象署。
+## 前端視覺與導覽
+
+- 珊瑚紅、亮黃、青綠、天藍、奶油白與炭黑組成固定亮色主題。
+- 共用粗框、硬陰影、方格／點陣／斜線表面與膠囊控制項，不依平台建立第二套 UI。
+- 900px 以上 Web 使用上方導覽；手機與窄版 Web 使用安全區內的底部導覽。
+- 初次設定、今日、行動卡、追問、回饋、紀錄與設定使用相同資訊層級與狀態語言。
+
+個人設定、歷史與回饋使用 AsyncStorage，只保存在裝置端；前端不直接呼叫量界智算、環境部、中央氣象署或 PostgreSQL。
 
 ## 執行
 
@@ -43,7 +50,7 @@ npm run build:web --workspace airme
 
 ## 設定
 
-- `EXPO_PUBLIC_API_BASE_URL`：本機或 Azure Functions 的 `/api` base URL。
+- `EXPO_PUBLIC_API_BASE_URL`：本機或 Coolify HTTPS API 的 `/api` base URL。Coolify Web image 以同源 `/api` build。
 - `EXPO_PUBLIC_API_TIMEOUT_MS`：前端逾時毫秒數。
 
 所有 `EXPO_PUBLIC_*` 都會進入 App／Web bundle，不得放 secret。預設 Demo fixture 不需要任何環境變數；LIVE 只有在使用者明確切換後才呼叫 API。

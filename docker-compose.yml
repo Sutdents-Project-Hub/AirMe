@@ -1,0 +1,66 @@
+name: airme
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-airme}
+      POSTGRES_USER: ${POSTGRES_USER:-airme}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?請在 Coolify 設定 POSTGRES_PASSWORD}
+    volumes:
+      - airme-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      AI_MODE: live
+      DATABASE_REQUIRED: "true"
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${POSTGRES_DB:-airme}
+      DATABASE_USER: ${POSTGRES_USER:-airme}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?請在 Coolify 設定 POSTGRES_PASSWORD}
+      CONTEXT_SIGNING_SECRET: ${CONTEXT_SIGNING_SECRET:?請在 Coolify 設定 CONTEXT_SIGNING_SECRET}
+      LIANGJIE_AI_BASE_URL: ${LIANGJIE_AI_BASE_URL:-https://liangjiewis.com}
+      LIANGJIE_AI_MODEL: ${LIANGJIE_AI_MODEL:?請在 Coolify 設定 LIANGJIE_AI_MODEL}
+      LIANGJIE_AI_API_KEY: ${LIANGJIE_AI_API_KEY:?請在 Coolify 設定 LIANGJIE_AI_API_KEY}
+      LIANGJIE_AI_JSON_MODE: ${LIANGJIE_AI_JSON_MODE:-auto}
+      MOENV_API_KEY: ${MOENV_API_KEY:?請在 Coolify 設定 MOENV_API_KEY}
+      CWA_API_KEY: ${CWA_API_KEY:?請在 Coolify 設定 CWA_API_KEY}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      REQUEST_TIMEOUT_MS: ${REQUEST_TIMEOUT_MS:-8000}
+      CONTEXT_TTL_SECONDS: ${CONTEXT_TTL_SECONDS:-1800}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "3000"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/client/Dockerfile
+      args:
+        EXPO_PUBLIC_API_BASE_URL: /api
+        EXPO_PUBLIC_API_TIMEOUT_MS: ${EXPO_PUBLIC_API_TIMEOUT_MS:-10000}
+    depends_on:
+      api:
+        condition: service_started
+    expose:
+      - "80"
+    restart: unless-stopped
+
+volumes:
+  airme-postgres:

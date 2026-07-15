@@ -1,190 +1,102 @@
-# AirMe 技術與 Azure 架構
+# AirMe 技術與 VPS 架構
 
-## 1. 技術選型結論
+## 1. 技術選型
 
-採用 React Native + Expo + TypeScript，而非 Flutter。
+- `apps/client`：React Native + Expo Router + TypeScript，單一專案輸出 iOS、Android 與 Web。
+- `services/api`：Node.js 22 + Fastify + TypeScript，作為唯一可信任後端。
+- `packages/contracts`：Zod runtime schema 與前後端共用型別。
+- 部署：自有 VPS 上的 Coolify，使用 repository 根目錄 Compose 建立 Web、API、PostgreSQL。
+- AI：量界智算的 OpenAI 相容 Chat Completions API。
+- 資料庫：PostgreSQL，只保存共享環境快取與匿名技術事件。
 
-理由：
-
-- 同一個 Expo Router 專案輸出 iOS、Android 與 Web，符合「單一 AirMe、兩種入口」。
-- Web 可以用 responsive layout 或 `.web.tsx` 處理桌面差異，不需建立第二套產品。
-- 前端與 Azure Functions 都使用 TypeScript，決賽前只維護一種主要語言與相同資料型別。
-- Expo 可快速使用實體手機展示，Web 靜態輸出可部署到 Azure Static Web Apps。
-
-Flutter 仍適合 App-centric 跨平台體驗，但此專案若使用 Flutter，後端仍需另維護 TypeScript／Python，且團隊未提供明顯 Dart 經驗優勢。獨立 React Native App + Next.js Web 雖然自由度高，但會形成三個執行元件，超出決賽時間。
+Expo 仍適合決賽的單一跨平台產品；Fastify 讓 API 在 VPS 容器中以固定 port 常駐。這不會把 AI 或政府 API key 移進前端。
 
 ## 2. 元件邊界
 
 ### `apps/client`
 
-- 唯一產品前端。
-- 管理 UI、裝置端個人設定、活動後回饋與示範 fixture。
-- 不持有 secret，不直接呼叫 Azure OpenAI 或政府資料 API。
-- 只信任 API 回傳的結構化資料，不渲染未驗證的模型原文。
+- 唯一產品前端，負責 UI、裝置端個人設定、回饋與離線 fixture。
+- Web image 以 Nginx 提供靜態輸出，並把 `/api/*` 反向代理到 API container。
+- 不持有 API key、資料庫帳密或任何伺服器端秘密。
+- 個人設定、回饋與歷史仍只保留在裝置端。
 
 ### `services/api`
 
-- 唯一可信任後端。
-- 驗證輸入、取得環境資料、套用官方規則、呼叫 Azure OpenAI、驗證 Structured Outputs。
-- 管理 timeout、rate limit、CORS、錯誤映射與安全 log。
-- Azure 上使用 Managed Identity／RBAC；外部 API key 放在平台設定或 Key Vault。
+- 驗證輸入、取得環境資料、套用官方規則、呼叫量界智算、驗證模型輸出與簽發短效追問 token。
+- Fastify 以 `/api` 路由提供 API；不回傳 provider body、stack trace 或秘密。
+- migration 由 `npm run db:migrate --workspace airme-api` 執行；容器啟動時會先執行 migration。
+- 對 PostgreSQL 的存取只限環境快取、`service_events` 技術事件與 readiness check。
 
 ### `packages/contracts`
 
-- App 與 API 共用的 Zod runtime schema 與 TypeScript 型別。
-- 定義個人設定、粗略地點、環境來源、行動卡、追問、錯誤、回饋與歷史紀錄。
-- 由兩個真實執行元件共同使用，避免只共享編譯期型別卻在 runtime 接受無效資料。
+- 定義個人設定、粗略地點、環境來源、行動卡、追問、錯誤、回饋與歷史紀錄的 runtime schema。
+- 由 App 與 API 共同使用，避免只共享 TypeScript 型別卻在 runtime 接受無效資料。
 
-## 3. Azure P0 架構
+## 3. Coolify P0 拓樸
 
 ```mermaid
 flowchart LR
-    U["AirMe App / Web"] -->|HTTPS JSON| F["Azure Functions v4"]
-    F --> V["輸入驗證與領域守門"]
-    V --> E["環境資料正規化"]
-    E --> M["環境部 AQI API"]
-    E --> W["中央氣象署 API"]
-    V --> P["官方規則與安全底線"]
-    E --> O["Azure OpenAI Responses API"]
-    P --> O
-    O --> S["JSON Schema 驗證與後處理"]
-    S --> U
-    F --> I["Application Insights 技術遙測"]
+  User["App／Web 使用者"] -->|HTTPS| Web["Coolify web：Nginx／Expo static"]
+  Web -->|"/api reverse proxy"| Api["Coolify api：Node 22／Fastify"]
+  Api --> Guard["輸入驗證／領域守門"]
+  Guard --> Env["環境資料正規化"]
+  Env --> Moenv["環境部 AQI"]
+  Env --> Cwa["中央氣象署"]
+  Guard --> Rules["官方規則安全底線"]
+  Env --> Ai["量界智算 Chat Completions"]
+  Rules --> Ai
+  Ai --> Validate["JSON／Schema／安全後處理"]
+  Api <--> Pg["PostgreSQL：快取／匿名技術事件"]
+  Validate --> Web
 ```
 
-### 必用
+Web 的正式 build 以 `EXPO_PUBLIC_API_BASE_URL=/api` 產生。瀏覽器請求因此使用同源，不須暴露 API container port 或設定 Web 的 CORS。原生 App 不具同源情境，最後打包時必須把 `EXPO_PUBLIC_API_BASE_URL` 設為 HTTPS 公開網域的 `/api`；這個值不是秘密。
 
-| Azure 服務 | P0 責任 | 選擇原因 |
+## 4. 資料流與安全界線
+
+1. Client 以共用 schema 建立 `RecommendationRequest`，只傳當次推論需要的活動、粗略地點與受控 profile 標籤。
+2. API 驗證欄位、長度、列舉與座標精度，然後進行領域／醫療／緊急守門。
+3. API 取得 AQI、天氣；PostgreSQL 先提供可用快取，外部成功回應才覆寫快取。
+4. 程式規則依環境、活動強度與敏感標籤建立不可降低的 risk floor。
+5. 量界 adapter 以 `POST /v1/chat/completions`、Bearer key、可設定模型與 JSON object 請求產生草稿。
+6. API 以 Zod 驗證草稿、禁止醫療因果，並以程式規則強制最小風險；失敗時改用清楚標示的 fixture 安全降級。
+7. API 不保存 request body、個人 profile、活動文字、回饋、context token 或模型完整回應；只寫入快取與匿名技術事件。
+
+## 5. PostgreSQL schema
+
+`services/api/database/migrations/001-operational-data.sql` 建立：
+
+| Table | 內容 | 明確不保存 |
 |---|---|---|
-| Microsoft Foundry／Azure OpenAI | 情境理解、行動卡與限定追問 | AI 必須是核心；Responses API 支援 Structured Outputs |
-| Azure Functions Flex Consumption | 安全後端與外部整合 | Node.js 22、serverless、Managed Identity、App 和 Web 共用 |
-| Azure Static Web Apps | 託管 Expo Web 靜態輸出 | `expo export --platform web` 產生靜態檔案 |
-| Managed Identity + RBAC | Function 到 Azure OpenAI 的無密碼驗證 | 避免 key 進入程式與前端 |
-| Application Insights | request、延遲、錯誤與依賴健康 | 支援現場診斷，但必須關閉敏感 payload 記錄 |
+| `environment_cache` | 粗略座標 key、標準化 AQI／天氣 JSON、取得時間 | 使用者 ID、活動、個人條件、精確地址 |
+| `service_events` | 隨機 request ID、route、status code、duration、建立時間 | IP、request／response body、prompt、模型輸出、錯誤原文 |
 
-### 有權限且時間足夠再使用
+所有 migration 都是版本化 SQL；`schema_migrations` 防止重複執行。決賽正式環境先採單一 API replica，避免多個 container 同時進行第一次 migration；之後再擴容前需加入 migration lock 與連線池容量評估。
 
-- Key Vault：保存環境部、中央氣象署等無法使用 Entra ID 的 secret。
-- Cosmos DB：只有在決賽確定需要匿名服務端回饋時才加入；不建立個人病歷。
-- Foundry Evaluation：可用於安全資料集與紅隊測試；沒有權限時用 repository 內固定案例執行同樣測試。
+## 6. API 契約
 
-### P0 不使用
+| Method | Route | 說明 |
+|---|---|---|
+| `GET` | `/api/health` | 不回傳配置的 API／資料庫 readiness |
+| `GET` | `/api/environment` | AQI、天氣、來源、時間與降級狀態 |
+| `POST` | `/api/recommendations` | 規則底線 + AI／fixture 行動卡 |
+| `POST` | `/api/follow-ups` | 原情境內追問；離題、醫療與緊急固定處理 |
 
-Azure Machine Learning、AI Search／RAG、Azure Maps、Document Intelligence、Vision、Speech、Notification Hubs、Power BI、API Management、Data Factory、AKS、VM、班級資料庫。這些服務沒有被最短核心流程需要，加入只會增加權限、成本與失敗面。
+公開錯誤固定使用 `{ error: { code, message, retryable, requestId } }`。重要代碼為 `INVALID_REQUEST`、`OUT_OF_SCOPE`、`MEDICAL_BOUNDARY`、`URGENT_SAFETY`、`CONTEXT_EXPIRED` 與 `INTERNAL_ERROR`。
 
-## 4. 主辦方 Azure 環境盤點
+## 7. 執行與部署契約
 
-- 帳戶是主辦方提供的共用 CSP 訂閱。
-- 共用資源群組內已有 Foundry、Azure OpenAI 與多種 AI 服務，也混有其他隊伍資源。
-- 已看到成功的聊天與 GPT-5 類 deployment，可作為候選模型；實作不得把目前看到的名稱當成永久契約。
-- CSP 成本管理畫面無法直接確認本隊個別額度。
-- 使用前必須確認允許的 deployment、RBAC、region、rate limit、token 額度與是否能建立新 Function／Static Web App。
-- 不讀取、複製或提交 Portal key；不修改或刪除他人資源。
+- 本機與 container runtime：Node.js 22。
+- API build：`npm run build --workspace airme-api`；啟動：`npm run start --workspace airme-api`。
+- migration：`npm run db:migrate --workspace airme-api`。
+- Web build：`npm run build:web --workspace airme`，輸出 `apps/client/dist/`。
+- Coolify：匯入根目錄 `docker-compose.yml`，公開網域設定到 `web:80`。
+- `api` 只以 Compose internal network 暴露 `3000`，避免資料庫與 API port 直接公開。
 
-## 5. AI 請求流程
+## 8. 尚未驗證的外部條件
 
-1. 前端建立 `RecommendationRequest`。
-2. API 以 Schema 驗證欄位、長度、列舉值與時間。
-3. 領域守門器判斷是否為空品、活動與一般自我保護情境。
-4. 環境 adapter 取得 AQI／天氣，標記來源、觀測時間與是否過期。
-5. 規則引擎根據官方資料產生不可突破的 constraints。
-6. Azure OpenAI 接收最小化情境、官方 constraints 與輸出 JSON Schema。
-7. 後端驗證 Structured Output、引用事實、內容過濾與禁止語句。
-8. 成功回傳行動卡；失敗回傳標準錯誤，不回傳模型原文。
-
-## 6. 已實作 API 契約
-
-### `GET /api/health`
-
-回傳 API 狀態、版本與相依服務摘要。不得回傳 endpoint、deployment、key 或 stack trace。
-
-### `GET /api/environment`
-
-輸入為名稱與最多小數三位的暫時座標；裝置端最多保存一個粗略地點，P0 不保存精確地址或長期軌跡。
-
-回傳：
-
-- location label
-- AQI、category、primary pollutant
-- weather summary
-- observedAt、fetchedAt、stale
-- source name、source URL
-
-### `POST /api/recommendations`
-
-簡化輸入範例：
-
-```json
-{
-  "activityText": "今天下午想跑 1600 公尺",
-  "location": { "name": "高雄市", "latitude": 22.627, "longitude": 120.301 },
-  "profile": {
-    "ageGroup": "teen",
-    "sensitiveConditions": ["allergy-sensitive"],
-    "commuteMode": "bike"
-  },
-  "locale": "zh-TW",
-  "timeZone": "Asia/Taipei",
-  "dataMode": "live"
-}
-```
-
-行動卡主要欄位：
-
-```json
-{
-  "actionCard": {
-    "riskLevel": "high",
-    "headline": "建議降低強度或改到室內",
-    "recommendedPlan": {
-      "timing": "延後或縮短活動",
-      "location": "室內通風空間",
-      "intensity": "低強度",
-      "equipment": []
-    },
-    "why": ["AQI 與活動強度觸發較保守底線"],
-    "safetyNotes": ["若不舒服請停止活動並告知身邊成人"],
-    "environment": {},
-    "provenance": {}
-  },
-  "contextToken": "signed-expiring-context",
-  "requestId": "opaque-id"
-}
-```
-
-完整欄位由 `packages/contracts/src/schemas.ts` 定義；文件範例不可取代程式驗證。
-
-### `POST /api/follow-ups`
-
-輸入短效 `contextToken` 與單一問題；後端使用原已驗證情境，問題離題時回傳拒答狀態，不重新猜測個人或環境資料。
-
-## 7. 錯誤契約
-
-所有 API 錯誤使用 `{ error: { code, message, retryable, requestId } }`：
-
-- `code`：穩定的機器可讀代碼。
-- `message`：安全、可顯示的繁體中文訊息。
-- `requestId`：除錯關聯值。
-- `retryable`：是否建議重試。
-重要代碼：`INVALID_REQUEST`、`OUT_OF_SCOPE`、`MEDICAL_BOUNDARY`、`URGENT_SAFETY`、`ENVIRONMENT_UNAVAILABLE`、`AI_UNAVAILABLE`、`CONTEXT_EXPIRED`、`RATE_LIMITED`、`INTERNAL_ERROR`。
-
-## 8. 執行與部署契約
-
-- 本機及 Azure Functions runtime：Node.js 22。
-- 依賴：repository 根目錄執行 `npm ci`，使用單一 workspace lockfile。
-- Web build：根目錄執行 `npm run build:web --workspace airme`，輸出 `apps/client/dist/`。
-- API build：根目錄執行 `npm run build --workspace airme-api`，Functions host 由平台啟動。
-- Static Web Apps 與 Functions 可分開部署；手機直接呼叫 Functions HTTPS endpoint。
-- 是否將 Functions 連結成 Static Web Apps `/api` backend 需看方案與權限，P0 不依賴 Standard plan 才有的功能。
-- 正式 region 應靠近使用者且支援獲准模型；目前尚未核准，不在文件猜值。
-
-## 9. 參考文件
-
-- [Expo 建立專案](https://docs.expo.dev/get-started/create-a-project/)
-- [Expo Web 靜態輸出](https://docs.expo.dev/router/web/static-rendering/)
-- [Flutter Web FAQ](https://docs.flutter.dev/platform-integration/web/faq)
-- [Azure Functions Node.js](https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference-node)
-- [Azure Functions Flex Consumption](https://learn.microsoft.com/en-us/azure/azure-functions/flex-consumption-plan)
-- [Azure Static Web Apps API 選項](https://learn.microsoft.com/en-us/azure/static-web-apps/apis-overview)
-- [Azure 無密碼驗證](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/secretless-authentication)
-- [Azure OpenAI Responses API](https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/responses)
+- VPS 的作業系統、Coolify 版本、反向代理、TLS、網域與防火牆。
+- 量界智算指定模型對 JSON mode 的實際支援、額度、429 與延遲。
+- 真實環境部／中央氣象署欄位、額度與 attribution。
+- PostgreSQL 容器首次啟動、備份、restore 與磁碟容量。
+- iOS／Android 最終安裝形式與原生 App 的 HTTPS API 網域。

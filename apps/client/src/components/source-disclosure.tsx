@@ -1,7 +1,7 @@
 import type { EnvironmentSnapshot } from '@airme/contracts';
 import { StyleSheet, View } from 'react-native';
 
-import { spacing, usePalette } from '../design/tokens';
+import { borders, spacing, usePalette } from '../design/tokens';
 import { AppText } from './ui/app-text';
 
 function formatDate(value: string): string {
@@ -22,7 +22,15 @@ export function SourceDisclosure({ sources }: { sources: EnvironmentSnapshot['so
     <View style={styles.list}>
       {sources.map((source) => (
         <View key={`${source.provider}-${source.observedAt}`} style={styles.row}>
-          <View style={[styles.dot, { backgroundColor: source.stale ? palette.warning : palette.air }]} />
+          <View
+            style={[
+              styles.dot,
+              {
+                backgroundColor: source.stale ? palette.yellow : palette.surface,
+                borderColor: palette.ink,
+              },
+            ]}
+          />
           <View style={styles.copy}>
             <AppText variant="body-small" weight="700">
               {source.label}
@@ -40,6 +48,6 @@ export function SourceDisclosure({ sources }: { sources: EnvironmentSnapshot['so
 const styles = StyleSheet.create({
   list: { gap: spacing.md },
   row: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.md },
-  dot: { borderRadius: 4, height: 8, marginTop: 7, width: 8 },
+  dot: { borderRadius: 5, borderWidth: borders.thin, height: 10, marginTop: 6, width: 10 },
   copy: { flex: 1 },
 });

@@ -12,8 +12,16 @@ interface AppTextProps extends TextProps {
 }
 
 const variantStyles: Record<TextVariant, TextStyle> = {
-  display: { fontSize: typography.size.display, lineHeight: typography.lineHeight.display },
-  title: { fontSize: typography.size.title, lineHeight: typography.lineHeight.title },
+  display: {
+    fontSize: typography.size.display,
+    letterSpacing: -1.4,
+    lineHeight: typography.lineHeight.display,
+  },
+  title: {
+    fontSize: typography.size.title,
+    letterSpacing: -0.5,
+    lineHeight: typography.lineHeight.title,
+  },
   'title-small': {
     fontSize: typography.size.titleSmall,
     lineHeight: typography.lineHeight.titleSmall,

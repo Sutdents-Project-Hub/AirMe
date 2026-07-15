@@ -9,12 +9,12 @@
 | 醫療拒答、追問、回饋與歷史 | 通過 | 手機瀏覽器實際操作與自動化測試 |
 | Responsive Web | 通過 | 375×812 與 1440px 桌面檢查 |
 | 共用資料契約 | 通過 | Zod runtime schema 與契約測試 |
-| API orchestration、規則與安全處理 | 通過 | fixture／mock 自動化測試與本機 Functions 四 endpoint smoke |
+| API orchestration、規則與安全處理 | 通過 | fixture／mock 自動化測試與本機 Fastify 四 endpoint smoke |
 | 30 個安全評估案例 | 通過 | `npm run evaluate` 30/30 |
 | Web production static export | 通過 | `npm run build:web --workspace airme` |
 | 真實 MOENV／CWA 呼叫 | 未驗證 | adapter 已完成；尚未使用真實 key |
-| 真實 Azure OpenAI 呼叫 | 未驗證 | adapter 已完成；尚未以獲准 deployment 執行 |
-| Azure Functions／Static Web Apps 部署 | 未驗證 | 未獲部署授權，沒有 production URL |
+| 真實量界智算呼叫 | 未驗證 | adapter 已完成；尚未以真實 token 與 model ID 執行 |
+| Coolify／PostgreSQL 部署 | 未驗證 | Compose 與 migration 已完成，沒有 production URL |
 | 實體 iOS／Android | 未驗證 | 尚未在決賽設備執行 |
 
 ## 核心流程驗收
@@ -28,7 +28,7 @@
 7. 詢問診斷／藥物、離題問題或提示注入時，不執行要求並引導回產品範圍。
 8. 出現呼吸困難、胸痛或昏厥等描述時，停止一般建議並提示立即求助。
 9. 回饋保存後可在紀錄看到摘要；清除資料後設定、紀錄與回饋全部移除。
-10. Demo 模式全程標示示範資料，不宣稱是即時 Azure。
+10. Demo 模式全程標示示範資料，不宣稱是即時 AI。
 
 ## API 驗收
 
@@ -41,8 +41,8 @@
 
 ## 發布前剩餘門檻
 
-- 以主辦方核准的 Entra／RBAC 執行真實 Azure OpenAI 流程並保存不含秘密的證據。
+- 以團隊量界 token 與指定 model ID 執行真實 AI 流程並保存不含秘密的證據。
 - 以真實 MOENV／CWA 帳號驗證欄位、額度、attribution、更新頻率與 fallback。
-- 部署 preview 後驗證 CORS、冷啟動、P50／P95、429、timeout 與 Application Insights redaction。
+- 部署 preview 後驗證同源 `/api`、API／PostgreSQL healthcheck、P50／P95、429、timeout 與 log／資料庫 redaction。
 - 在至少一台 Android 實機與決賽 Web 瀏覽器重跑核心流程。
 - 完成素材、字型、開放資料、競賽規則與 LICENSE 人工審查。

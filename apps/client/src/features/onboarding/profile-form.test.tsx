@@ -10,6 +10,9 @@ describe('ProfileForm', () => {
     const onSubmit = vi.fn();
     render(<ProfileForm onSubmit={onSubmit} submitting={false} />);
 
+    for (const step of ['STEP 01', 'STEP 02', 'STEP 03', 'STEP 04', 'STEP 05']) {
+      expect(screen.getByText(step)).toBeTruthy();
+    }
     expect(screen.getByText(/只保存在這台裝置/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '年齡層：13–18 歲' }));
     fireEvent.click(screen.getByRole('button', { name: '敏感條件：呼吸道較敏感' }));

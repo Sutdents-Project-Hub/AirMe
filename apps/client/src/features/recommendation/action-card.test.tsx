@@ -53,6 +53,7 @@ describe('ActionCard', () => {
   it('communicates risk with text, plan, evidence, source and mode', () => {
     render(<ActionCard recommendation={recommendation} />);
 
+    expect(screen.getByText('AIRME ACTION PLAN')).toBeTruthy();
     expect(screen.getByText('風險偏高')).toBeTruthy();
     expect(screen.getByText(recommendation.actionCard.headline)).toBeTruthy();
     expect(screen.getByText('時間')).toBeTruthy();
@@ -60,5 +61,8 @@ describe('ActionCard', () => {
     expect(screen.getByText('AirMe 決賽示範資料')).toBeTruthy();
     expect(screen.getByText('決賽示範')).toBeTruthy();
     expect(screen.getByText(/更新：2026\/07\/13/)).toBeTruthy();
+    for (const label of ['時間', '地點', '強度', '準備']) {
+      expect(screen.getByLabelText(`建議方案：${label}`)).toBeTruthy();
+    }
   });
 });

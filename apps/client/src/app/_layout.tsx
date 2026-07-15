@@ -8,8 +8,8 @@ import { AppProvider } from '../state/app-provider';
 export default function RootLayout() {
   return (
     <AppProvider>
-      <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false, animation: 'fade' }} />
+      <StatusBar style="dark" />
+      <Stack screenOptions={{ headerShown: false, animation: 'none' }} />
     </AppProvider>
   );
 }

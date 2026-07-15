@@ -1,7 +1,7 @@
 import type { EnvironmentSnapshot } from '@airme/contracts';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { radii, spacing, usePalette } from '../design/tokens';
+import { borders, radii, spacing, usePalette } from '../design/tokens';
 import { SourceDisclosure } from './source-disclosure';
 import { AppButton } from './ui/app-button';
 import { AppText } from './ui/app-text';
@@ -23,7 +23,7 @@ export function EnvironmentHero({
   const palette = usePalette();
   if (!environment) {
     return (
-      <Card>
+      <Card pattern="grid" patternColor={palette.teal}>
         <AppText variant="title-small" weight="800">
           今日環境
         </AppText>
@@ -35,33 +35,42 @@ export function EnvironmentHero({
   }
 
   return (
-    <Card style={{ backgroundColor: palette.airSoft, borderColor: palette.airSoft }}>
+    <Card
+      pattern="stripes"
+      patternColor={palette.surface}
+      style={{ backgroundColor: palette.teal, borderColor: palette.ink }}>
       <View style={styles.topRow}>
         <View style={styles.copy}>
-          <AppText variant="caption" tone="muted" weight="700">
-            {environment.location.name}
-          </AppText>
+          <View style={[styles.eyebrow, { backgroundColor: palette.yellow, borderColor: palette.ink }]}>
+            <AppText variant="caption" weight="900">
+              AIR QUALITY · {environment.location.name}
+            </AppText>
+          </View>
           <View style={styles.aqiRow}>
             <AppText variant="display" weight="800">
               {environment.airQuality.aqi}
             </AppText>
             <View>
-              <AppText variant="body-small" tone="muted">
+              <AppText variant="body-small">
                 AQI
               </AppText>
               <AppText weight="700">{aqiLabel(environment.airQuality.category)}</AppText>
             </View>
           </View>
         </View>
-        <View style={[styles.badge, { backgroundColor: palette.surface }]}>
+        <View
+          style={[
+            styles.badge,
+            { backgroundColor: palette.surface, borderColor: palette.ink },
+          ]}>
           <AppText variant="caption" weight="800">
             {demoMode ? '決賽示範' : environment.provenance === 'live' ? '即時資料' : '部分降級'}
           </AppText>
         </View>
       </View>
-      <View style={[styles.weather, { borderTopColor: palette.border }]}>
+      <View style={[styles.weather, { borderTopColor: palette.ink }]}>
         <AppText weight="700">{environment.weather.summary}</AppText>
-        <AppText variant="body-small" tone="muted">
+        <AppText variant="body-small">
           {environment.weather.temperatureC === null ? '溫度未提供' : `${environment.weather.temperatureC}°C`}
           {' · '}
           {environment.weather.rainProbability === null
@@ -95,6 +104,19 @@ const styles = StyleSheet.create({
   topRow: { alignItems: 'flex-start', flexDirection: 'row', justifyContent: 'space-between' },
   copy: { flex: 1, gap: spacing.xs },
   aqiRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
-  badge: { borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  weather: { borderTopWidth: 1, gap: spacing.xs, paddingTop: spacing.md },
+  eyebrow: {
+    alignSelf: 'flex-start',
+    borderRadius: radii.pill,
+    borderWidth: borders.thin,
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  badge: {
+    borderRadius: radii.pill,
+    borderWidth: borders.thin,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  weather: { borderTopWidth: borders.thick, gap: spacing.xs, paddingTop: spacing.md },
 });

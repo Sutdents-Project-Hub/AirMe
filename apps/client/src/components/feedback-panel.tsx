@@ -2,7 +2,7 @@ import type { Feedback } from '@airme/contracts';
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
-import { radii, spacing, typography, usePalette } from '../design/tokens';
+import { borders, radii, spacing, typography, usePalette } from '../design/tokens';
 import { AppButton } from './ui/app-button';
 import { AppText } from './ui/app-text';
 import { Card } from './ui/card';
@@ -27,7 +27,10 @@ export function FeedbackPanel({ recommendationId, submitted, onSubmit }: Feedbac
 
   if (submitted) {
     return (
-      <Card style={{ backgroundColor: palette.successSoft, borderColor: palette.successSoft }}>
+      <Card
+        pattern="dots"
+        patternColor={palette.success}
+        style={{ backgroundColor: palette.successSoft, borderColor: palette.ink }}>
         <AppText variant="title-small" weight="800">
           回饋已保存在這台裝置
         </AppText>
@@ -37,8 +40,13 @@ export function FeedbackPanel({ recommendationId, submitted, onSubmit }: Feedbac
   }
 
   return (
-    <Card>
+    <Card pattern="stripes" patternColor={palette.coral}>
       <View style={styles.heading}>
+        <View style={[styles.eyebrow, { backgroundColor: palette.coral, borderColor: palette.ink }]}>
+          <AppText variant="caption" weight="900" style={{ color: palette.surface }}>
+            5 SECOND CHECK-IN
+          </AppText>
+        </View>
         <AppText variant="title" weight="800">
           5 秒活動回饋
         </AppText>
@@ -98,7 +106,7 @@ export function FeedbackPanel({ recommendationId, submitted, onSubmit }: Feedbac
         placeholderTextColor={palette.textMuted}
         style={[
           styles.input,
-          { backgroundColor: palette.background, borderColor: palette.border, color: palette.text },
+          { backgroundColor: palette.background, borderColor: palette.ink, color: palette.text },
         ]}
         value={note}
       />
@@ -121,11 +129,18 @@ export function FeedbackPanel({ recommendationId, submitted, onSubmit }: Feedbac
 
 const styles = StyleSheet.create({
   heading: { gap: spacing.sm },
+  eyebrow: {
+    alignSelf: 'flex-start',
+    borderRadius: radii.pill,
+    borderWidth: borders.thin,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
   field: { gap: spacing.sm },
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   input: {
     borderRadius: radii.md,
-    borderWidth: 1,
+    borderWidth: borders.thick,
     fontFamily: typography.family,
     fontSize: typography.size.body,
     minHeight: 48,

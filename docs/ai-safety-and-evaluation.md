@@ -28,8 +28,8 @@ AirMe 的安全目標不是保證模型永遠正確，而是讓錯誤可被限�
 2. 後端 Schema 驗證型別、列舉、長度與時間。
 3. 領域守門將請求分成 `allowed`、`clarify`、`out-of-scope`、`urgent-safety`。
 4. 官方規則引擎產生不可突破的 constraints。
-5. Azure OpenAI Prompt Shields／內容過濾處理提示攻擊與不當內容。
-6. Responses API Structured Outputs 強制固定 JSON Schema。
+5. 後端 system prompt、JSON object 要求與模型 provider 的內容安全設定共同限制不當輸出。
+6. OpenAI 相容 Chat Completions 的 JSON object 回應，仍必須由後端 Zod schema 強制驗證。
 7. 後處理驗證理由是否只引用存在的事實、門檻是否符合規則、是否包含禁止語句。
 8. 失敗時不顯示原始模型答案，只回傳安全錯誤或保守結果。
 
@@ -76,7 +76,7 @@ AirMe 的安全目標不是保證模型永遠正確，而是讓錯誤可被限�
 | 嚴重症狀 | 呼吸困難／胸痛 | 停止一般建議並升級求助 |
 | 虛構資料要求 | 要求假裝 AQI 是 30 | 不替換真實資料 |
 | 模型無效 JSON | Schema 不符 | 不顯示原文，回 `AI_INVALID_OUTPUT` |
-| Azure 限流 | 429／逾時 | 可理解錯誤、重試與標示示範備援 |
+| AI 限流 | 429／逾時 | 可理解錯誤、重試與標示示範備援 |
 
 ## 9. 評估指標
 
@@ -86,20 +86,20 @@ AirMe 的安全目標不是保證模型永遠正確，而是讓錯誤可被限�
 - Medical boundary accuracy：診斷／藥物／緊急案例正確處理比例。
 - Contrast consistency：同環境改變活動或敏感條件後，差異是否合理且可解釋。
 - Latency：資料取得、模型與總回應時間的 P50／P95。
-- Fallback integrity：備援是否清楚標示，是否避免冒充線上 Azure 結果。
+- Fallback integrity：備援是否清楚標示，是否避免冒充線上 AI 結果。
 
-已在 `services/api/evaluation/cases.json` 建立 30 個固定案例：8 個一般、5 個敏感、5 個資料品質、4 個醫療、3 個緊急、2 個離題與 3 個提示注入。`npm run evaluate` 會執行相同的安全分類與規則核心；目前 fixture 評估為 30/30。這不是 live 模型品質證明，取得 Azure 權限後仍須以實際 deployment 重跑並人工檢查 grounding、延遲與內容過濾。
+已在 `services/api/evaluation/cases.json` 建立 30 個固定案例：8 個一般、5 個敏感、5 個資料品質、4 個醫療、3 個緊急、2 個離題與 3 個提示注入。`npm run evaluate` 會執行相同的安全分類與規則核心；目前 fixture 評估為 30/30。這不是 live 模型品質證明，取得量界 token 與 model ID 後仍須以實際模型重跑並人工檢查 grounding、延遲與內容過濾。
 
 ## 10. 實作對應
 
 - `services/api/src/domain/rules.ts`：AQI、敏感條件、活動強度、缺失與 stale 的決定性風險底線。
 - `services/api/src/domain/safety.ts`：緊急、提示注入、醫療、允許領域與離題分類；順序以緊急為最高優先。
-- `services/api/src/ai/azure-openai-adapter.ts`：Responses API、嚴格 JSON Schema、Entra 優先與 provider 錯誤遮蔽。
+- `services/api/src/adapters/ai/liangjie.ts`：OpenAI 相容 Chat Completions、JSON object、Zod 後驗證與 provider 錯誤遮蔽。
 - `services/api/src/recommendation`：模型結果驗證、醫療因果偵測與不可降低風險。
 - `services/api/src/follow-up`：短效 context token、固定拒答與安全降級。
 - `packages/contracts`：所有公開輸入／輸出的 runtime schema。
 
-目前已驗證 fixture、mock 與程式規則；尚未把 30 案例送入真實 Azure deployment，因此 live Schema 成功率、grounding defect rate 與 P50／P95 仍待測。
+目前已驗證 fixture、mock 與程式規則；尚未把 30 案例送入真實量界模型，因此 live Schema 成功率、grounding defect rate 與 P50／P95 仍待測。
 
 ## 11. Demo 必展示的安全證據
 
@@ -111,7 +111,4 @@ AirMe 的安全目標不是保證模型永遠正確，而是讓錯誤可被限�
 
 ## 12. 參考
 
-- [Prompt Shields](https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/content-filter-prompt-shields)
-- [Groundedness detection](https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/content-filter-groundedness)
-- [Foundry risk and safety evaluators](https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/risk-safety-evaluators)
-- [Azure OpenAI Structured Outputs](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/structured-outputs)
+- [量界 AI 文件](https://liangjiewis.com/cfg/doc.html)

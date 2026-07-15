@@ -1,73 +1,81 @@
-# 部署計畫
+# Coolify／VPS 部署計畫
 
 ## 現況
 
-部署狀態為 `planned`。初始化沒有建立、修改或刪除任何 Azure 資源，也沒有建立 GitHub remote、CI 或 production secret。
+部署目標為自有 VPS 的 Coolify。repository 已包含可部署的 `docker-compose.yml`、兩個 Dockerfile 與 PostgreSQL migration，但尚未建立 VPS、Coolify app、網域、production secret、備份或 production URL。
 
-## 規劃拓樸
+## Compose 拓樸
 
-| 元件 | 平台 | 安裝／Build（repository root） | 產物／啟動 | 發布 owner |
-|---|---|---|---|---|
-| Web | Azure Static Web Apps | `npm ci`；`npm run build:web --workspace airme` | `apps/client/dist/` | 尚未由團隊指派 |
-| API | 獨立 Azure Functions Flex Consumption | `npm ci`；`npm run build --workspace airme-api` | Functions 平台啟動 Node.js 22 | 尚未由團隊指派 |
-| Mobile | Expo development build／EAS 或 Android 本機 build | 同一 root workspace；交付形式待確認 | 尚未部署 | 尚未由團隊指派 |
+| Service | Image／責任 | 網路與資料 |
+|---|---|---|
+| `web` | Nginx 提供 Expo Web 靜態檔，將 `/api` 代理到 `api` | Coolify 將公開網域指向 `web:80` |
+| `api` | Node.js 22 + Fastify；先跑 migration 再啟動 | 僅 Compose internal network 的 `3000` |
+| `postgres` | PostgreSQL 17；共享環境快取與匿名技術事件 | 命名 volume `airme-postgres`，不公開 port |
 
-專案使用 npm workspaces 與單一 root lockfile，因此部署不能只在子目錄執行獨立 `npm ci`。以上命令需在部署前用實際 Azure 建置環境再次驗證。API 採獨立 Function App，讓手機與 Web 共用同一個 HTTPS API，並保留 Managed Identity 與 Key Vault 整合能力；Web 預設直接呼叫 Functions 並限制 CORS。
+Web 的 `EXPO_PUBLIC_API_BASE_URL` 在 Docker build 時固定為 `/api`。所以 Web 只需一個公開 HTTPS 網域；Nginx 會保留 `/api` 路徑轉送給 Fastify。
 
-取得主辦方對 subscription、resource group、RBAC、region 與命名的確認後，再新增 `infra/`、Bicep 與 `azure.yaml`。目前不建立空白基礎設施資料夾，也不把未驗證的資源名稱或 region 寫死。
+## 第一次部署步驟
 
-## Azure 前置確認
+1. 準備已安裝 Coolify 的 VPS，確認主機防火牆與 Coolify reverse proxy 能處理 80/443；這些主機操作不由此 repository 自動執行。
+2. 在 Coolify 建立 **Docker Compose** application，來源選擇本 repository，Compose 路徑選 `docker-compose.yml`。
+3. 在 app 的 Environment Variables 設定下列必填值；將 secret 類型標記為 secret／masked。
+4. 將正式網域指向 service `web` 的 port `80`，開啟 TLS。不要公開 `api:3000` 或 `postgres:5432`。
+5. 執行第一次 Deploy。`api` 會在啟動前執行 `npm run db:migrate`；`postgres` healthcheck 就緒後才允許 API 啟動。
+6. 用公開網域驗證 `GET https://<your-domain>/api/health` 回應 `200` 與 `{"status":"ok","service":"airme-api"}`。
+7. 先以 fixture 模式檢查 Web 與 API，再切換／驗證 live 量界與政府資料流程。不要把 fixture 結果口述為即時資料。
 
-- 主辦方是否允許建立專屬 Function App、Storage、Static Web App、Application Insights。
-- Azure OpenAI deployment、region、RBAC role、quota 與 rate limit。
-- Managed Identity 是否能取得 Azure OpenAI 使用權限。
-- Function region 與模型 region 的延遲與資料處理要求。
-- CSP 訂閱的費用歸屬與資源命名規則。
+## Coolify 環境變數
 
-## 設定與秘密
+| 變數 | 範例／用途 | 秘密 |
+|---|---|---|
+| `POSTGRES_DB` | `airme` | 否 |
+| `POSTGRES_USER` | `airme` | 否 |
+| `POSTGRES_PASSWORD` | PostgreSQL 強密碼 | 是 |
+| `CONTEXT_SIGNING_SECRET` | 至少 32 bytes 的隨機字串 | 是 |
+| `LIANGJIE_AI_BASE_URL` | `https://liangjiewis.com` | 否 |
+| `LIANGJIE_AI_MODEL` | 量界控制台中已驗證的 model ID | 否 |
+| `LIANGJIE_AI_API_KEY` | 量界 token | 是 |
+| `LIANGJIE_AI_JSON_MODE` | `auto`；不相容時改 `disabled` | 否 |
+| `MOENV_API_KEY` | 環境部 key | 是 |
+| `CWA_API_KEY` | 中央氣象署 key | 是 |
+| `ALLOWED_ORIGINS` | 原生 App 或獨立 Web 的 HTTPS origin，逗號分隔 | 否 |
+| `REQUEST_TIMEOUT_MS` | 預設 `8000` | 否 |
+| `CONTEXT_TTL_SECONDS` | 預設 `1800` | 否 |
 
-| 設定 | 使用元件 | 值的 owner／來源 | 秘密 |
-|---|---|---|---|
-| `EXPO_PUBLIC_API_BASE_URL` | App／Web | Azure 發布負責人填入已驗證的 Functions base URL | 否 |
-| `EXPO_PUBLIC_API_TIMEOUT_MS` | App／Web | 前端維護者依實測延遲調整 | 否 |
-| `AZURE_OPENAI_ENDPOINT` | API | 主辦方或 Azure 管理者提供 | 是，不進前端或 Git |
-| `AZURE_OPENAI_DEPLOYMENT` | API | 主辦方核准的 deployment | 否，但不得寫死成未驗證名稱 |
-| `AZURE_OPENAI_API_VERSION` | API | 依核准 Responses API 版本設定 | 否 |
-| `AZURE_OPENAI_API_KEY` | API | 僅在無法使用 Entra 時由管理者注入 | 是，預設不使用 |
-| `MOENV_API_KEY` | API | 環境部資料平台帳號持有人 | 是 |
-| `CWA_API_KEY` | API | 中央氣象署資料平台帳號持有人 | 是 |
-| `ALLOWED_ORIGINS` | API | Web 部署完成後由 Azure 發布負責人設定 | 否，但必須限制來源 |
-| `CONTEXT_SIGNING_SECRET` | API | 發布 owner 產生高熵秘密 | 是 |
-| `APPLICATIONINSIGHTS_CONNECTION_STRING` | API | Azure 平台建立或注入 | 是 |
+Compose 會用資料庫的 `POSTGRES_*` 設定自動組成 API 連線。若改用 Coolify 獨立的 PostgreSQL service，請在 API 設定 `DATABASE_URL`，或完整提供 `DATABASE_HOST`、`DATABASE_PORT`、`DATABASE_NAME`、`DATABASE_USER`、`DATABASE_PASSWORD`；此時必須調整 Compose 的 `postgres` 服務與 `depends_on`，不要同時留下兩套不一致資料庫。
 
-- Function App settings 保存外部 API key；Azure OpenAI 優先使用 Managed Identity。
-- 不把 production 值放 GitHub Actions、README、截圖或簡報。
-- `ALLOWED_ORIGINS` 限定實際 Web 網域，不使用正式環境萬用 origin。
+`AI_MODE=live` 與 `DATABASE_REQUIRED=true` 已在 Compose 固定。若要在本機測試，使用 `AI_MODE=fixture DATABASE_REQUIRED=false`，不要把 fixture 設定誤帶到正式 Coolify app。
 
-## 環境邊界與相依服務
+## 原生 App 設定
 
-- 決賽前先使用單一 dev／competition 環境；是否需要獨立 staging 尚未確認。
-- Web、API、Azure OpenAI、環境部與中央氣象署是核心相依服務；任一失敗都必須顯示真實錯誤或清楚標示的示範備援。
-- 本機前端預設 API base 是 `http://localhost:7071/api`；雲端 domain、API URL、healthcheck URL 與 Functions resource name尚未驗證，不在文件猜值。
-- P0 不建立雲端個人資料庫，因此沒有 database migration 或 server backup；裝置端資料由使用者清除，示範 fixture 可由 repository 重建。
+Coolify Web 因同源可使用 `/api`。iOS／Android bundle 不可使用相對 URL，發布前需以非秘密的公開 API base URL 重建：
 
-## 監控
+```bash
+EXPO_PUBLIC_API_BASE_URL=https://<your-domain>/api npm run build:web --workspace airme
+```
 
-- Health endpoint、request count、P50／P95 latency、429、5xx、環境資料失敗、AI 無效輸出。
-- 不收集完整 request／response body。
-- 設定合理 sampling 與資料保留，避免共用額度被大量遙測消耗。
+真正的 mobile delivery（development build、APK、AAB 或 TestFlight）尚未決定；上例只說明環境變數，不能取代原生發佈流程。
 
-## 發布與回滾
+## 上線驗收與觀測
 
-1. lint、typecheck、build、安全測試與核心人工流程通過。
-2. 先部署 staging／preview，確認 App 和 Web 都能呼叫。
-3. 記錄可回滾的前一個 commit 與部署版本。
-4. 決賽前凍結設定；現場不修改共用模型 deployment。
-5. 部署失敗時回到上一個驗證版本；不以 fixture 冒充 production 修復。
+- `/api/health`：確認 API 及必要 PostgreSQL 連線；不要公開 `/api` container port。
+- Web：檢查首頁、設定、fixture／live 標籤、推薦、追問、回饋與資料清除。
+- Live：確認量界模型 ID、JSON output、429、timeout、無效輸出與 provider 失敗都不會洩漏 provider body。
+- Data：確認環境部／中央氣象署來源、時間、stale 與 partial／fixture 狀態。
+- Database：確認僅出現 `environment_cache`、`service_events` 與 `schema_migrations`；抽查不得有 activity text、profile、prompt、模型全文或 IP。
+- Server：用 Coolify logs 只看服務健康與錯誤分類，不將完整 request body 或 secret 寫入 log。
+
+## 備份、回滾與維運
+
+- 先在 Coolify 或 VPS 層建立 PostgreSQL volume 的排程備份，再宣稱正式資料庫可用；備份必須加密、限制存取並演練 restore。
+- 保留上一次成功 Docker image／deployment。程式回滾可使用 Coolify 的既有版本；資料庫 migration 不可直接假設可逆，新的 migration 需先設計相容或 rollback SQL。
+- `CONTEXT_SIGNING_SECRET` 輪替會使既有追問 token 失效，應在低流量時進行並接受使用者重新產生行動卡。
+- 若量界、政府資料或資料庫不可用，切換清楚標示的 fixture Demo；不要以錯誤快取或 fixture 假裝 live。
 
 ## 尚未驗證
 
-- 實際 Azure resource names、region、URL、healthcheck URL 與費用。
-- GitHub Actions／Static Web Apps 自動部署流程。
-- Mobile 最終交付格式。
-- Production backup／database，因 P0 不建立個人資料庫。
+- 實際 Coolify / VPS / Docker 版本、網域、TLS、firewall、運算與磁碟資源。
+- Coolify Compose 對 `depends_on` health condition 與 build args 的實際行為。
+- 量界與政府 API 真實 key 的 quota、rate limit、JSON 相容性與服務條款。
+- PostgreSQL 備份、restore、監控與 retention。
+- 正式 mobile build 與實體裝置流程。

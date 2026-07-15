@@ -5,21 +5,21 @@
 - 人物：有過敏性鼻炎、需要騎車通勤與參加體育活動的學生。
 - 觸發：看到空品警示，但不知道下午能否跑 1600 公尺。
 - 缺口：環境數據存在，活動、個人條件與當下選擇之間仍缺少橋樑。
-- 解法：AirMe 用 Azure AI 把真實環境與個人活動情境轉成有依據行動。
+- 解法：AirMe 用量界智算 AI 把真實環境與個人活動情境轉成有依據行動。
 
 ## 3-5 分鐘展示腳本
 
-目前本機 Demo 可完成下列操作；步驟 3 的「真實 AQI／Azure」必須等 live 串接通過後才能這樣口述，否則改稱「示範資料／本機安全引擎」。
+目前本機 Demo 可完成下列操作；步驟 3 的「真實 AQI／量界 AI」必須等 live 串接通過後才能這樣口述，否則改稱「示範資料／本機安全引擎」。
 
 1. 以一句話呈現問題，不先介紹架構。
 2. 在 AirMe 輸入「下午要跑 1600 公尺，我有過敏且今天鼻塞」。
-3. 顯示真實 AQI、主要污染物、資料時間與 Azure 生成的行動卡。
+3. 顯示真實 AQI、主要污染物、資料時間與量界 AI 生成的行動卡。
 4. 展開「為什麼」，讓評審看到活動、環境、個人條件與官方規則。
 5. 保持相同 AQI，改成一般使用者短時間步行，比較結果。
 6. 追問「如果改室內呢」，展示情境延續。
 7. 問「幫我寫英文作業」或要求忽略規則，展示拒答。
 8. 五秒回饋，說明只記錄使用者自述，不宣稱醫療因果。
-9. 用一張架構圖指出 Azure Functions、Azure OpenAI、Structured Outputs 與安全驗證。
+9. 用一張架構圖指出 Coolify、Fastify、PostgreSQL、量界智算與安全驗證。
 
 ## 目前 Demo 證據
 
@@ -27,7 +27,7 @@
 - 1440px：桌面 responsive layout。
 - Web static export 成功；操作期間 0 console error、0 console warning。
 - 30 個固定 AI／安全案例 30/30。
-- 上述都是本機 fixture／mock 證據，不能替代真實 Azure 概念驗證。
+- 上述都是本機 fixture／mock 證據，不能替代真實量界 AI 概念驗證。
 
 ## 評審應帶走的五個答案
 
@@ -35,13 +35,13 @@
 - AI 做了什麼：理解自然語言、組合條件、產生個人化行動與可解釋理由。
 - 為何不是儀表板：相同環境下，活動與個人情境改變會得到不同方案。
 - 如何不跑題：領域守門、官方底線、Structured Outputs、後處理與固定拒答測試。
-- Azure 在哪裡：Recommendation 實際經 Azure Functions 呼叫 Azure OpenAI，而不是只畫在簡報。
+- AI 在哪裡：Recommendation 實際經 Coolify API 呼叫量界智算，而不是只畫在簡報。
 
 ## 展示備援
 
-- A：真實 Azure + 真實環境 API。
-- B：真實 Azure + 固定公開環境 fixture，用於外部資料 API 失敗。
-- C：完全本機預錄 fixture，只在 Azure／網路不可用時使用，畫面必標示「示範資料／非即時 Azure」。
+- A：真實量界 AI + 真實環境 API。
+- B：真實量界 AI + 固定公開環境 fixture，用於外部資料 API 失敗。
+- C：完全本機預錄 fixture，只在 AI／網路不可用時使用，畫面必標示「示範資料／非即時 AI」。
 - 準備一段事前錄製的完整線上流程影片，但不以影片取代現場操作。
 
 ## 禁止誇大
@@ -49,13 +49,13 @@
 - 不說其他 App 完全沒有個人化或 AI。
 - 不說 AirMe 已預測疾病、症狀成因或個人敏感閾值。
 - 不使用無來源的 78% 等數字。
-- 不說所有 Azure 服務已完成或 production-ready。
-- 不把預先 fixture 說成即時 Azure 結果。
+- 不說 VPS、Coolify、PostgreSQL 或量界服務已 production-ready。
+- 不把預先 fixture 說成即時 AI 結果。
 
 ## 提交前清單
 
 - 比賽規則、簡報格式、Demo 時間、網路、設備與帳號已確認。
-- Azure deployment、quota、RBAC 與環境 API key 已事前驗證。
+- 量界 model ID、quota、JSON mode、VPS／Coolify healthcheck 與環境 API key 已事前驗證。
 - App／Web 主流程、安全案例與 fallback 已排練。
 - 測試資料全為虛構，不含真實學生個資。
 - repository、build、簡報與口頭說法一致。

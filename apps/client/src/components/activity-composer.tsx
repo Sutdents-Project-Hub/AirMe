@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
-import { radii, spacing, typography, usePalette } from '../design/tokens';
+import { borders, radii, spacing, typography, usePalette } from '../design/tokens';
 import { AppButton } from './ui/app-button';
 import { AppText } from './ui/app-text';
 import { Card } from './ui/card';
@@ -18,8 +18,13 @@ export function ActivityComposer({ loading, onSubmit, initialValue = '' }: Activ
   const trimmed = value.trim();
 
   return (
-    <Card>
+    <Card pattern="dots" patternColor={palette.yellow}>
       <View style={styles.heading}>
+        <View style={[styles.eyebrow, { backgroundColor: palette.yellow, borderColor: palette.ink }]}>
+          <AppText variant="caption" weight="900">
+            AIRME ACTION LAB
+          </AppText>
+        </View>
         <AppText variant="title" weight="800">
           你現在想做什麼？
         </AppText>
@@ -39,7 +44,7 @@ export function ActivityComposer({ loading, onSubmit, initialValue = '' }: Activ
           styles.input,
           {
             backgroundColor: palette.background,
-            borderColor: palette.border,
+            borderColor: palette.ink,
             color: palette.text,
           },
         ]}
@@ -72,14 +77,21 @@ export function ActivityComposer({ loading, onSubmit, initialValue = '' }: Activ
 
 const styles = StyleSheet.create({
   heading: { gap: spacing.sm },
+  eyebrow: {
+    alignSelf: 'flex-start',
+    borderRadius: radii.pill,
+    borderWidth: borders.thin,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
   input: {
     borderRadius: radii.md,
-    borderWidth: 1,
+    borderWidth: borders.thick,
     fontFamily: typography.family,
     fontSize: typography.size.body,
     lineHeight: typography.lineHeight.body,
-    minHeight: 140,
+    minHeight: 160,
     padding: spacing.lg,
   },
-  meta: { flexDirection: 'row', justifyContent: 'space-between' },
+  meta: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'space-between' },
 });

@@ -1,4 +1,2 @@
-import './functions/health';
-import './functions/environment';
-import './functions/recommendations';
-import './functions/follow-ups';
+export { createApplication } from './application';
+export { createServer } from './server';

@@ -1,7 +1,7 @@
 import type { RecommendationResponse, RiskLevel } from '@airme/contracts';
 import { StyleSheet, View } from 'react-native';
 
-import { radii, spacing, usePalette, type Palette } from '../design/tokens';
+import { borders, radii, spacing, usePalette, type Palette } from '../design/tokens';
 import { SourceDisclosure } from './source-disclosure';
 import { AppText } from './ui/app-text';
 import { Card } from './ui/card';
@@ -28,14 +28,30 @@ export function ActionCard({ recommendation }: { recommendation: RecommendationR
 
   return (
     <View style={styles.container}>
-      <Card style={{ backgroundColor: risk.background, borderColor: risk.background }}>
+      <Card
+        pattern="dots"
+        patternColor={palette.ink}
+        style={{ backgroundColor: risk.background, borderColor: palette.ink }}>
+        <View style={[styles.eyebrow, { backgroundColor: palette.coral, borderColor: palette.ink }]}>
+          <AppText variant="caption" weight="900" style={{ color: palette.surface }}>
+            AIRME ACTION PLAN
+          </AppText>
+        </View>
         <View style={styles.badgeRow}>
-          <View style={[styles.badge, { borderColor: risk.foreground }]}>
+          <View
+            style={[
+              styles.badge,
+              { backgroundColor: palette.surface, borderColor: palette.ink },
+            ]}>
             <AppText variant="body-small" weight="800" style={{ color: risk.foreground }}>
               {RISK_LABELS[card.riskLevel]}
             </AppText>
           </View>
-          <View style={[styles.mode, { backgroundColor: palette.surface }]}>
+          <View
+            style={[
+              styles.mode,
+              { backgroundColor: palette.yellow, borderColor: palette.ink },
+            ]}>
             <AppText variant="caption" weight="700">
               {modeLabel}
             </AppText>
@@ -49,19 +65,25 @@ export function ActionCard({ recommendation }: { recommendation: RecommendationR
         </AppText>
       </Card>
 
-      <Card>
+      <Card pattern="grid" patternColor={palette.teal}>
         <AppText variant="title" weight="800">
           建議方案
         </AppText>
-        <PlanRow label="時間" value={card.recommendedPlan.timing} />
-        <PlanRow label="地點" value={card.recommendedPlan.location} />
-        <PlanRow label="強度" value={card.recommendedPlan.intensity} />
-        {card.recommendedPlan.equipment.length > 0 ? (
-          <PlanRow label="準備" value={card.recommendedPlan.equipment.join('、')} />
-        ) : null}
+        <View style={styles.planGrid}>
+          <PlanTile color={palette.yellow} label="時間" value={card.recommendedPlan.timing} />
+          <PlanTile color={palette.sky} label="地點" value={card.recommendedPlan.location} />
+          <PlanTile color={palette.teal} label="強度" value={card.recommendedPlan.intensity} />
+          {card.recommendedPlan.equipment.length > 0 ? (
+            <PlanTile
+              color={palette.coral}
+              label="準備"
+              value={card.recommendedPlan.equipment.join('、')}
+            />
+          ) : null}
+        </View>
       </Card>
 
-      <Card>
+      <Card pattern="dots" patternColor={palette.yellow}>
         <AppText variant="title-small" weight="800">
           為什麼
         </AppText>
@@ -77,7 +99,7 @@ export function ActionCard({ recommendation }: { recommendation: RecommendationR
         ))}
       </Card>
 
-      <Card>
+      <Card pattern="grid" patternColor={palette.teal}>
         <AppText variant="title-small" weight="800">
           資料來源與更新時間
         </AppText>
@@ -87,7 +109,10 @@ export function ActionCard({ recommendation }: { recommendation: RecommendationR
         </AppText>
       </Card>
 
-      <Card style={{ backgroundColor: palette.airSoft, borderColor: palette.airSoft }}>
+      <Card
+        pattern="stripes"
+        patternColor={palette.surface}
+        style={{ backgroundColor: palette.teal, borderColor: palette.ink }}>
         <AppText variant="title-small" weight="800">
           安全提醒
         </AppText>
@@ -102,27 +127,44 @@ export function ActionCard({ recommendation }: { recommendation: RecommendationR
   );
 }
 
-function PlanRow({ label, value }: { label: string; value: string }) {
+function PlanTile({ label, value, color }: { label: string; value: string; color: string }) {
   const palette = usePalette();
   return (
-    <View style={[styles.planRow, { borderTopColor: palette.border }]}>
-      <AppText variant="body-small" tone="muted" weight="700" style={styles.planLabel}>
+    <View
+      accessible
+      accessibilityLabel={`建議方案：${label}`}
+      style={[styles.planTile, { backgroundColor: color, borderColor: palette.ink }]}>
+      <AppText variant="caption" weight="900">
         {label}
       </AppText>
-      <AppText style={styles.planValue}>{value}</AppText>
+      <AppText weight="700">{value}</AppText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { gap: spacing.lg },
-  badgeRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm },
-  badge: { borderRadius: radii.pill, borderWidth: 1.5, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
-  mode: { borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
-  planRow: { borderTopWidth: 1, flexDirection: 'row', gap: spacing.lg, paddingTop: spacing.md },
-  planLabel: { width: 48 },
-  planValue: { flex: 1 },
+  eyebrow: {
+    alignSelf: 'flex-start',
+    borderRadius: radii.pill,
+    borderWidth: borders.thin,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  badgeRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  badge: { borderRadius: radii.pill, borderWidth: borders.thin, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  mode: { borderRadius: radii.pill, borderWidth: borders.thin, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  planGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  planTile: {
+    borderRadius: radii.md,
+    borderWidth: borders.thin,
+    flexBasis: '46%',
+    flexGrow: 1,
+    gap: spacing.sm,
+    minWidth: 140,
+    padding: spacing.lg,
+  },
   reason: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.md },
-  number: { alignItems: 'center', borderRadius: 12, height: 24, justifyContent: 'center', width: 24 },
+  number: { alignItems: 'center', borderRadius: 12, borderWidth: borders.thin, height: 28, justifyContent: 'center', width: 28 },
   reasonText: { flex: 1 },
 });

@@ -1,4 +1,4 @@
-import { Platform, useColorScheme } from 'react-native';
+import { Platform } from 'react-native';
 
 export const spacing = {
   xs: 4,
@@ -12,9 +12,19 @@ export const spacing = {
 
 export const radii = {
   sm: 8,
-  md: 12,
-  lg: 16,
+  md: 10,
+  lg: 12,
   pill: 999,
+} as const;
+
+export const borders = {
+  thin: 2,
+  thick: 3,
+} as const;
+
+export const shadows = {
+  offset: { width: 5, height: 5 },
+  color: '#292827',
 } as const;
 
 export const typography = {
@@ -25,7 +35,7 @@ export const typography = {
     bodySmall: 14,
     titleSmall: 18,
     title: 24,
-    display: 34,
+    display: 40,
   },
   lineHeight: {
     caption: 18,
@@ -33,62 +43,44 @@ export const typography = {
     bodySmall: 22,
     titleSmall: 26,
     title: 34,
-    display: 42,
+    display: 48,
   },
 } as const;
 
 const light = {
-  background: '#F5F7FA',
+  background: '#FFF9EC',
   surface: '#FFFFFF',
   surfaceRaised: '#FFFFFF',
-  text: '#111827',
-  textMuted: '#5B6677',
-  border: '#DCE2EA',
-  primary: '#15181E',
+  text: '#292827',
+  textMuted: '#5E5A55',
+  border: '#292827',
+  primary: '#F75B4B',
   onPrimary: '#FFFFFF',
-  accent: '#0B66E4',
-  accentSoft: '#E9F1FC',
-  airSoft: '#E7F5F3',
-  air: '#24756E',
+  accent: '#08A6A6',
+  accentSoft: '#C9F2EE',
+  airSoft: '#C9F2EE',
+  air: '#08A6A6',
+  coral: '#F75B4B',
+  yellow: '#FFD447',
+  teal: '#08A6A6',
+  sky: '#5BC0EB',
+  cream: '#FFF9EC',
+  ink: '#292827',
   destructive: '#B42318',
-  destructiveSoft: '#FEECEB',
-  warning: '#8A5A00',
-  warningSoft: '#FFF4D6',
-  success: '#146C43',
-  successSoft: '#E7F5ED',
-  high: '#A33B08',
-  highSoft: '#FFF0E6',
-  overlay: 'rgba(17,24,39,0.48)',
+  destructiveSoft: '#FFD9D4',
+  warning: '#765000',
+  warningSoft: '#FFF0A8',
+  success: '#176B53',
+  successSoft: '#CFF3DF',
+  high: '#9B3B0A',
+  highSoft: '#FFD4B8',
+  overlay: 'rgba(41,40,39,0.48)',
 } as const;
 
-const dark = {
-  background: '#0E1116',
-  surface: '#171B22',
-  surfaceRaised: '#1D222B',
-  text: '#F7F8FA',
-  textMuted: '#B4BDC9',
-  border: '#313845',
-  primary: '#F7F8FA',
-  onPrimary: '#111318',
-  accent: '#78AFFF',
-  accentSoft: '#192D49',
-  airSoft: '#143632',
-  air: '#7CC9C0',
-  destructive: '#FF8A80',
-  destructiveSoft: '#471F1D',
-  warning: '#FFD070',
-  warningSoft: '#3C2C10',
-  success: '#7ED6A8',
-  successSoft: '#163A29',
-  high: '#FFAB78',
-  highSoft: '#472616',
-  overlay: 'rgba(0,0,0,0.68)',
-} as const;
-
-export type Palette = typeof light | typeof dark;
+export type Palette = typeof light;
 
 export function usePalette(): Palette {
-  return useColorScheme() === 'dark' ? dark : light;
+  return light;
 }
 
 export const lightPalette = light;

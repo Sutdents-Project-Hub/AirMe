@@ -2,7 +2,7 @@ import type { FollowUpResponse } from '@airme/contracts';
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
-import { radii, spacing, typography, usePalette } from '../design/tokens';
+import { borders, radii, spacing, typography, usePalette } from '../design/tokens';
 import { AppButton } from './ui/app-button';
 import { AppText } from './ui/app-text';
 import { Card } from './ui/card';
@@ -43,8 +43,16 @@ export function FollowUpPanel({ onAsk }: FollowUpPanelProps) {
   };
 
   return (
-    <Card>
+    <Card
+      pattern="dots"
+      patternColor={palette.ink}
+      style={{ backgroundColor: palette.yellow, borderColor: palette.ink }}>
       <View style={styles.heading}>
+        <View style={[styles.eyebrow, { backgroundColor: palette.surface, borderColor: palette.ink }]}>
+          <AppText variant="caption" weight="900">
+            ASK WITHIN CONTEXT
+          </AppText>
+        </View>
         <AppText variant="title" weight="800">
           還想確認什麼？
         </AppText>
@@ -72,7 +80,7 @@ export function FollowUpPanel({ onAsk }: FollowUpPanelProps) {
         placeholderTextColor={palette.textMuted}
         style={[
           styles.input,
-          { backgroundColor: palette.background, borderColor: palette.border, color: palette.text },
+          { backgroundColor: palette.surface, borderColor: palette.ink, color: palette.text },
         ]}
         value={question}
       />
@@ -93,7 +101,8 @@ export function FollowUpPanel({ onAsk }: FollowUpPanelProps) {
               backgroundColor:
                 response.disposition === 'urgent-safety'
                   ? palette.destructiveSoft
-                  : palette.accentSoft,
+                  : palette.surface,
+              borderColor: palette.ink,
             },
           ]}>
           <AppText variant="body-small" weight="800">
@@ -113,15 +122,22 @@ export function FollowUpPanel({ onAsk }: FollowUpPanelProps) {
 
 const styles = StyleSheet.create({
   heading: { gap: spacing.sm },
+  eyebrow: {
+    alignSelf: 'flex-start',
+    borderRadius: radii.pill,
+    borderWidth: borders.thin,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
   starters: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   input: {
     borderRadius: radii.md,
-    borderWidth: 1,
+    borderWidth: borders.thick,
     fontFamily: typography.family,
     fontSize: typography.size.body,
     minHeight: 48,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  response: { borderRadius: radii.md, gap: spacing.sm, padding: spacing.lg },
+  response: { borderRadius: radii.md, borderWidth: borders.thin, gap: spacing.sm, padding: spacing.lg },
 });

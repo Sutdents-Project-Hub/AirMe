@@ -9,7 +9,7 @@ import { AppButton } from '../components/ui/app-button';
 import { AppText } from '../components/ui/app-text';
 import { Card } from '../components/ui/card';
 import { Screen } from '../components/ui/screen';
-import { spacing, usePalette } from '../design/tokens';
+import { radii, spacing, usePalette } from '../design/tokens';
 import { useApp } from '../state/app-provider';
 
 export default function HomeScreen() {
@@ -39,15 +39,28 @@ export default function HomeScreen() {
       <Screen>
         <AppHeader demoMode={app.local.demoMode} />
         <View style={styles.intro}>
+          <View style={[styles.eyebrow, { backgroundColor: palette.coral, borderColor: palette.ink }]}>
+            <AppText variant="body-small" weight="900" style={{ color: palette.surface }}>
+              AIRME DAILY BRIEF
+            </AppText>
+          </View>
           <AppText variant="display" weight="900">
-            先看環境，再決定怎麼動。
+            先看環境，{`\n`}再決定怎麼動。
           </AppText>
           <AppText tone="muted">
             AirMe 把官方資料、你的最低限度設定與活動情境整理成可執行方案。
           </AppText>
+          <View style={styles.signalBars}>
+            {[palette.teal, palette.coral, palette.yellow, palette.sky].map((color) => (
+              <View key={color} style={[styles.signalBar, { backgroundColor: color }]} />
+            ))}
+          </View>
         </View>
         {app.error ? (
-          <Card style={{ borderColor: palette.destructive }}>
+          <Card
+            pattern="dots"
+            patternColor={palette.destructive}
+            style={{ backgroundColor: palette.destructiveSoft, borderColor: palette.ink }}>
             <AppText tone="danger" weight="800">
               目前無法完成
             </AppText>
@@ -76,8 +89,17 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   center: { alignItems: 'center', flex: 1, gap: spacing.md, justifyContent: 'center' },
   intro: { gap: spacing.sm, maxWidth: 720 },
-  dashboard: { gap: spacing.lg },
-  dashboardWide: { alignItems: 'flex-start', flexDirection: 'row' },
+  eyebrow: {
+    alignSelf: 'flex-start',
+    borderRadius: radii.pill,
+    borderWidth: 2,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  signalBars: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+  signalBar: { borderRadius: radii.pill, height: 8, width: 52 },
+  dashboard: { gap: spacing.xl },
+  dashboardWide: { alignItems: 'stretch', flexDirection: 'row' },
   environmentColumn: { flex: 0.82, width: '100%' },
   composerColumn: { flex: 1.18, width: '100%' },
 });

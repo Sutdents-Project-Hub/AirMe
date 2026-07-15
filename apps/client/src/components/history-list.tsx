@@ -1,7 +1,7 @@
 import type { RecommendationHistoryItem, RiskLevel } from '@airme/contracts';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
-import { radii, spacing, usePalette } from '../design/tokens';
+import { borders, radii, spacing, usePalette } from '../design/tokens';
 import { AppText } from './ui/app-text';
 import { Card } from './ui/card';
 
@@ -14,9 +14,11 @@ const RISK_LABEL: Record<RiskLevel, string> = {
 
 export function HistoryList({ items }: { items: RecommendationHistoryItem[] }) {
   const palette = usePalette();
+  const { width } = useWindowDimensions();
+  const wide = width >= 760;
   if (items.length === 0) {
     return (
-      <Card>
+      <Card pattern="dots" patternColor={palette.yellow}>
         <AppText variant="title-small" weight="800">
           還沒有活動紀錄
         </AppText>
@@ -27,7 +29,12 @@ export function HistoryList({ items }: { items: RecommendationHistoryItem[] }) {
   return (
     <View style={styles.list}>
       {items.map((item) => (
-        <Card key={item.id}>
+        <Card
+          key={item.id}
+          pattern="grid"
+          patternColor={palette.teal}
+          style={wide ? styles.cardWide : styles.cardNarrow}>
+          <View style={[styles.colorBar, { backgroundColor: riskAccent(item.riskLevel, palette) }]} />
           <View style={styles.top}>
             <View style={styles.copy}>
               <AppText variant="body-small" tone="muted">
@@ -39,8 +46,12 @@ export function HistoryList({ items }: { items: RecommendationHistoryItem[] }) {
                 {item.activitySummary}
               </AppText>
             </View>
-            <View style={[styles.badge, { backgroundColor: palette.accentSoft }]}>
-              <AppText variant="caption" weight="800" style={{ color: palette.accent }}>
+            <View
+              style={[
+                styles.badge,
+                { backgroundColor: palette.yellow, borderColor: palette.ink },
+              ]}>
+              <AppText variant="caption" weight="800">
                 {RISK_LABEL[item.riskLevel]}
               </AppText>
             </View>
@@ -55,9 +66,19 @@ export function HistoryList({ items }: { items: RecommendationHistoryItem[] }) {
   );
 }
 
+function riskAccent(level: RiskLevel, palette: ReturnType<typeof usePalette>): string {
+  if (level === 'low') return palette.teal;
+  if (level === 'moderate') return palette.yellow;
+  if (level === 'high') return palette.coral;
+  return palette.destructive;
+}
+
 const styles = StyleSheet.create({
-  list: { gap: spacing.md },
+  list: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
+  cardWide: { flexBasis: '46%', flexGrow: 1 },
+  cardNarrow: { width: '100%' },
+  colorBar: { borderRadius: radii.pill, height: 8, width: 76 },
   top: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.md },
   copy: { flex: 1, gap: spacing.xs },
-  badge: { borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  badge: { borderRadius: radii.pill, borderWidth: borders.thin, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
 });

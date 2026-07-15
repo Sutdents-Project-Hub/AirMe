@@ -48,16 +48,19 @@ export function ProfileForm({ onSubmit, submitting }: ProfileFormProps) {
 
   return (
     <View style={styles.container}>
-      <Card style={{ backgroundColor: palette.airSoft, borderColor: palette.airSoft }}>
+      <Card
+        pattern="dots"
+        patternColor={palette.ink}
+        style={{ backgroundColor: palette.teal, borderColor: palette.ink }}>
         <AppText variant="title-small" weight="700">
           只留下真正會影響建議的資料
         </AppText>
-        <AppText variant="body-small" tone="muted">
+        <AppText variant="body-small" style={{ color: palette.ink }}>
           這些設定只保存在這台裝置；AirMe 不收集姓名、學號、聯絡方式或醫療診斷。
         </AppText>
       </Card>
 
-      <Field title="你的年齡層" hint="用來套用適齡的活動安全提醒">
+      <Field step="STEP 01" title="你的年齡層" hint="用來套用適齡的活動安全提醒">
         <Chip
           label="13–18 歲"
           selected={ageGroup === 'teen'}
@@ -72,7 +75,7 @@ export function ProfileForm({ onSubmit, submitting }: ProfileFormProps) {
         />
       </Field>
 
-      <Field title="空品敏感條件（可複選）" hint="不需要輸入病名或症狀細節">
+      <Field step="STEP 02" title="空品敏感條件（可複選）" hint="不需要輸入病名或症狀細節">
         <Chip
           label="呼吸道較敏感"
           selected={sensitive.includes('respiratory-sensitive')}
@@ -93,7 +96,7 @@ export function ProfileForm({ onSubmit, submitting }: ProfileFormProps) {
         />
       </Field>
 
-      <Field title="最常用的通勤方式">
+      <Field step="STEP 03" title="最常用的通勤方式">
         <Chip
           label="步行"
           selected={commuteMode === 'walk'}
@@ -120,7 +123,7 @@ export function ProfileForm({ onSubmit, submitting }: ProfileFormProps) {
         />
       </Field>
 
-      <Field title="常見活動（可複選）">
+      <Field step="STEP 04" title="常見活動（可複選）">
         <Chip
           label="慢跑"
           selected={activities.includes('run')}
@@ -141,7 +144,10 @@ export function ProfileForm({ onSubmit, submitting }: ProfileFormProps) {
         />
       </Field>
 
-      <Field title="常用地點" hint="只保存區域級、三位小數座標，不建立位置軌跡">
+      <Field
+        step="STEP 05"
+        title="常用地點"
+        hint="只保存區域級、三位小數座標，不建立位置軌跡">
         {LOCATIONS.map((item) => (
           <Chip
             key={item.name}
@@ -159,23 +165,32 @@ export function ProfileForm({ onSubmit, submitting }: ProfileFormProps) {
         onPress={complete}
         disabled={!ageGroup || !commuteMode || !location}
         loading={submitting}
+        variant="secondary"
       />
     </View>
   );
 }
 
 function Field({
+  step,
   title,
   hint,
   children,
 }: {
+  step: string;
   title: string;
   hint?: string;
   children: React.ReactNode;
 }) {
+  const palette = usePalette();
   return (
-    <View style={styles.field}>
-      <View>
+    <Card style={{ borderColor: palette.ink }}>
+      <View style={styles.fieldHeading}>
+        <View style={[styles.step, { backgroundColor: palette.coral, borderColor: palette.ink }]}>
+          <AppText variant="caption" weight="900" style={{ color: palette.surface }}>
+            {step}
+          </AppText>
+        </View>
         <AppText variant="title-small" weight="700">
           {title}
         </AppText>
@@ -186,12 +201,19 @@ function Field({
         ) : null}
       </View>
       <View style={styles.chips}>{children}</View>
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   container: { gap: spacing.xl },
-  field: { gap: spacing.md },
+  fieldHeading: { gap: spacing.sm },
+  step: {
+    alignSelf: 'flex-start',
+    borderRadius: 6,
+    borderWidth: 2,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
 });

@@ -7,16 +7,44 @@ export interface ApiConfig {
   contextTtlSeconds: number;
   moenvApiKey: string | null;
   cwaApiKey: string | null;
-  azureOpenAiEndpoint: string | null;
-  azureOpenAiDeployment: string | null;
-  azureOpenAiApiVersion: string;
-  azureOpenAiApiKey: string | null;
+  liangjieAiBaseUrl: string;
+  liangjieAiModel: string | null;
+  liangjieAiApiKey: string | null;
+  liangjieAiJsonMode: 'auto' | 'enabled' | 'disabled';
+  databaseUrl: string | null;
+  databaseRequired: boolean;
+  host: string;
+  port: number;
   aiMode: 'live' | 'fixture';
 }
 
 function positiveInteger(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function readBoolean(value: string | undefined, fallback: boolean): boolean {
+  if (value === undefined) return fallback;
+  return value.trim().toLowerCase() === 'true';
+}
+
+function readJsonMode(value: string | undefined): ApiConfig['liangjieAiJsonMode'] {
+  if (value === 'enabled' || value === 'disabled') return value;
+  return 'auto';
+}
+
+function buildDatabaseUrl(env: NodeJS.ProcessEnv): string | null {
+  const configured = env.DATABASE_URL?.trim();
+  if (configured) return configured;
+
+  const host = env.DATABASE_HOST?.trim();
+  const user = env.DATABASE_USER?.trim();
+  const password = env.DATABASE_PASSWORD;
+  const database = env.DATABASE_NAME?.trim();
+  if (!host || !user || !password || !database) return null;
+
+  const port = positiveInteger(env.DATABASE_PORT, 5_432);
+  return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${encodeURIComponent(database)}`;
 }
 
 function readContextSigningSecret(
@@ -31,6 +59,7 @@ function readContextSigningSecret(
 
 export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   const aiMode = env.AI_MODE === 'live' ? 'live' : 'fixture';
+  const databaseUrl = buildDatabaseUrl(env);
 
   return {
     allowedOrigins: (env.ALLOWED_ORIGINS ?? 'http://localhost:8081,http://localhost:19006')
@@ -42,10 +71,14 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     contextTtlSeconds: positiveInteger(env.CONTEXT_TTL_SECONDS, 1_800),
     moenvApiKey: env.MOENV_API_KEY?.trim() || null,
     cwaApiKey: env.CWA_API_KEY?.trim() || null,
-    azureOpenAiEndpoint: env.AZURE_OPENAI_ENDPOINT?.trim() || null,
-    azureOpenAiDeployment: env.AZURE_OPENAI_DEPLOYMENT?.trim() || null,
-    azureOpenAiApiVersion: env.AZURE_OPENAI_API_VERSION?.trim() || '2025-04-01-preview',
-    azureOpenAiApiKey: env.AZURE_OPENAI_API_KEY?.trim() || null,
+    liangjieAiBaseUrl: (env.LIANGJIE_AI_BASE_URL?.trim() || 'https://liangjiewis.com').replace(/\/$/, ''),
+    liangjieAiModel: env.LIANGJIE_AI_MODEL?.trim() || null,
+    liangjieAiApiKey: env.LIANGJIE_AI_API_KEY?.trim() || null,
+    liangjieAiJsonMode: readJsonMode(env.LIANGJIE_AI_JSON_MODE),
+    databaseUrl,
+    databaseRequired: readBoolean(env.DATABASE_REQUIRED, aiMode === 'live'),
+    host: env.HOST?.trim() || '0.0.0.0',
+    port: positiveInteger(env.PORT, 3_000),
     aiMode,
   };
 }

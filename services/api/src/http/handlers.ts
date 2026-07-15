@@ -1,4 +1,3 @@
-import type { HttpRequest, HttpResponseInit } from '@azure/functions';
 import {
   DataModeSchema,
   FollowUpRequestSchema,
@@ -14,7 +13,14 @@ import { ZodError } from 'zod';
 
 import { ContextTokenError } from '../domain/context-token';
 import { corsHeaders } from './cors';
-import { errorResponse, jsonResponse } from './respond';
+import { errorResponse, jsonResponse, type HttpResponse } from './respond';
+
+export interface ApiRequest {
+  method: string;
+  headers: Headers;
+  url: string;
+  json(): Promise<unknown>;
+}
 
 interface ApiHandlerDependencies {
   allowedOrigins: string[];
@@ -24,17 +30,18 @@ interface ApiHandlerDependencies {
   ) => Promise<EnvironmentSnapshot>;
   createRecommendation: (request: RecommendationRequest) => Promise<RecommendationResponse>;
   answerFollowUp: (request: FollowUpRequest) => Promise<FollowUpResponse>;
+  isReady?: () => Promise<boolean>;
   requestId?: () => string;
 }
 
 export interface ApiHandlers {
-  health(request: HttpRequest): Promise<HttpResponseInit>;
-  environment(request: HttpRequest): Promise<HttpResponseInit>;
-  recommendations(request: HttpRequest): Promise<HttpResponseInit>;
-  followUps(request: HttpRequest): Promise<HttpResponseInit>;
+  health(request: ApiRequest): Promise<HttpResponse>;
+  environment(request: ApiRequest): Promise<HttpResponse>;
+  recommendations(request: ApiRequest): Promise<HttpResponse>;
+  followUps(request: ApiRequest): Promise<HttpResponse>;
 }
 
-async function readJson(request: HttpRequest): Promise<unknown> {
+async function readJson(request: ApiRequest): Promise<unknown> {
   try {
     return await request.json();
   } catch {
@@ -46,9 +53,9 @@ export function createApiHandlers(deps: ApiHandlerDependencies): ApiHandlers {
   const requestId = () => (deps.requestId ?? (() => crypto.randomUUID()))();
 
   async function execute(
-    request: HttpRequest,
-    action: (headers: Record<string, string>) => Promise<HttpResponseInit>,
-  ): Promise<HttpResponseInit> {
+    request: ApiRequest,
+    action: (headers: Record<string, string>) => Promise<HttpResponse>,
+  ): Promise<HttpResponse> {
     const headers = corsHeaders(request, deps.allowedOrigins);
     if (request.method.toUpperCase() === 'OPTIONS') return { status: 204, headers };
     try {
@@ -101,18 +108,20 @@ export function createApiHandlers(deps: ApiHandlerDependencies): ApiHandlers {
 
   return {
     health: (request) =>
-      execute(request, async (headers) =>
-        jsonResponse(200, { status: 'ok', service: 'airme-api' }, headers),
-      ),
+      execute(request, async (headers) => {
+        const ready = (await deps.isReady?.()) !== false;
+        return jsonResponse(ready ? 200 : 503, { status: ready ? 'ok' : 'unavailable', service: 'airme-api' }, headers);
+      }),
     environment: (request) =>
       execute(request, async (headers) => {
         if (request.method.toUpperCase() !== 'GET') throw new ZodError([]);
+        const query = new URL(request.url).searchParams;
         const location = LocationSchema.parse({
-          name: request.query.get('name'),
-          latitude: Number(request.query.get('lat')),
-          longitude: Number(request.query.get('lng')),
+          name: query.get('name'),
+          latitude: Number(query.get('lat')),
+          longitude: Number(query.get('lng')),
         });
-        const mode = DataModeSchema.parse(request.query.get('mode') ?? 'live');
+        const mode = DataModeSchema.parse(query.get('mode') ?? 'live');
         return jsonResponse(200, await deps.getEnvironment(location, mode), headers);
       }),
     recommendations: (request) =>

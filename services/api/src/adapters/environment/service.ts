@@ -1,5 +1,6 @@
 import type { DataMode, EnvironmentSnapshot, Location } from '@airme/contracts';
 
+import type { EnvironmentCacheEntry } from '../../database/types';
 import type { LoadAirQuality, LoadWeather } from './types';
 
 interface EnvironmentServiceOptions {
@@ -9,6 +10,10 @@ interface EnvironmentServiceOptions {
   now?: () => Date;
   cacheTtlMs?: number;
   staleCacheMaxAgeMs?: number;
+  persistentCache?: {
+    getEnvironmentCache(cacheKey: string): Promise<EnvironmentCacheEntry | null>;
+    setEnvironmentCache(cacheKey: string, snapshot: EnvironmentSnapshot): Promise<void>;
+  };
 }
 
 interface CacheEntry {
@@ -29,7 +34,14 @@ export class EnvironmentService {
     const cacheTtlMs = this.options.cacheTtlMs ?? 5 * 60 * 1_000;
     const staleCacheMaxAgeMs = this.options.staleCacheMaxAgeMs ?? 30 * 60 * 1_000;
     const cacheKey = `${location.latitude.toFixed(3)},${location.longitude.toFixed(3)}`;
-    const cached = this.cache.get(cacheKey);
+    let cached = this.cache.get(cacheKey);
+    if (!cached && this.options.persistentCache) {
+      const stored = await this.options.persistentCache.getEnvironmentCache(cacheKey).catch(() => null);
+      if (stored) {
+        cached = stored;
+        this.cache.set(cacheKey, stored);
+      }
+    }
 
     if (cached && nowMs - cached.storedAt <= cacheTtlMs) {
       return cached.snapshot;
@@ -48,7 +60,9 @@ export class EnvironmentService {
         sources: [airResult.value.source, weatherResult.value.source],
         provenance: 'live',
       };
-      this.cache.set(cacheKey, { storedAt: nowMs, snapshot });
+      const entry = { storedAt: nowMs, snapshot };
+      this.cache.set(cacheKey, entry);
+      void this.options.persistentCache?.setEnvironmentCache(cacheKey, snapshot).catch(() => undefined);
       return snapshot;
     }
 

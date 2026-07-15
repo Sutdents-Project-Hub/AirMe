@@ -1,8 +1,3 @@
-import {
-  HttpRequest,
-  type HttpRequestInit,
-  type HttpResponseInit,
-} from '@azure/functions';
 import type {
   EnvironmentSnapshot,
   FollowUpResponse,
@@ -11,7 +6,7 @@ import type {
 import { describe, expect, it, vi } from 'vitest';
 
 import { ContextTokenError } from '../domain/context-token';
-import { createApiHandlers } from '../http/handlers';
+import { createApiHandlers, type ApiRequest } from './handlers';
 
 const environment: EnvironmentSnapshot = {
   location: { name: '高雄市前鎮區', latitude: 22.6, longitude: 120.31 },
@@ -61,12 +56,14 @@ const followUp: FollowUpResponse = {
   requestId: 'req_follow',
 };
 
-function request(init: HttpRequestInit): HttpRequest {
-  return new HttpRequest({ url: 'http://localhost/api/test', ...init });
-}
-
-function body(value: unknown): HttpRequestInit['body'] {
-  return { string: JSON.stringify(value) };
+function request(init: RequestInit & { url?: string } = {}): ApiRequest {
+  const nativeRequest = new Request(init.url ?? 'http://localhost/api/test', init);
+  return {
+    method: nativeRequest.method,
+    headers: nativeRequest.headers,
+    url: nativeRequest.url,
+    json: () => nativeRequest.json(),
+  };
 }
 
 function createHandlers(overrides: Record<string, unknown> = {}) {
@@ -113,7 +110,7 @@ describe('AirMe HTTP handlers', () => {
 
   it('rejects an invalid recommendation payload with a stable error', async () => {
     const response = await createHandlers().recommendations(
-      request({ method: 'POST', body: body({ activityText: '' }) }),
+      request({ method: 'POST', body: JSON.stringify({ activityText: '' }) }),
     );
 
     expect(response.status).toBe(400);
@@ -130,7 +127,7 @@ describe('AirMe HTTP handlers', () => {
       request({
         method: 'POST',
         headers: { origin: 'http://localhost:8081' },
-        body: body({
+        body: JSON.stringify({
           activityText: '下午想在操場慢跑',
           profile: { ageGroup: 'teen', sensitiveConditions: [], commuteMode: 'walk' },
           location: environment.location,
@@ -154,7 +151,7 @@ describe('AirMe HTTP handlers', () => {
     }).followUps(
       request({
         method: 'POST',
-        body: body({ question: '改成室內走路可以嗎？', contextToken: 'expired-context-token' }),
+        body: JSON.stringify({ question: '改成室內走路可以嗎？', contextToken: 'expired-context-token' }),
       }),
     );
 
@@ -170,7 +167,7 @@ describe('AirMe HTTP handlers', () => {
     }).recommendations(
       request({
         method: 'POST',
-        body: body({
+        body: JSON.stringify({
           activityText: '下午想在操場慢跑',
           profile: { ageGroup: 'teen', sensitiveConditions: [], commuteMode: 'walk' },
           location: environment.location,
@@ -186,5 +183,3 @@ describe('AirMe HTTP handlers', () => {
     expect(JSON.stringify(response.jsonBody)).not.toContain('stack');
   });
 });
-
-void ({} as HttpResponseInit);
