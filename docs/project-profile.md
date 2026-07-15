@@ -17,6 +17,12 @@
 - Deployment：`planned`
 - Team：`true`
 
+## 結構與技術例外
+
+- `structure_exception`：保留新版固定 component root 規則前已建立的 npm workspace 路徑 `apps/client/`、`services/api/` 與 `packages/contracts/`。既有 build、Compose、workspace scripts 與文件均依賴這些路徑，不進行只為改名的搬移。
+- Framework root 證據：三個 workspace 的 `package.json` 皆直接位於各 component 根目錄，依賴鎖定由 repository 根目錄 `package-lock.json` 統一管理，沒有額外 project-name／framework-name wrapper 或巢狀 `.git/`。
+- `technology_source`：`existing-project`。Expo、Fastify、Node.js 22 與 npm workspace 是競賽需求下已實作且可驗證的選型；公司基線只作未指定技術之新專案預設，不自動觸發遷移。
+
 ## 摘要
 
 以個人使用為主的跨平台空氣健康 AI 行動助理，結合即時環境資料、最低限度個人情境與官方準則，產生有依據、可解釋且受安全邊界限制的行動方案。

@@ -11,6 +11,8 @@
 
 Expo 仍適合決賽的單一跨平台產品；Fastify 讓 API 在 VPS 容器中以固定 port 常駐。這不會把 AI 或政府 API key 移進前端。
 
+`apps/client/`、`services/api/` 與 `packages/contracts/` 是保留的既有 npm workspace 結構例外；各目錄本身就是 component root，manifest 直接位於根目錄。後續不增加 project-name／framework-name wrapper，新元件才依新版固定 component root 規則選擇路徑。
+
 ## 2. 元件邊界
 
 ### `apps/client`

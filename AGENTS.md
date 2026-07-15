@@ -57,6 +57,8 @@
 
 - `apps/client`：同一套 iOS、Android、Web 個人 AirMe；依 `Expo` 的官方慣例維護，不可把其他元件的秘密或責任移入此處，也不可建立教師端或另一套 Web 產品。
 - `services/api`：後端／API；依 Node.js／Fastify 與 PostgreSQL migration 慣例維護，不可把其他元件的秘密或責任移入此處。
+- `structure_exception`：保留既有 npm workspace 的 `apps/client/`、`services/api/` 與 `packages/contracts/`；各 workspace 本身就是 component root，manifest 直接位於該根目錄，不得增加 project-name 或 framework-name wrapper。這是既有專案例外，不是新專案預設。
+- Expo、Fastify、Node.js 22 與 npm workspace 是已實作選型；除非另行核准遷移，不為了套用公司新專案基線而改成其他 framework、runtime 或 package manager。
 
 - Repository 與新專案根目錄名稱維持 `AirMe`；技術資源優先使用 `airme` 或平台既有慣例。
 - 新 component id、路徑與一般文件名使用簡短且能表達責任的 lowercase kebab-case；程式碼內命名遵守各 framework 慣例。
@@ -74,6 +76,18 @@
 - 以可觀察結果驗證：優先執行現有的 lint、typecheck、test、build 或實際操作；無法執行時明確回報原因與剩餘風險。
 - 不得聲稱未實際執行的測試、部署、外部操作或人工驗收已完成。
 - 產品範圍以 `docs/product-spec.md` 為基準；架構以 `docs/architecture.md` 為基準；AI 邊界與測試以 `docs/ai-safety-and-evaluation.md` 為基準。變更核心定位或 P0 前必須先更新規格並取得使用者確認。
+
+## 變更分類與文件同步
+
+- 工作中新增或發現功能、需求、流程、既有行為變更、缺陷、測試結果或實作事實時，先分類為釐清、缺陷修正、已核准範圍調整、範圍變更或新能力。
+- 使用者當次明確要求即代表目前敘述方向已獲核准；一般範圍內實作與文件同步不需額外等待批准。只有結果會實質改變架構、權限／安全、保存資料、破壞性行為、外部服務／成本／授權、production／部署、核心 P0 或競賽驗收時才停止確認。
+- 實作前辨識受影響的權威文件，完成前在同一任務同步；文件同步是完成條件，不是之後再補的工作。
+- 產品定位、P0／非 P0、需求與驗收更新 `docs/product-spec.md`、`docs/requirements.md`、`docs/project-overview.md`、`docs/acceptance.md`；能力狀態或專案分類改變時同步 `docs/project-capabilities.md` 與 `docs/project-profile.md`。
+- 元件邊界、資料、安全、AI 行為、政府資料源或外部整合更新 `docs/architecture.md`、`docs/data-and-storage.md`、`docs/security-and-privacy.md`、`docs/ai-safety-and-evaluation.md`、`docs/integrations.md` 及受影響的 `apps/client/README.md`／`services/api/README.md`。
+- 啟動、指令、環境變數、Compose、部署或 rollback 改變時，更新根 `README.md`、元件 README、`.env.example` 與 `docs/deployment.md` 中實際受影響的文件。
+- 競賽故事、Demo、可重播情境、證據或限制改變時，更新 `docs/competition.md`、`docs/acceptance.md` 與實際仍作為執行依據的 `docs/implementation-plan.md`。
+- 優先更新既有權威文件，不為了形式新增空 Markdown；不把規劃、假設或未執行結果寫成已實作或已驗證。
+- 完成回報列出變更分類與同步文件；若沒有文件需要變更，說明文件仍與實作一致的具體理由。
 
 ## README 與文件同步
 
@@ -116,4 +130,4 @@
 
 ## 完成回報
 
-- 回報變更檔案、行為差異、實際執行的驗證與結果、未驗證事項、剩餘風險及需要人工決定的項目。
+- 回報變更分類、變更檔案、行為差異、實際執行的驗證與結果、同步文件、未驗證事項、剩餘風險及需要人工決定的項目；若沒有文件變更，說明理由。

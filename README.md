@@ -44,6 +44,8 @@ AirMe/
 └── docs/                    # 產品、架構、安全、競賽與部署文件
 ```
 
+`apps/client/`、`services/api/` 與 `packages/contracts/` 是本專案既有 npm workspace 的 `structure_exception`。每個目錄本身就是 component root，`package.json` 直接位於根目錄；不得再建立 project-name／framework-name wrapper。新學生專案仍以 `app/`、`backend/`、`packages/` 等固定 root 為預設。
+
 ```mermaid
 flowchart LR
   U["Expo App／Web"] -->|"最小必要情境"| W["Coolify Web／Nginx"]
