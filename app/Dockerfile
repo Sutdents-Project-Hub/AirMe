@@ -17,7 +17,7 @@ RUN npm ci \
 COPY packages/contracts packages/contracts
 COPY app app
 ARG EXPO_PUBLIC_API_BASE_URL=/api
-ARG EXPO_PUBLIC_API_TIMEOUT_MS=10000
+ARG EXPO_PUBLIC_API_TIMEOUT_MS=22000
 ENV EXPO_PUBLIC_API_BASE_URL=$EXPO_PUBLIC_API_BASE_URL
 ENV EXPO_PUBLIC_API_TIMEOUT_MS=$EXPO_PUBLIC_API_TIMEOUT_MS
 RUN npm run build --workspace @airme/contracts && npm run build:web --workspace airme

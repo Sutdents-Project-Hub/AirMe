@@ -12,11 +12,17 @@ const RISK_LABEL: Record<RiskLevel, string> = {
   'very-high': '建議避免',
 };
 
-const FEELING_LABEL: Record<Feedback['feeling'], string> = {
-  better: '感覺比較好',
-  same: '感覺差不多',
-  worse: '感覺比較差',
-  'not-sure': '感覺不確定',
+const DISCOMFORT_LABEL: Record<Feedback['discomfort'], string> = {
+  none: '沒有不舒服',
+  mild: '有輕微不舒服',
+  obvious: '有明顯不舒服',
+  'prefer-not': '不想回答不舒服狀況',
+};
+
+const HELPFUL_LABEL: Record<Feedback['helpful'], string> = {
+  yes: '建議有幫助',
+  no: '建議沒有幫助',
+  unsure: '建議是否有幫助不確定',
 };
 
 export function HistoryList({
@@ -77,7 +83,8 @@ export function HistoryList({
               {checkIn ? (
                 <>
                   <AppText variant="body-small">
-                    {checkIn.completed ? '已進行活動' : '沒有進行活動'} · {FEELING_LABEL[checkIn.feeling]}
+                    {checkIn.completed ? '已進行活動' : '沒有進行活動'} · {DISCOMFORT_LABEL[checkIn.discomfort]}
+                    {' · '}{HELPFUL_LABEL[checkIn.helpful]}
                   </AppText>
                   {checkIn.note ? <AppText variant="body-small" tone="muted">「{checkIn.note}」</AppText> : null}
                 </>

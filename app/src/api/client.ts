@@ -106,13 +106,15 @@ export function createAirMeApi(options: AirMeApiOptions): AirMeApi {
       );
     },
     getEnvironment(location, mode) {
-      const query = new URLSearchParams({
-        name: location.name,
-        lat: String(location.latitude),
-        lng: String(location.longitude),
-        mode,
-      });
-      return call(`environment?${query.toString()}`, { method: 'GET' }, EnvironmentSnapshotSchema);
+      return call(
+        'environment',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ location, dataMode: mode }),
+        },
+        EnvironmentSnapshotSchema,
+      );
     },
     createRecommendation(request) {
       return call(
@@ -141,5 +143,5 @@ export function createAirMeApi(options: AirMeApiOptions): AirMeApi {
 
 export const airMeApi = createAirMeApi({
   baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3000/api',
-  timeoutMs: Number(process.env.EXPO_PUBLIC_API_TIMEOUT_MS) || 10_000,
+  timeoutMs: Number(process.env.EXPO_PUBLIC_API_TIMEOUT_MS) || 22_000,
 });

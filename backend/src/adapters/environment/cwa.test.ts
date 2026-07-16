@@ -58,4 +58,38 @@ describe('parseCwaResponse', () => {
       ),
     ).toThrow('CWA_INVALID_RESPONSE');
   });
+
+  it('uses a controlled administrative area when the display name has no county', () => {
+    const result = parseCwaResponse(
+      {
+        records: {
+          location: [
+            {
+              locationName: '高雄市',
+              weatherElement: [
+                {
+                  elementName: 'Wx',
+                  time: [
+                    {
+                      startTime: '2026-07-13 09:00:00',
+                      parameter: { parameterName: '晴時多雲' },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        name: '高科大第一校區周邊',
+        administrativeArea: '高雄市',
+        latitude: 22.754,
+        longitude: 120.335,
+      },
+      new Date('2026-07-13T02:03:00.000Z'),
+    );
+
+    expect(result.value.summary).toBe('晴時多雲');
+  });
 });

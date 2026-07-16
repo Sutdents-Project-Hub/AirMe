@@ -17,7 +17,7 @@ export interface ActivityRuleResult {
   rulesVersion: string;
 }
 
-const RULES_VERSION = 'moe-school-aqi-2026.1';
+const RULES_VERSION = 'moe-school-aqi-2023-12-18.v1';
 const RISK_ORDER: RiskLevel[] = ['low', 'moderate', 'high', 'very-high'];
 
 function baselineForAqi(aqi: number): RiskLevel {
@@ -50,19 +50,21 @@ export function evaluateActivityRules(input: ActivityRuleInput): ActivityRuleRes
     reasonCodes.push('SENSITIVE_GROUP');
   }
 
-  if (input.aqi > 100 && (isSensitive || input.activityIntensity === 'vigorous')) {
+  if (input.aqi > 200) {
+    restrictions.push('立即停止戶外活動，改採室內低強度方案');
+  } else if (input.aqi > 150 && isSensitive) {
+    minimumRiskLevel = enforceMinimumRisk('high', minimumRiskLevel);
+    restrictions.push('留在室內並減少體力消耗活動，必要外出時採一般防護');
+  } else if (input.aqi > 150) {
+    restrictions.push('避免長時間劇烈戶外活動，進行其他戶外活動時增加休息');
+  } else if (input.aqi > 100 && isSensitive) {
+    minimumRiskLevel = enforceMinimumRisk('high', minimumRiskLevel);
+    restrictions.push('減少體力消耗與戶外活動，必要外出時採一般防護');
+  } else if (input.aqi > 100 && input.activityIntensity === 'vigorous') {
     minimumRiskLevel = enforceMinimumRisk('high', minimumRiskLevel);
     restrictions.push('避免長時間或劇烈戶外活動');
   } else if (input.aqi > 100) {
     restrictions.push('縮短長時間戶外活動，並留意身體狀況');
-  }
-
-  if (input.aqi > 150 && !restrictions.includes('避免長時間或劇烈戶外活動')) {
-    restrictions.push('減少長時間或劇烈戶外活動');
-  }
-
-  if (input.aqi > 200) {
-    restrictions.splice(0, restrictions.length, '避免戶外活動，改採室內低強度方案');
   }
 
   if (input.stale) {

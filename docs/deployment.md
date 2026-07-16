@@ -48,11 +48,17 @@ Web 的 `EXPO_PUBLIC_API_BASE_URL` 在 Docker build 時固定為 `/api`。所以
 | `CWA_API_KEY` | 中央氣象署 key | 是 |
 | `ALLOWED_ORIGINS` | 原生 App 或獨立 Web 的 HTTPS origin，逗號分隔 | 否 |
 | `REQUEST_TIMEOUT_MS` | 預設 `8000` | 否 |
+| `AI_MAX_REQUESTS_PER_MINUTE` | 每 API process 預設 `60` | 否 |
+| `AI_MAX_CONCURRENCY` | 每 API process 預設同時 `4` 個 AI 作業 | 否 |
+| `ENVIRONMENT_MAX_REQUESTS_PER_MINUTE` | 每 API process 預設 `120` 次環境查詢 | 否 |
+| `ENVIRONMENT_MAX_CONCURRENCY` | 每 API process 預設同時 `8` 個環境查詢 | 否 |
 | `CONTEXT_TTL_SECONDS` | 預設 `1800` | 否 |
 
 Compose 會用資料庫的 `POSTGRES_*` 設定自動組成 API 連線。若改用 Coolify 獨立的 PostgreSQL service，請在 API 設定 `DATABASE_URL`，或完整提供 `DATABASE_HOST`、`DATABASE_PORT`、`DATABASE_NAME`、`DATABASE_USER`、`DATABASE_PASSWORD`；此時必須調整 Compose 的 `postgres` 服務與 `depends_on`，不要同時留下兩套不一致資料庫。
 
-`AI_MODE=live` 與 `DATABASE_REQUIRED=true` 已在 Compose 固定。本機 fixture 同樣維持 `DATABASE_REQUIRED=true`，以驗證 PostgreSQL migration 與匿名技術事件記錄；不要把 fixture 設定誤帶到正式 Coolify app。
+Compose 預設 `AI_MODE=live` 與 `DATABASE_REQUIRED=true`，但 `AI_MODE` 保留為環境變數，讓第一次部署可先在沒有 AI／政府 key 時以 fixture 驗證容器、migration 與同源 proxy。正式展示前必須明確切回 `AI_MODE=live`並驗證 provenance；不要把 fixture 設定誤帶到正式展示。
+
+API image 的 runtime 只安裝 contracts／backend production dependencies，並以 `node` 非 root 使用者執行。PostgreSQL Pool 含 5 秒連線 timeout、10 秒 query timeout 與 8 秒 statement timeout，避免資料庫不可用時無限卡住。
 
 ## 本機 Docker fixture 測試
 
@@ -76,15 +82,18 @@ EXPO_PUBLIC_API_BASE_URL=https://<your-domain>/api npm run build:web --workspace
 
 真正的 mobile delivery（development build、APK、AAB 或 TestFlight）尚未決定；上例只說明環境變數，不能取代原生發佈流程。
 
+前端 `EXPO_PUBLIC_API_TIMEOUT_MS` 預設為 `22000`，覆蓋環境資料與 AI 串接的正常上限；依線上 P95 調整時必須同步 App Docker build arg 與元件 README。
+
 ## 上線驗收與觀測
 
 - `/api/health`：確認 API 及必要 PostgreSQL 連線；不要公開 `/api` container port。
 - Web：檢查個人檔案、首頁理解確認、路線資料不足、Air 日誌、fixture／live 標籤、推薦、追問、回饋與資料清除。
 - API：除既有 health／environment／recommendations／follow-ups 外，驗證 `POST /api/activity-intents` 不寫入 request body，live／fixture provenance 正確。
 - Live：確認量界模型 ID、JSON output、429、timeout、無效輸出與 provider 失敗都不會洩漏 provider body。
+- Abuse：驗證 32KB body 上限、malformed JSON、`AI_MAX_REQUESTS_PER_MINUTE`、`AI_MAX_CONCURRENCY` 與 429 UI。多 replica 部署前需再於 reverse proxy 或共用 store 加上全域 limiter。
 - Data：確認環境部／中央氣象署來源、時間、stale 與 partial／fixture 狀態。
 - Database：確認僅出現 `environment_cache`、`service_events` 與 `schema_migrations`；抽查不得有 activity text、profile、prompt、模型全文或 IP。
-- Server：用 Coolify logs 只看服務健康與錯誤分類，不將完整 request body 或 secret 寫入 log。
+- Server：repository 內 Nginx 已關閉 access log；用 Coolify logs 只看服務健康與錯誤分類，不將完整 request body 或 secret 寫入 log，並為外層 reverse proxy 的連線 IP 設定最短保存期與存取限制。
 
 ## 備份、回滾與維運
 
@@ -100,3 +109,4 @@ EXPO_PUBLIC_API_BASE_URL=https://<your-domain>/api npm run build:web --workspace
 - 量界與政府 API 真實 key 的 quota、rate limit、JSON 相容性與服務條款。
 - PostgreSQL 備份、restore、監控與 retention。
 - 正式 mobile build 與實體裝置流程。
+- 競賽簡章的 Azure 25% 是否允許以 Coolify／量界替代；在取得書面確認前，完成 Coolify 部署不等於完成官方概念驗證。

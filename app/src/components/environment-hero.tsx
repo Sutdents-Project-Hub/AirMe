@@ -77,6 +77,11 @@ export function EnvironmentHero({
             ? '降雨機率未提供'
             : `降雨 ${environment.weather.rainProbability}%`}
         </AppText>
+        <AppText variant="body-small" tone="muted">
+          {environment.airQuality.primaryPollutant
+            ? `主要污染物 ${environment.airQuality.primaryPollutant}`
+            : '主要污染物未提供'}
+        </AppText>
       </View>
       <SourceDisclosure sources={environment.sources} />
       <AppButton

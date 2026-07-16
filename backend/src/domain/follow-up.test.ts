@@ -43,6 +43,20 @@ describe('FollowUpService', () => {
     expect(ai.answerFollowUp).not.toHaveBeenCalled();
   });
 
+  it('returns urgent guidance even when the context token is invalid or expired', async () => {
+    const ai = { answerFollowUp: vi.fn() };
+    const service = new FollowUpService({ contextTokens, ai, requestId: () => 'req_follow' });
+
+    const response = await service.answer({
+      question: '我現在喘不過氣而且快昏倒了',
+      contextToken: 'invalid-token',
+    });
+
+    expect(response.disposition).toBe('urgent-safety');
+    expect(response.answer).toContain('立即停止活動');
+    expect(ai.answerFollowUp).not.toHaveBeenCalled();
+  });
+
   it('uses AI only for an allowed in-context question', async () => {
     const ai = {
       answerFollowUp: vi.fn().mockResolvedValue({
@@ -68,5 +82,41 @@ describe('FollowUpService', () => {
     expect(response.disposition).toBe('answered');
     expect(response.answer).toContain('規則底線');
     expect(response.answer).not.toContain('provider secret');
+  });
+
+  it('rejects model advice that contradicts the signed rule floor', async () => {
+    const ai = {
+      answerFollowUp: vi.fn().mockResolvedValue({
+        answer: '沒問題，你可以照常全力在操場跑。',
+        suggestedQuestions: [],
+      }),
+    };
+    const service = new FollowUpService({ contextTokens, ai, requestId: () => 'req_follow' });
+
+    const response = await service.answer({
+      question: '所以我可以照常全力跑嗎？',
+      contextToken: token,
+    });
+
+    expect(response.answer).toContain('規則底線');
+    expect(response.answer).not.toContain('照常全力');
+  });
+
+  it('rejects ungrounded personal claims from the model', async () => {
+    const ai = {
+      answerFollowUp: vi.fn().mockResolvedValue({
+        answer: '依你的歷史紀錄，這次一定不會不舒服。',
+        suggestedQuestions: [],
+      }),
+    };
+    const service = new FollowUpService({ contextTokens, ai, requestId: () => 'req_follow' });
+
+    const response = await service.answer({
+      question: '改成室內走路可以嗎？',
+      contextToken: token,
+    });
+
+    expect(response.answer).toContain('規則底線');
+    expect(response.answer).not.toContain('歷史紀錄');
   });
 });

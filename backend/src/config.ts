@@ -3,6 +3,10 @@ import { randomBytes } from 'node:crypto';
 export interface ApiConfig {
   allowedOrigins: string[];
   requestTimeoutMs: number;
+  aiMaxRequestsPerMinute: number;
+  aiMaxConcurrency: number;
+  environmentMaxRequestsPerMinute: number;
+  environmentMaxConcurrency: number;
   contextSigningSecret: string;
   contextTtlSeconds: number;
   moenvApiKey: string | null;
@@ -52,7 +56,12 @@ function readContextSigningSecret(
   aiMode: ApiConfig['aiMode'],
 ): string {
   const configured = env.CONTEXT_SIGNING_SECRET?.trim();
-  if (configured) return configured;
+  if (configured) {
+    if (Buffer.byteLength(configured, 'utf8') < 32) {
+      throw new Error('CONTEXT_SIGNING_SECRET_TOO_SHORT');
+    }
+    return configured;
+  }
   if (aiMode === 'fixture') return randomBytes(32).toString('base64url');
   throw new Error('CONTEXT_SIGNING_SECRET_REQUIRED');
 }
@@ -67,6 +76,13 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       .map((item) => item.trim())
       .filter(Boolean),
     requestTimeoutMs: positiveInteger(env.REQUEST_TIMEOUT_MS, 8_000),
+    aiMaxRequestsPerMinute: positiveInteger(env.AI_MAX_REQUESTS_PER_MINUTE, 60),
+    aiMaxConcurrency: positiveInteger(env.AI_MAX_CONCURRENCY, 4),
+    environmentMaxRequestsPerMinute: positiveInteger(
+      env.ENVIRONMENT_MAX_REQUESTS_PER_MINUTE,
+      120,
+    ),
+    environmentMaxConcurrency: positiveInteger(env.ENVIRONMENT_MAX_CONCURRENCY, 8),
     contextSigningSecret: readContextSigningSecret(env, aiMode),
     contextTtlSeconds: positiveInteger(env.CONTEXT_TTL_SECONDS, 1_800),
     moenvApiKey: env.MOENV_API_KEY?.trim() || null,

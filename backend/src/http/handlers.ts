@@ -1,8 +1,7 @@
 import {
   ActivityIntentRequestSchema,
-  DataModeSchema,
+  EnvironmentRequestSchema,
   FollowUpRequestSchema,
-  LocationSchema,
   RecommendationRequestSchema,
   type ActivityIntentRequest,
   type ActivityIntentResponse,
@@ -15,6 +14,7 @@ import {
 import { ZodError } from 'zod';
 
 import { ContextTokenError } from '../domain/context-token';
+import { FIXED_SAFETY_MESSAGES } from '../domain/safety';
 import { corsHeaders } from './cors';
 import { errorResponse, jsonResponse, type HttpResponse } from './respond';
 
@@ -88,14 +88,42 @@ export function createApiHandlers(deps: ApiHandlerDependencies): ApiHandlers {
         });
       }
       const message = error instanceof Error ? error.message : '';
-      const domainCodes = ['OUT_OF_SCOPE', 'MEDICAL_BOUNDARY', 'URGENT_SAFETY'] as const;
-      const domainCode = domainCodes.find((code) => code === message);
-      if (domainCode) {
+      const safetyErrors = {
+        OUT_OF_SCOPE: { code: 'OUT_OF_SCOPE', message: FIXED_SAFETY_MESSAGES['out-of-scope'] },
+        MEDICAL_BOUNDARY: {
+          code: 'MEDICAL_BOUNDARY',
+          message: FIXED_SAFETY_MESSAGES['medical-boundary'],
+        },
+        URGENT_SAFETY: { code: 'URGENT_SAFETY', message: FIXED_SAFETY_MESSAGES['urgent-safety'] },
+        INJECTION: { code: 'OUT_OF_SCOPE', message: FIXED_SAFETY_MESSAGES.injection },
+      } as const;
+      const safetyError = safetyErrors[message as keyof typeof safetyErrors];
+      if (safetyError) {
         return errorResponse({
           status: 422,
-          code: domainCode,
-          message: '這個問題超出 AirMe 的空品與活動安全範圍。',
+          code: safetyError.code,
+          message: safetyError.message,
           retryable: false,
+          requestId: id,
+          headers,
+        });
+      }
+      if (message === 'ENVIRONMENT_LOCATION_MISMATCH') {
+        return errorResponse({
+          status: 422,
+          code: 'ENVIRONMENT_UNAVAILABLE',
+          message: '活動地點和目前選定區域不同，請先在設定更新區域，再重新產生行動卡。',
+          retryable: false,
+          requestId: id,
+          headers,
+        });
+      }
+      if (message === 'RATE_LIMITED') {
+        return errorResponse({
+          status: 429,
+          code: 'RATE_LIMITED',
+          message: '目前同時使用人數較多，請稍後再試。',
+          retryable: true,
           requestId: id,
           headers,
         });
@@ -119,15 +147,13 @@ export function createApiHandlers(deps: ApiHandlerDependencies): ApiHandlers {
       }),
     environment: (request) =>
       execute(request, async (headers) => {
-        if (request.method.toUpperCase() !== 'GET') throw new ZodError([]);
-        const query = new URL(request.url).searchParams;
-        const location = LocationSchema.parse({
-          name: query.get('name'),
-          latitude: Number(query.get('lat')),
-          longitude: Number(query.get('lng')),
-        });
-        const mode = DataModeSchema.parse(query.get('mode') ?? 'live');
-        return jsonResponse(200, await deps.getEnvironment(location, mode), headers);
+        if (request.method.toUpperCase() !== 'POST') throw new ZodError([]);
+        const parsed = EnvironmentRequestSchema.parse(await readJson(request));
+        return jsonResponse(
+          200,
+          await deps.getEnvironment(parsed.location, parsed.dataMode),
+          headers,
+        );
       }),
     activityIntents: (request) =>
       execute(request, async (headers) => {

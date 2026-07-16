@@ -3,6 +3,8 @@
 > 競賽版跨平台產品｜決賽：2026-07-26
 > 部署目標：自有 VPS 的 Coolify + PostgreSQL + 量界智算
 
+> 競賽合規提醒：官方簡章將「概念驗證（Azure）」列為 25%，且要求雲端資源使用主辦單位指定平台。目前 Coolify／量界方案只能在取得主辦單位書面許可後作為正式概念驗證；否則需保留或恢復指定 Azure 資源路徑。
+
 AirMe 讓使用者用自然語言描述想做的活動，再把 AQI、天氣、最低限度個人敏感條件與官方安全底線，整理成可執行、可解釋且受安全邊界限制的個人行動卡。
 
 ## 命名對照
@@ -25,9 +27,9 @@ AirMe 讓使用者用自然語言描述想做的活動，再把 AQI、天氣、�
 - 自然語言活動輸入會先整理成活動、時間、地點、強度、時長與當下狀況，缺資料只問一個問題，使用者確認後才產生建議。
 - 環境部 AQI 與中央氣象署資料 adapter，保留來源、時間、新鮮度與降級狀態。
 - 量界智算 OpenAI 相容 `chat/completions` adapter，以 JSON object 產生固定格式行動卡。
-- 程式規則先決定不可突破的風險底線，後端再次驗證模型輸出。
+- 程式規則先決定不可突破的風險底線，後端再次驗證模型輸出、資料引用與未經支持的保證，決定性規則會取代衝突建議。
 - 限定在空品、活動安全與一般自我保護範圍內追問；醫療、緊急、離題與提示注入有固定處理。
-- Air 日誌整合最多 20 筆活動、環境、建議摘要與最多 50 筆活動後回饋，只保存在裝置端。
+- Air 日誌整合最多 20 筆活動、環境、建議摘要與最多 50 筆活動後回饋（是否進行、不舒服程度、建議是否有幫助、選填註記），只保存在裝置端。
 - 路線頁可輸入起點、終點、時間與方式，顯示出發地環境判斷並由使用者主動交接外部地圖；尚未連接即時 route provider，不捏造距離、時間或街道級空品。
 - 全面採用淺綠、白色、柔和圓角與留白的亮色介面，AQI 黃／橙／紅只保留為風險語意。
 - PostgreSQL 僅保存共享環境快取與不含 payload 的技術事件，不保存個人設定、活動內容、回饋或模型全文。
@@ -101,10 +103,11 @@ npm run evaluate
 
 本次架構遷移實際驗證：
 
-- 共用契約、API 與 App 共 99 項自動化測試通過（8 + 55 + 36）。
+- 共用契約、API 與 App 共 170 項自動化測試通過（12 + 106 + 52）。
 - 固定安全評估 30/30 通過。
-- Fastify fixture API 實際回應 `/api/health`、`/api/environment` 與 `/api/recommendations`。
-- Docker Compose 設定已以 placeholder 環境變數解析；尚未對 VPS、Coolify、PostgreSQL 容器或真實量界／政府 key 執行部署。
+- `npm run lint`、三個 workspace typecheck、production build、Expo Doctor 20/20 與 Compose config 解析通過。
+- 本機 AirMe Compose 三服務重建並健康；API 以 `node` 非 root 使用者執行，runtime production dependencies audit 為 0 漏洞，五個 endpoint、緊急 422、malformed JSON 400、migration 與三張預期 table 已實際驗證。
+- 尚未對 VPS／Coolify production、真實量界／政府 key 或實體 iOS／Android 執行驗收。
 
 ## 環境變數
 
@@ -123,6 +126,7 @@ API 的核心設定：
 - `DATABASE_URL`，或 `DATABASE_HOST`、`DATABASE_PORT`、`DATABASE_NAME`、`DATABASE_USER`、`DATABASE_PASSWORD`
 - `DATABASE_REQUIRED`
 - `ALLOWED_ORIGINS`、`REQUEST_TIMEOUT_MS`
+- `AI_MAX_REQUESTS_PER_MINUTE`、`AI_MAX_CONCURRENCY`
 - `CONTEXT_SIGNING_SECRET`、`CONTEXT_TTL_SECONDS`
 
 所有 `EXPO_PUBLIC_*` 都會進入 bundle，不能放 secret。正式值只放 Coolify Environment Variables 或本機忽略的 `.env`。
@@ -132,7 +136,7 @@ API 的核心設定：
 | Method | Route | 用途 |
 |---|---|---|
 | `GET` | `/api/health` | 不洩漏設定值的服務／資料庫 readiness |
-| `GET` | `/api/environment` | 標準化 AQI／天氣與來源狀態 |
+| `POST` | `/api/environment` | 以 request body 傳送粗略地點，回傳標準化 AQI／天氣與來源狀態 |
 | `POST` | `/api/activity-intents` | 不持久化的活動結構化理解與單一澄清問題 |
 | `POST` | `/api/recommendations` | 規則約束的結構化行動卡 |
 | `POST` | `/api/follow-ups` | 原情境內的限定追問與固定拒答 |
@@ -143,7 +147,7 @@ Request／response 型別由 `packages/contracts` 共用；HTTP 錯誤使用穩�
 
 此 repository 根目錄的 [docker-compose.yml](docker-compose.yml) 定義 `web`、`api`、`postgres` 三個服務。Coolify 將公開網域指向 `web:80`；Nginx 會把同源 `/api/*` 反向代理到 API 容器，因此 Web 不必設定公開 API 網域或 CORS。
 
-部署前只需在 Coolify 填入必要的 PostgreSQL 密碼、context signing secret、量界與政府 API key，然後依 [部署計畫](docs/deployment.md) 完成第一次 migration、health check 與線上驗收。沒有 production URL、CI/CD、remote、release 或實際 VPS 部署已被宣稱完成。
+部署前只需在 Coolify 填入必要的 PostgreSQL 密碼、context signing secret、量界與政府 API key，然後依 [部署計畫](docs/deployment.md) 完成第一次 migration、health check 與線上驗收。Coolify 是產品部署目標，不等於競賽官方 Azure 概念驗證已合規；這項仍需主辦單位書面確認。沒有 production URL、CI/CD、remote、release 或實際 VPS 部署已被宣稱完成。
 
 本機 Docker fixture 測試使用同一個 Compose 專案的三個服務，不會碰觸其他專案：
 
@@ -161,7 +165,7 @@ docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.loc
 ## 隱私與安全
 
 - 不蒐集 Email、密碼、姓名、學號、學校、聯絡方式、病歷或長期 GPS 軌跡；可選裝置暱稱只留在本機且不傳後端。
-- 地點持久化精度限制為小數三位；後端只接收當次推論必要內容。
+- 新增地點持久化前四捨五入到小數二位（約公里級），API 為舊資料相容最多接受三位，且只接受臺灣服務範圍；後端只接收當次推論必要內容。
 - 個人設定、回饋、行動紀錄、路線輸入與完整活動文字不寫入 PostgreSQL。
 - PostgreSQL 只保存環境快取與 request ID、路徑、狀態碼、耗時等匿名技術事件。
 - 嚴重呼吸困難、昏厥等緊急描述會停止一般建議並提示立即尋求身邊成人與當地緊急協助。

@@ -29,8 +29,9 @@ describe('ProfileForm', () => {
       },
       location: {
         name: '高科大第一校區周邊',
-        latitude: 22.754,
-        longitude: 120.335,
+        administrativeArea: '高雄市',
+        latitude: 22.75,
+        longitude: 120.34,
       },
     });
     expect(JSON.stringify(onSubmit.mock.calls)).not.toContain('鼻子容易');

@@ -22,11 +22,37 @@ export const AqiCategorySchema = z.enum([
   'hazardous',
 ]);
 
+export const TaiwanAdministrativeAreaSchema = z.enum([
+  '基隆市',
+  '臺北市',
+  '新北市',
+  '桃園市',
+  '新竹市',
+  '新竹縣',
+  '苗栗縣',
+  '臺中市',
+  '彰化縣',
+  '南投縣',
+  '雲林縣',
+  '嘉義市',
+  '嘉義縣',
+  '臺南市',
+  '高雄市',
+  '屏東縣',
+  '宜蘭縣',
+  '花蓮縣',
+  '臺東縣',
+  '澎湖縣',
+  '金門縣',
+  '連江縣',
+]);
+
 export const LocationSchema = z
   .object({
     name: z.string().trim().min(1).max(80),
-    latitude: coordinate(-90, 90),
-    longitude: coordinate(-180, 180),
+    administrativeArea: TaiwanAdministrativeAreaSchema.optional(),
+    latitude: coordinate(21.7, 26.5),
+    longitude: coordinate(118, 122.5),
   })
   .strict();
 
@@ -67,6 +93,13 @@ export const ActivityIntentRequestSchema = z
     activityText: z.string().trim().min(2).max(800),
     locale: z.literal('zh-TW'),
     timeZone: z.string().trim().min(1).max(80),
+    dataMode: DataModeSchema.default('live'),
+  })
+  .strict();
+
+export const EnvironmentRequestSchema = z
+  .object({
+    location: LocationSchema,
     dataMode: DataModeSchema.default('live'),
   })
   .strict();
@@ -223,7 +256,8 @@ export const FeedbackSchema = z
     id: z.string().trim().min(1).max(100),
     recommendationId: z.string().trim().min(1).max(100),
     completed: z.boolean(),
-    feeling: z.enum(['better', 'same', 'worse', 'not-sure']),
+    discomfort: z.enum(['none', 'mild', 'obvious', 'prefer-not']),
+    helpful: z.enum(['yes', 'no', 'unsure']),
     note: z.string().trim().max(240).optional(),
     createdAt: z.iso.datetime(),
   })
@@ -253,11 +287,13 @@ export const RecommendationHistoryItemSchema = z
 export type DataMode = z.infer<typeof DataModeSchema>;
 export type ProvenanceMode = z.infer<typeof ProvenanceModeSchema>;
 export type RiskLevel = z.infer<typeof RiskLevelSchema>;
+export type TaiwanAdministrativeArea = z.infer<typeof TaiwanAdministrativeAreaSchema>;
 export type Location = z.infer<typeof LocationSchema>;
 export type Profile = z.infer<typeof ProfileSchema>;
 export type ActivityIntent = z.infer<typeof ActivityIntentSchema>;
 export type ActivityIntentRequest = z.infer<typeof ActivityIntentRequestSchema>;
 export type ActivityIntentResponse = z.infer<typeof ActivityIntentResponseSchema>;
+export type EnvironmentRequest = z.infer<typeof EnvironmentRequestSchema>;
 export type RecommendationRequest = z.infer<typeof RecommendationRequestSchema>;
 export type EnvironmentSnapshot = z.infer<typeof EnvironmentSnapshotSchema>;
 export type ActionCard = z.infer<typeof ActionCardSchema>;

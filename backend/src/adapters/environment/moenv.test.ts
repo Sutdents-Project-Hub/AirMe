@@ -48,4 +48,38 @@ describe('parseMoenvResponse', () => {
       ),
     ).toThrow('MOENV_INVALID_RESPONSE');
   });
+
+  it('rejects a county and coordinate mismatch instead of mixing regions', () => {
+    expect(() =>
+      parseMoenvResponse(
+        {
+          records: [
+            {
+              sitename: '前鎮',
+              county: '高雄市',
+              aqi: '82',
+              publishtime: '2026-07-13 10:00:00',
+              latitude: '22.6054',
+              longitude: '120.3075',
+            },
+            {
+              sitename: '中山',
+              county: '臺北市',
+              aqi: '42',
+              publishtime: '2026-07-13 10:00:00',
+              latitude: '25.062',
+              longitude: '121.526',
+            },
+          ],
+        },
+        {
+          name: '錯配位置',
+          administrativeArea: '高雄市',
+          latitude: 25.062,
+          longitude: 121.526,
+        },
+        new Date('2026-07-13T02:03:00.000Z'),
+      ),
+    ).toThrow('MOENV_LOCATION_MISMATCH');
+  });
 });

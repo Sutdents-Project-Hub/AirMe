@@ -57,11 +57,11 @@ Web 的正式 build 以 `EXPO_PUBLIC_API_BASE_URL=/api` 產生。瀏覽器請求
 ## 4. 資料流與安全界線
 
 1. Client 先以 `POST /api/activity-intents` 取得結構化理解；Demo 使用同契約的可重播解析。使用者確認後才建立含 `confirmedIntent` 的 `RecommendationRequest`。
-2. API 驗證欄位、長度、列舉與座標精度，進行領域／醫療／緊急守門；意圖請求及推薦請求都不持久化。
-3. API 取得 AQI、天氣；PostgreSQL 先提供可用快取，外部成功回應才覆寫快取。
+2. API 驗證欄位、長度、列舉、請求 body、臺灣座標範圍與座標精度，進行領域／醫療／緊急守門；意圖請求及推薦請求都不持久化。AI 與環境路由分別受每 process 固定窗口頻率與同時數限制。
+3. API 取得 AQI、天氣；Location 契約以受控縣市欄位對應 CWA，避免把校園顯示名稱當成縣市。PostgreSQL 先提供可用快取，外部成功回應才覆寫快取。
 4. 程式規則依環境、已確認活動強度與敏感標籤建立不可降低的 risk floor。
 5. 量界 adapter 以 `POST /v1/chat/completions`、Bearer key、可設定模型與 JSON object 請求產生草稿。
-6. API 以 Zod 驗證草稿、禁止醫療因果，並以程式規則強制最小風險；失敗時改用清楚標示的 fixture 安全降級。
+6. API 以 Zod 驗證草稿，拒絕醫療因果、安全保證、未經支持的歷史／百分比事實與規則衝突；行動強度以決定性規則底線覆寫，理由則後端使用實際請求與環境事實重建。未來活動不把當前 AQI 假當預報。
 7. API 不保存 request body、個人 profile、活動文字、回饋、路線、context token 或模型完整回應；`service_events` request ID 一律由伺服器產生 UUID，只寫入快取與匿名技術事件。
 8. Air 日誌由 client 將確認後的 activity／time／duration／intensity 與環境／建議摘要持久化；明確排除 currentCondition 與自由文字原稿。
 
@@ -71,7 +71,7 @@ Web 的正式 build 以 `EXPO_PUBLIC_API_BASE_URL=/api` 產生。瀏覽器請求
 
 | Table | 內容 | 明確不保存 |
 |---|---|---|
-| `environment_cache` | 粗略座標 key、標準化 AQI／天氣 JSON、取得時間 | 使用者 ID、活動、個人條件、精確地址 |
+| `environment_cache` | 受控縣市＋粗略座標 key、固定非個資地點名、標準化 AQI／天氣 JSON、取得時間 | 使用者地點顯示名、使用者 ID、活動、個人條件、精確地址 |
 | `service_events` | 隨機 request ID、route、status code、duration、建立時間 | IP、request／response body、prompt、模型輸出、錯誤原文 |
 
 所有 migration 都是版本化 SQL；`schema_migrations` 防止重複執行。決賽正式環境先採單一 API replica，避免多個 container 同時進行第一次 migration；之後再擴容前需加入 migration lock 與連線池容量評估。
@@ -81,12 +81,12 @@ Web 的正式 build 以 `EXPO_PUBLIC_API_BASE_URL=/api` 產生。瀏覽器請求
 | Method | Route | 說明 |
 |---|---|---|
 | `GET` | `/api/health` | 不回傳配置的 API／資料庫 readiness |
-| `GET` | `/api/environment` | AQI、天氣、來源、時間與降級狀態 |
+| `POST` | `/api/environment` | 以 body 傳送粗略地點，回傳 AQI、天氣、來源、時間與降級狀態 |
 | `POST` | `/api/activity-intents` | 活動結構化理解、最多一個澄清問題與 AI／fixture provenance |
 | `POST` | `/api/recommendations` | 規則底線 + AI／fixture 行動卡 |
 | `POST` | `/api/follow-ups` | 原情境內追問；離題、醫療與緊急固定處理 |
 
-公開錯誤固定使用 `{ error: { code, message, retryable, requestId } }`。重要代碼為 `INVALID_REQUEST`、`OUT_OF_SCOPE`、`MEDICAL_BOUNDARY`、`URGENT_SAFETY`、`CONTEXT_EXPIRED` 與 `INTERNAL_ERROR`。
+公開錯誤固定使用 `{ error: { code, message, retryable, requestId } }`。重要代碼為 `INVALID_REQUEST`、`OUT_OF_SCOPE`、`MEDICAL_BOUNDARY`、`URGENT_SAFETY`、`ENVIRONMENT_UNAVAILABLE`、`RATE_LIMITED`、`CONTEXT_EXPIRED` 與 `INTERNAL_ERROR`。Fastify 另將 malformed JSON、32KB 以上 body 與未預期錯誤正規化，不回傳 stack。
 
 ## 7. 執行與部署契約
 

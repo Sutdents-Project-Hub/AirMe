@@ -60,8 +60,12 @@ export function ActionCard({ recommendation }: { recommendation: RecommendationR
         <AppText variant="display" weight="800">
           {card.headline}
         </AppText>
-        <AppText tone="muted">
-          AQI {card.environment.airQuality.aqi} · {card.environment.weather.summary}
+        <AppText>
+          {card.environment.location.name} · AQI {card.environment.airQuality.aqi} ·{' '}
+          {card.environment.weather.summary}
+          {card.environment.airQuality.primaryPollutant
+            ? ` · 主要污染物 ${card.environment.airQuality.primaryPollutant}`
+            : ''}
         </AppText>
       </Card>
 
@@ -75,7 +79,7 @@ export function ActionCard({ recommendation }: { recommendation: RecommendationR
           <PlanTile color={palette.teal} label="強度" value={card.recommendedPlan.intensity} />
           {card.recommendedPlan.equipment.length > 0 ? (
             <PlanTile
-              color={palette.coral}
+              color={palette.accentSoft}
               label="準備"
               value={card.recommendedPlan.equipment.join('、')}
             />
@@ -85,7 +89,7 @@ export function ActionCard({ recommendation }: { recommendation: RecommendationR
 
       <Card pattern="dots" patternColor={palette.yellow}>
         <AppText variant="title-small" weight="800">
-          為什麼
+          本次使用的事實
         </AppText>
         {card.why.map((reason, index) => (
           <View key={reason} style={styles.reason}>
@@ -104,6 +108,9 @@ export function ActionCard({ recommendation }: { recommendation: RecommendationR
           資料來源與更新時間
         </AppText>
         <SourceDisclosure sources={card.environment.sources} />
+        <AppText variant="caption" tone="muted">
+          官方規則：教育部校園空品措施（2023/12/18 修正）
+        </AppText>
         <AppText variant="caption" tone="muted">
           規則版本：{card.provenance.rulesVersion} · 追蹤碼：{recommendation.requestId}
         </AppText>

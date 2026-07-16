@@ -14,7 +14,8 @@ interface FeedbackPanelProps {
   onSubmit: (value: {
     recommendationId: string;
     completed: boolean;
-    feeling: Feedback['feeling'];
+    discomfort: Feedback['discomfort'];
+    helpful: Feedback['helpful'];
     note: string | undefined;
   }) => void;
 }
@@ -22,7 +23,8 @@ interface FeedbackPanelProps {
 export function FeedbackPanel({ recommendationId, submitted, onSubmit }: FeedbackPanelProps) {
   const palette = usePalette();
   const [completed, setCompleted] = useState<boolean | null>(null);
-  const [feeling, setFeeling] = useState<Feedback['feeling'] | null>(null);
+  const [discomfort, setDiscomfort] = useState<Feedback['discomfort'] | null>(null);
+  const [helpful, setHelpful] = useState<Feedback['helpful'] | null>(null);
   const [note, setNote] = useState('');
 
   if (submitted) {
@@ -50,10 +52,10 @@ export function FeedbackPanel({ recommendationId, submitted, onSubmit }: Feedbac
         <AppText variant="title" weight="800">
           5 秒活動回饋
         </AppText>
-        <AppText tone="muted">只記錄完成狀況與主觀感受，不判定空品造成了什麼。</AppText>
+        <AppText tone="muted">只保存你自己選擇的活動紀錄，不解釋原因，也不當成醫療紀錄。</AppText>
       </View>
       <View style={styles.field}>
-        <AppText weight="700">有完成今天的方案嗎？</AppText>
+        <AppText weight="700">後來有進行這項活動嗎？</AppText>
         <View style={styles.options}>
           <Chip
             label="有"
@@ -70,31 +72,55 @@ export function FeedbackPanel({ recommendationId, submitted, onSubmit }: Feedbac
         </View>
       </View>
       <View style={styles.field}>
-        <AppText weight="700">活動後的感受</AppText>
+        <AppText weight="700">活動後有不舒服嗎？</AppText>
+        <AppText variant="caption" tone="muted">若沒有進行活動，可選「不想回答」。</AppText>
         <View style={styles.options}>
           <Chip
-            label="比較好"
-            selected={feeling === 'better'}
-            onPress={() => setFeeling('better')}
-            accessibilityLabel="活動後感受：比較好"
+            label="沒有"
+            selected={discomfort === 'none'}
+            onPress={() => setDiscomfort('none')}
+            accessibilityLabel="活動後不舒服程度：沒有"
           />
           <Chip
-            label="差不多"
-            selected={feeling === 'same'}
-            onPress={() => setFeeling('same')}
-            accessibilityLabel="活動後感受：差不多"
+            label="輕微"
+            selected={discomfort === 'mild'}
+            onPress={() => setDiscomfort('mild')}
+            accessibilityLabel="活動後不舒服程度：輕微"
           />
           <Chip
-            label="比較差"
-            selected={feeling === 'worse'}
-            onPress={() => setFeeling('worse')}
-            accessibilityLabel="活動後感受：比較差"
+            label="明顯"
+            selected={discomfort === 'obvious'}
+            onPress={() => setDiscomfort('obvious')}
+            accessibilityLabel="活動後不舒服程度：明顯"
+          />
+          <Chip
+            label="不想回答"
+            selected={discomfort === 'prefer-not'}
+            onPress={() => setDiscomfort('prefer-not')}
+            accessibilityLabel="活動後不舒服程度：不想回答"
+          />
+        </View>
+      </View>
+      <View style={styles.field}>
+        <AppText weight="700">這張建議有幫助嗎？</AppText>
+        <View style={styles.options}>
+          <Chip
+            label="有"
+            selected={helpful === 'yes'}
+            onPress={() => setHelpful('yes')}
+            accessibilityLabel="建議是否有幫助：有"
+          />
+          <Chip
+            label="沒有"
+            selected={helpful === 'no'}
+            onPress={() => setHelpful('no')}
+            accessibilityLabel="建議是否有幫助：沒有"
           />
           <Chip
             label="不確定"
-            selected={feeling === 'not-sure'}
-            onPress={() => setFeeling('not-sure')}
-            accessibilityLabel="活動後感受：不確定"
+            selected={helpful === 'unsure'}
+            onPress={() => setHelpful('unsure')}
+            accessibilityLabel="建議是否有幫助：不確定"
           />
         </View>
       </View>
@@ -113,15 +139,16 @@ export function FeedbackPanel({ recommendationId, submitted, onSubmit }: Feedbac
       <AppButton
         label="儲存活動回饋"
         onPress={() => {
-          if (completed === null || feeling === null) return;
+          if (completed === null || discomfort === null || helpful === null) return;
           onSubmit({
             recommendationId,
             completed,
-            feeling,
+            discomfort,
+            helpful,
             note: note.trim() || undefined,
           });
         }}
-        disabled={completed === null || feeling === null}
+        disabled={completed === null || discomfort === null || helpful === null}
       />
     </Card>
   );

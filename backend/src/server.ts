@@ -3,8 +3,9 @@ import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest }
 import { createApplication } from './application';
 import { readApiConfig } from './config';
 import type { OperationalStore } from './database/types';
+import { corsHeaders } from './http/cors';
 import type { ApiHandlers, ApiRequest } from './http/handlers';
-import type { HttpResponse } from './http/respond';
+import { errorResponse, type HttpResponse } from './http/respond';
 
 function toApiRequest(request: FastifyRequest): ApiRequest {
   const protocol = request.protocol || 'http';
@@ -25,8 +26,35 @@ async function sendResponse(response: HttpResponse, reply: FastifyReply): Promis
   return reply.code(response.status).headers(response.headers).send(response.jsonBody);
 }
 
-export function createServer(input: { handlers: ApiHandlers; store: OperationalStore | null }): FastifyInstance {
-  const server = Fastify({ logger: false, trustProxy: true });
+export function createServer(input: {
+  handlers: ApiHandlers;
+  store: OperationalStore | null;
+  allowedOrigins?: string[];
+}): FastifyInstance {
+  const server = Fastify({ logger: false, trustProxy: true, bodyLimit: 32 * 1_024 });
+
+  server.setErrorHandler((error, request, reply) => {
+    const errorStatus =
+      typeof error === 'object' && error !== null && 'statusCode' in error
+        ? Number(error.statusCode)
+        : 500;
+    const status = errorStatus === 413 ? 413 : errorStatus === 400 ? 400 : 500;
+    const headers = corsHeaders(toApiRequest(request), input.allowedOrigins ?? []);
+    const response = errorResponse({
+      status,
+      code: status === 500 ? 'INTERNAL_ERROR' : 'INVALID_REQUEST',
+      message:
+        status === 413
+          ? '輸入內容過大，請縮短後再試。'
+          : status === 400
+            ? '請檢查輸入內容是否為正確格式。'
+            : '服務暫時無法完成，請稍後再試或使用決賽示範模式。',
+      retryable: status === 500,
+      requestId: crypto.randomUUID(),
+      headers,
+    });
+    return sendResponse(response, reply);
+  });
   const register = (
     method: 'GET' | 'POST',
     path: string,
@@ -40,7 +68,7 @@ export function createServer(input: { handlers: ApiHandlers; store: OperationalS
   };
 
   register('GET', '/api/health', input.handlers.health);
-  register('GET', '/api/environment', input.handlers.environment);
+  register('POST', '/api/environment', input.handlers.environment);
   register('POST', '/api/activity-intents', input.handlers.activityIntents);
   register('POST', '/api/recommendations', input.handlers.recommendations);
   register('POST', '/api/follow-ups', input.handlers.followUps);
@@ -75,7 +103,9 @@ async function main(): Promise<void> {
   await server.listen({ host: config.host, port: config.port });
 }
 
-void main().catch(() => {
-  process.stderr.write('AirMe API 無法啟動。請確認必要的環境變數與資料庫連線。\n');
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  void main().catch(() => {
+    process.stderr.write('AirMe API 無法啟動。請確認必要的環境變數與資料庫連線。\n');
+    process.exitCode = 1;
+  });
+}

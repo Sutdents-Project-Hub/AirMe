@@ -38,6 +38,11 @@ function categoryForAqi(aqi: number): EnvironmentSnapshot['airQuality']['categor
   return 'hazardous';
 }
 
+function normalizeAdministrativeArea(value: unknown): string | null {
+  if (typeof value !== 'string' || value.trim() === '') return null;
+  return value.trim().replace(/^台/u, '臺');
+}
+
 export function parseMoenvResponse(
   payload: unknown,
   location: Location,
@@ -55,7 +60,8 @@ export function parseMoenvResponse(
       const latitude = Number(field(record, 'latitude', 'Latitude'));
       const longitude = Number(field(record, 'longitude', 'Longitude'));
       const observedAt = taiwanLocalToIso(field(record, 'publishtime', 'PublishTime'));
-      return { record, aqi, latitude, longitude, observedAt };
+      const administrativeArea = normalizeAdministrativeArea(field(record, 'county', 'County'));
+      return { record, aqi, latitude, longitude, observedAt, administrativeArea };
     })
     .filter(
       (item) =>
@@ -64,7 +70,9 @@ export function parseMoenvResponse(
         item.aqi <= 500 &&
         Number.isFinite(item.latitude) &&
         Number.isFinite(item.longitude) &&
-        item.observedAt !== null,
+        item.observedAt !== null &&
+        (!location.administrativeArea ||
+          item.administrativeArea === location.administrativeArea),
     )
     .sort((a, b) => {
       const distanceA =
@@ -76,6 +84,10 @@ export function parseMoenvResponse(
 
   const selected = candidates[0];
   if (!selected?.observedAt) throw new Error('MOENV_INVALID_RESPONSE');
+  const distanceSquared =
+    (selected.latitude - location.latitude) ** 2 +
+    (selected.longitude - location.longitude) ** 2;
+  if (distanceSquared > 0.25) throw new Error('MOENV_LOCATION_MISMATCH');
   const pollutant = field(selected.record, 'pollutant', 'Pollutant');
 
   return {

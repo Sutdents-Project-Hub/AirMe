@@ -43,6 +43,16 @@ export function AppText({
   ...props
 }: PropsWithChildren<AppTextProps>) {
   const palette = usePalette();
+  const accessibilityRole =
+    props.accessibilityRole ??
+    (variant === 'display' || variant === 'title' || variant === 'title-small'
+      ? 'header'
+      : undefined);
+  const role =
+    props.role ??
+    (variant === 'display' || variant === 'title' || variant === 'title-small'
+      ? 'heading'
+      : undefined);
   const color =
     tone === 'muted'
       ? palette.textMuted
@@ -54,6 +64,8 @@ export function AppText({
   return (
     <Text
       {...props}
+      accessibilityRole={accessibilityRole}
+      role={role}
       style={[
         { color, fontFamily: typography.family, fontWeight: weight },
         variantStyles[variant],

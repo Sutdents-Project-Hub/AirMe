@@ -41,7 +41,10 @@ export function AppHeader({ demoMode }: { demoMode: boolean }) {
         </View>
       </View>
       {desktop ? (
-        <View style={styles.navigation}>
+        <View
+          accessibilityLabel="主要導覽"
+          role="navigation"
+          style={styles.navigation}>
           {NAV_ITEMS.map((item) => {
             const selected = pathname === item.href;
             return (

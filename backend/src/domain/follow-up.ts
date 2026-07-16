@@ -6,7 +6,13 @@ import {
 } from '@airme/contracts';
 
 import type { RecommendationContext, ContextTokenService } from './context-token';
-import { classifyUserText, containsUnsafeMedicalClaim, FIXED_SAFETY_MESSAGES } from './safety';
+import {
+  classifyUserText,
+  containsUngroundedPersonalClaim,
+  containsUnsafeMedicalClaim,
+  contradictsSafetyFloor,
+  FIXED_SAFETY_MESSAGES,
+} from './safety';
 
 interface FollowUpAi {
   answerFollowUp?: (input: {
@@ -30,7 +36,6 @@ export class FollowUpService {
   constructor(private readonly options: FollowUpServiceOptions) {}
 
   async answer(request: FollowUpRequest): Promise<FollowUpResponse> {
-    const context = this.options.contextTokens.verify(request.contextToken);
     const disposition = classifyUserText(request.question);
     const requestId = (this.options.requestId ?? (() => crypto.randomUUID()))();
 
@@ -44,6 +49,8 @@ export class FollowUpService {
       });
     }
 
+    const context = this.options.contextTokens.verify(request.contextToken);
+
     let draft = {
       answer: deterministicAnswer(context),
       suggestedQuestions: ['多久後再確認 AQI？', '如果改成低強度活動呢？'],
@@ -53,7 +60,17 @@ export class FollowUpService {
         const candidate = FollowUpDraftSchema.parse(
           await this.options.ai.answerFollowUp({ question: request.question, context }),
         );
-        if (containsUnsafeMedicalClaim(candidate.answer)) throw new Error('AI_UNSAFE_OUTPUT');
+        if (
+          containsUnsafeMedicalClaim(candidate.answer) ||
+          containsUngroundedPersonalClaim(candidate.answer) ||
+          contradictsSafetyFloor(
+            candidate.answer,
+            context.minimumRiskLevel,
+            context.restrictions,
+          )
+        ) {
+          throw new Error('AI_UNSAFE_OUTPUT');
+        }
         draft = candidate;
       } catch {
         // The deterministic answer remains available for the competition fallback path.

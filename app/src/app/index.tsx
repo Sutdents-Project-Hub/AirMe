@@ -17,6 +17,7 @@ export default function HomeScreen() {
   const palette = usePalette();
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const wideDashboard = width >= 880;
 
   if (!app.hydrated) {
     return (
@@ -33,6 +34,26 @@ export default function HomeScreen() {
       router.push('/recommendation' as Href);
     }
   };
+
+  const environmentPanel = (
+    <View key="environment" style={styles.environmentColumn}>
+      <EnvironmentHero
+        environment={app.environment}
+        loading={app.environmentLoading}
+        demoMode={app.local.demoMode}
+        onRefresh={app.refreshEnvironment}
+      />
+    </View>
+  );
+  const composerPanel = (
+    <View key="composer" style={styles.composerColumn}>
+      <ActivityComposer
+        loading={app.busy}
+        onUnderstand={app.understandActivity}
+        onSubmit={(activityText, intent) => void submit(activityText, intent)}
+      />
+    </View>
+  );
 
   return (
     <PageShell>
@@ -57,6 +78,8 @@ export default function HomeScreen() {
         </View>
         {app.error ? (
           <Card
+            accessibilityRole="alert"
+            key="error"
             pattern="dots"
             patternColor={palette.destructive}
             style={{ backgroundColor: palette.destructiveSoft, borderColor: palette.ink }}>
@@ -64,25 +87,22 @@ export default function HomeScreen() {
               目前無法完成
             </AppText>
             <AppText>{app.error}</AppText>
+            {!app.local.demoMode ? (
+              <AppButton
+                label="切換示範模式"
+                onPress={() => void app.setDemoMode(true)}
+                variant="secondary"
+              />
+            ) : null}
             <AppButton label="關閉提醒" onPress={app.clearError} variant="ghost" />
           </Card>
         ) : null}
-        <View style={[styles.dashboard, width >= 880 && styles.dashboardWide]}>
-          <View style={styles.environmentColumn}>
-            <EnvironmentHero
-              environment={app.environment}
-              loading={app.environmentLoading}
-              demoMode={app.local.demoMode}
-              onRefresh={app.refreshEnvironment}
-            />
-          </View>
-          <View style={styles.composerColumn}>
-            <ActivityComposer
-              loading={app.busy}
-              onUnderstand={app.understandActivity}
-              onSubmit={(activityText, intent) => void submit(activityText, intent)}
-            />
-          </View>
+        <View
+          key="dashboard"
+          style={[styles.dashboard, wideDashboard && styles.dashboardWide]}>
+          {wideDashboard
+            ? [environmentPanel, composerPanel]
+            : [composerPanel, environmentPanel]}
         </View>
       </Screen>
     </PageShell>

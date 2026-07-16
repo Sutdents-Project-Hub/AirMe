@@ -10,11 +10,11 @@
 
 ## 目前進度（2026-07-16）
 
-- M0 完成：規格、架構、安全、部署與競賽文件已改為 VPS／Coolify／PostgreSQL／量界智算方向。
+- M0 部分完成：產品規格、架構、安全與 Coolify 部署文件已完成；但官方簡章 Azure 25% 與「指定雲端平台」尚無 Coolify／量界書面例外。
 - M1 本機完成、live 待驗證：Fastify API、量界 OpenAI 相容 adapter、JSON／Zod 驗證、規則、行動卡與追問已完成。
 - M2 本機完成、live 待驗證：MOENV／CWA adapter、來源時間、timeout、cache、partial／stale／fixture 降級已完成；PostgreSQL cache migration 已加入。
 - M3 完成：淺綠白設計系統、輸入式裝置個人檔案、活動理解確認／單一澄清、行動卡、限定追問、五秒回饋、整合 Air 日誌與 responsive Web 已完成。
-- M4 完成：30 個固定案例、安全錯誤路徑與離線示範 fixture 已完成。
+- M4 完成：30 個固定案例、安全錯誤路徑與離線示範 fixture 已完成；緊急狀況在離線 Demo 也會停止一般建議。
 - M4.1 完成：安全路線交接已完成；未配置 provider 時不產生距離、時間或污染分數，起終點不持久化。
 - M5 待執行：尚未取得 VPS／Coolify／量界／政府 API production 設定，沒有實體 mobile 或線上部署證據。
 
@@ -22,14 +22,15 @@
 
 ### M5：Coolify 與真實整合驗證
 
-1. 建立 Coolify Compose application，將公開網域綁定 `web:80` 並完成 TLS。
-2. 以 secret 注入 PostgreSQL、量界、環境部、中央氣象署與 context signing 設定。
-3. 確認 PostgreSQL migration、`/api/health`、Web 同源 `/api` proxy 與 container restart。
-4. 使用真實量界 model ID 驗證 JSON mode；若模型拒絕該參數，才在有證據下將 `LIANGJIE_AI_JSON_MODE` 改為 `disabled`。
-5. 以真實政府資料驗證來源、欄位、更新時間、cache、stale、partial、timeout、429。
-6. 確認 log／PostgreSQL 沒有 activity text、profile、prompt、模型全文、IP 或 secret。
-7. 在至少一台 Android 實機與決賽 Web 瀏覽器重跑核心流程。
-8. 若決賽要展示即時路線，先取得 provider、billing、attribution 與隱私核准；否則維持目前外部地圖交接，不臨時加入付費整合。
+1. 先取得主辦單位對 Azure／指定雲端規則的書面說明；若無替代許可，先把核心 AI 概念驗證回復到指定 Azure 資源。
+2. 建立 Coolify Compose application，將公開網域綁定 `web:80` 並完成 TLS。
+3. 以 secret 注入 PostgreSQL、量界、環境部、中央氣象署與 context signing 設定。
+4. 確認 PostgreSQL migration、`/api/health`、Web 同源 `/api` proxy 與 container restart。
+5. 使用真實量界 model ID 驗證 JSON mode；若模型拒絕該參數，才在有證據下將 `LIANGJIE_AI_JSON_MODE` 改為 `disabled`。
+6. 以真實政府資料驗證來源、欄位、更新時間、cache、stale、partial、timeout、429。
+7. 確認應用 log／PostgreSQL 沒有 activity text、profile、prompt、模型全文、IP 或 secret，並檢查 Coolify／VPS 外層 proxy 的 IP log 保存政策。
+8. 在至少一台 Android 實機與決賽 Web 瀏覽器重跑核心流程。
+9. 若決賽要展示即時路線，先取得 provider、billing、attribution 與隱私核准；否則維持目前外部地圖交接，不臨時加入付費整合。
 
 完成條件：決賽設備與網路能完成線上流程；資料庫與 API health 正常；備援流程也已演練。
 

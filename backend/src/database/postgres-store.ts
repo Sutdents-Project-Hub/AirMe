@@ -10,7 +10,14 @@ export class PostgresStore implements OperationalStore {
   private readonly pool: Pool;
 
   constructor(connectionString: string) {
-    this.pool = new Pool({ connectionString, max: 10 });
+    this.pool = new Pool({
+      connectionString,
+      max: 10,
+      connectionTimeoutMillis: 5_000,
+      idleTimeoutMillis: 30_000,
+      query_timeout: 10_000,
+      statement_timeout: 8_000,
+    });
   }
 
   async getEnvironmentCache(cacheKey: string): Promise<EnvironmentCacheEntry | null> {
@@ -25,7 +32,21 @@ export class PostgresStore implements OperationalStore {
     return { storedAt: new Date(row.stored_at).getTime(), snapshot: snapshot.data };
   }
 
-  async setEnvironmentCache(cacheKey: string, snapshot: EnvironmentCacheEntry['snapshot']): Promise<void> {
+  async setEnvironmentCache(
+    cacheKey: string,
+    snapshot: EnvironmentCacheEntry['snapshot'],
+    options?: { preserveStoredAt?: number },
+  ): Promise<void> {
+    if (options?.preserveStoredAt !== undefined) {
+      await this.pool.query(
+        `INSERT INTO environment_cache (cache_key, snapshot, stored_at)
+         VALUES ($1, $2::jsonb, TO_TIMESTAMP($3 / 1000.0))
+         ON CONFLICT (cache_key) DO UPDATE
+         SET snapshot = EXCLUDED.snapshot, stored_at = environment_cache.stored_at`,
+        [cacheKey, JSON.stringify(snapshot), options.preserveStoredAt],
+      );
+      return;
+    }
     await this.pool.query(
       `INSERT INTO environment_cache (cache_key, snapshot, stored_at)
        VALUES ($1, $2::jsonb, NOW())

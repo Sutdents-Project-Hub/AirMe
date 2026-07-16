@@ -42,7 +42,7 @@ const recommendation: RecommendationResponse = {
       overall: 'fixture',
       environmentMode: 'fixture',
       aiMode: 'fixture',
-      rulesVersion: 'moe-school-aqi-2026.1',
+      rulesVersion: 'moe-school-aqi-2023-12-18.v1',
     },
   },
   contextToken: 'signed-context-token',
@@ -57,10 +57,12 @@ describe('ActionCard', () => {
     expect(screen.getByText('風險偏高')).toBeTruthy();
     expect(screen.getByText(recommendation.actionCard.headline)).toBeTruthy();
     expect(screen.getByText('時間')).toBeTruthy();
-    expect(screen.getByText('為什麼')).toBeTruthy();
+    expect(screen.getByText('本次使用的事實')).toBeTruthy();
+    expect(screen.getByText(/主要污染物 細懸浮微粒/)).toBeTruthy();
     expect(screen.getByText('AirMe 決賽示範資料')).toBeTruthy();
     expect(screen.getByText('決賽示範')).toBeTruthy();
     expect(screen.getByText(/更新：2026\/07\/13/)).toBeTruthy();
+    expect(screen.getByText(/教育部校園空品措施.*2023\/12\/18/)).toBeTruthy();
     for (const label of ['時間', '地點', '強度', '準備']) {
       expect(screen.getByLabelText(`建議方案：${label}`)).toBeTruthy();
     }

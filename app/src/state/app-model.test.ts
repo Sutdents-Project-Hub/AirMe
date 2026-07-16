@@ -19,7 +19,7 @@ const recommendation = {
       airQuality: { aqi: 118, category: 'unhealthy-sensitive' },
       weather: { summary: '多雲' },
     },
-    provenance: { overall: 'fixture', rulesVersion: 'moe-school-aqi-2026.1' },
+    provenance: { overall: 'fixture', rulesVersion: 'moe-school-aqi-2023-12-18.v1' },
   },
   requestId: 'req_test',
 } as RecommendationResponse;

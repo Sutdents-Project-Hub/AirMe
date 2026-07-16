@@ -15,6 +15,7 @@ import {
   useState,
   type PropsWithChildren,
 } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { airMeApi, type AirMeApi } from '../api/client';
 import {
@@ -71,14 +72,26 @@ export function AppProvider({
 
   useEffect(() => {
     let active = true;
-    store.load().then((state) => {
-      if (!active) return;
-      setLocal(state);
-      if (state.demoMode && state.savedLocation) {
-        setEnvironment({ ...DEMO_ENVIRONMENT, location: state.savedLocation });
+
+    const hydrate = async () => {
+      try {
+        const state = await store.load();
+        if (!active) return;
+        setLocal(state);
+        if (state.demoMode && state.savedLocation) {
+          setEnvironment({ ...DEMO_ENVIRONMENT, location: state.savedLocation });
+        }
+      } catch {
+        if (!active) return;
+        setLocal({ ...DEFAULT_LOCAL_STATE, history: [], feedback: [] });
+        setEnvironment(null);
+        setError('無法讀取這台裝置上的 AirMe 設定，已改用安全的初始狀態。');
+      } finally {
+        if (active) setHydrated(true);
       }
-      setHydrated(true);
-    });
+    };
+
+    void hydrate();
     return () => {
       active = false;
     };
@@ -180,9 +193,18 @@ export function AppProvider({
   };
 
   const setDemoMode = async (value: boolean) => {
-    const state = await store.setDemoMode(value);
-    setLocal(state);
-    setEnvironment(value && state.savedLocation ? { ...DEMO_ENVIRONMENT, location: state.savedLocation } : null);
+    try {
+      const state = await store.setDemoMode(value);
+      setLocal(state);
+      setEnvironment(
+        value && state.savedLocation
+          ? { ...DEMO_ENVIRONMENT, location: state.savedLocation }
+          : null,
+      );
+      setError(null);
+    } catch {
+      setError('無法儲存示範模式設定，請稍後再試。');
+    }
   };
 
   const clearAll = async () => {
@@ -191,6 +213,15 @@ export function AppProvider({
     setCurrentRecommendation(null);
     setError(null);
   };
+
+  if (!hydrated) {
+    return (
+      <View accessibilityLabel="AirMe 正在載入" style={styles.loading}>
+        <ActivityIndicator color="#176B4D" />
+        <Text style={styles.loadingText}>正在開啟 AirMe…</Text>
+      </View>
+    );
+  }
 
   return (
     <AppContext.Provider
@@ -216,6 +247,18 @@ export function AppProvider({
     </AppContext.Provider>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    alignItems: 'center',
+    backgroundColor: '#F4FBF7',
+    flex: 1,
+    gap: 12,
+    justifyContent: 'center',
+    minHeight: '100%',
+  },
+  loadingText: { color: '#52645D', fontSize: 16 },
+});
 
 export function useApp(): AppContextValue {
   const value = useContext(AppContext);

@@ -26,4 +26,17 @@ describe('local activity intent fallback', () => {
     expect(result.intent.time).toBe('今天下午四點');
     expect(result.intent.location).toBe('操場');
   });
+
+  it('keeps a plainly stated nasal condition in the one-request context', () => {
+    const result = parseActivityIntentLocally(
+      '今天下午四點想在操場全力跑步 30 分鐘，我有過敏且今天鼻塞',
+    );
+
+    expect(result.intent.currentCondition).toContain('鼻塞');
+  });
+
+  it('recognizes common school activities beyond running and cycling', () => {
+    expect(parseActivityIntentLocally('放學打羽球 45 分鐘').intent.activity).toBe('球類活動');
+    expect(parseActivityIntentLocally('明天游泳 30 分鐘').intent.activity).toBe('游泳');
+  });
 });

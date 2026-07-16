@@ -28,7 +28,8 @@ describe('Air journal', () => {
             id: 'feedback_1',
             recommendationId: 'req_1',
             completed: true,
-            feeling: 'same',
+            discomfort: 'mild',
+            helpful: 'yes',
             note: '下次提早出發',
             createdAt: '2026-07-16T05:00:00.000Z',
           },
@@ -37,7 +38,7 @@ describe('Air journal', () => {
     );
 
     expect(screen.getByText('AQI 118 · 多雲')).toBeTruthy();
-    expect(screen.getByText(/已進行活動 · 感覺差不多/)).toBeTruthy();
+    expect(screen.getByText(/已進行活動 · 有輕微不舒服 · 建議有幫助/)).toBeTruthy();
     expect(screen.getByText('「下次提早出發」')).toBeTruthy();
   });
 });

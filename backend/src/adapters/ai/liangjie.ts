@@ -46,6 +46,16 @@ function parseJson<T>(content: string, schema: { parse(value: unknown): T }): T 
   }
 }
 
+function coarseActivityLocation(text: string | null | undefined): string | null {
+  if (!text) return null;
+  if (/操場/u.test(text)) return '操場';
+  if (/公園/u.test(text)) return '公園';
+  if (/道路|路邊|通勤/u.test(text)) return '道路或通勤路線';
+  if (/室內|健身房|體育館/u.test(text)) return '室內活動空間';
+  if (/戶外|室外/u.test(text)) return '一般戶外空間';
+  return null;
+}
+
 export class LiangjieAiAdapter implements AiAdapter {
   readonly mode = 'live' as const;
   private readonly fetcher: typeof fetch;
@@ -57,11 +67,35 @@ export class LiangjieAiAdapter implements AiAdapter {
   }
 
   async createActionCard(input: ActionCardAiInput): Promise<ActionCardDraft> {
+    const confirmed = input.request.confirmedIntent;
+    const activity = confirmed
+      ? {
+          activity: confirmed.activity,
+          time: confirmed.time,
+          locationType: coarseActivityLocation(confirmed.location),
+          intensity: confirmed.intensity,
+          durationMinutes: confirmed.durationMinutes,
+          currentCondition: confirmed.currentCondition,
+          userGoal: confirmed.userGoal,
+        }
+      : { activitySummary: input.request.activityText.slice(0, 160) };
     const content = await this.complete({
-      activityText: input.request.activityText,
-      profile: input.request.profile,
-      location: input.request.location,
-      environment: input.environment,
+      activity,
+      profileContext: {
+        ageGroup: input.request.profile.ageGroup,
+        sensitiveConditions: input.request.profile.sensitiveConditions,
+      },
+      selectedArea: input.request.location.administrativeArea ?? '粗略區域已由後端比對',
+      environment: {
+        airQuality: input.environment.airQuality,
+        weather: input.environment.weather,
+        provenance: input.environment.provenance,
+        sources: input.environment.sources.map((source) => ({
+          provider: source.provider,
+          observedAt: source.observedAt,
+          stale: source.stale,
+        })),
+      },
       officialRuleFloor: input.rules,
       outputShape: {
         riskLevel: 'low | moderate | high | very-high',

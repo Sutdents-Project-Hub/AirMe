@@ -15,17 +15,18 @@
 | 官方安全底線 | `backend/src/domain/rules.ts` | 單元與 orchestration tests |
 | 安全領域守門 | `backend/src/domain/safety.ts` | 醫療、緊急、離題、注入測試 |
 | 量界智算 adapter | `backend/src/adapters/ai/liangjie.ts` | mock／fixture tests；live 未驗證 |
-| Fastify API | `backend/src/server.ts`、`src/http` | 五 endpoint handler tests 與 Docker fixture image |
-| PostgreSQL migration | `backend/database/migrations`、`src/database` | Compose schema 解析；實際 DB 未驗證 |
+| Fastify API | `backend/src/server.ts`、`src/http` | 五 endpoint handler tests、malformed／32KB body 正規化、AI 頻率／同時數防護與 Docker fixture image |
+| PostgreSQL migration | `backend/database/migrations`、`src/database` | 本機 Compose 實際 migration、三張預期 table 與匿名技術事件驗證 |
 | 固定安全評估 | `backend/evaluation/cases.json` | 30/30 evaluation |
 
 ## 有程式碼但需外部環境驗證
 
 - 環境部 `AQX_P_432` 與中央氣象署 `F-C0032-001` 的真實欄位、額度與 attribution。
 - 量界 OpenAI 相容 API、JSON mode、指定模型、額度、429 與延遲。
-- PostgreSQL migration、container restart 後快取、Coolify healthcheck、同源 proxy 與正式 TLS。
+- PostgreSQL container restart 後快取、Coolify healthcheck、同源 proxy、production volume 與正式 TLS；本機 migration 與 schema 已驗證。
 - VPS backup、restore、監控、disk capacity 與防火牆。
 - iOS／Android 實體裝置與最終安裝包形式。
+- 官方 Azure 25% 是否可以 Coolify／量界替代；目前沒有書面核准證據。
 
 ## 尚未建立且不是本次已完成範圍
 

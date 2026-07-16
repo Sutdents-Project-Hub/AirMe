@@ -44,7 +44,7 @@ const response = {
       overall: 'fixture',
       environmentMode: 'fixture',
       aiMode: 'fixture',
-      rulesVersion: 'moe-school-aqi-2026.1',
+      rulesVersion: 'moe-school-aqi-2023-12-18.v1',
     },
   },
   contextToken: 'signed-context-token',
@@ -54,6 +54,42 @@ const response = {
 afterEach(() => vi.useRealTimers());
 
 describe('AirMe API client', () => {
+  it('sends the controlled area in a POST body instead of the access-log URL', async () => {
+    let capturedUrl = '';
+    let capturedInit: RequestInit | undefined;
+    const api = createAirMeApi({
+      baseUrl: 'http://localhost:7071/api',
+      timeoutMs: 1_000,
+      fetcher: vi.fn(async (url, init) => {
+        capturedUrl = String(url);
+        capturedInit = init;
+        return new Response(JSON.stringify(response.actionCard.environment), { status: 200 });
+      }),
+    });
+
+    await api.getEnvironment(
+      {
+        name: '高科大第一校區周邊',
+        administrativeArea: '高雄市',
+        latitude: 22.754,
+        longitude: 120.335,
+      },
+      'live',
+    );
+
+    expect(capturedUrl).toBe('http://localhost:7071/api/environment');
+    expect(capturedInit?.method).toBe('POST');
+    expect(JSON.parse(String(capturedInit?.body))).toEqual({
+      location: {
+        name: '高科大第一校區周邊',
+        administrativeArea: '高雄市',
+        latitude: 22.754,
+        longitude: 120.335,
+      },
+      dataMode: 'live',
+    });
+  });
+
   it('validates a structured activity understanding response', async () => {
     let capturedUrl = '';
     const api = createAirMeApi({

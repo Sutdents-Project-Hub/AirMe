@@ -13,6 +13,7 @@ import { ActivityIntentService } from './domain/activity-intent';
 import { FollowUpService } from './domain/follow-up';
 import { RecommendationService } from './domain/recommendation';
 import { createApiHandlers } from './http/handlers';
+import { RequestGate } from './lib/request-gate';
 
 const unavailableAirQuality = async () => {
   throw new Error('MOENV_UNAVAILABLE');
@@ -24,6 +25,7 @@ const unavailableWeather = async () => {
 export interface AirMeApplication {
   handlers: ReturnType<typeof createApiHandlers>;
   store: OperationalStore | null;
+  allowedOrigins: string[];
 }
 
 export function createApplication(): AirMeApplication {
@@ -66,15 +68,27 @@ export function createApplication(): AirMeApplication {
   });
   const followUpService = new FollowUpService({ contextTokens, ai });
   const activityIntentService = new ActivityIntentService(ai);
+  const aiGate = new RequestGate({
+    maxRequests: config.aiMaxRequestsPerMinute,
+    windowMs: 60_000,
+    maxConcurrent: config.aiMaxConcurrency,
+  });
+  const environmentGate = new RequestGate({
+    maxRequests: config.environmentMaxRequestsPerMinute,
+    windowMs: 60_000,
+    maxConcurrent: config.environmentMaxConcurrency,
+  });
 
   return {
     store,
+    allowedOrigins: config.allowedOrigins,
     handlers: createApiHandlers({
       allowedOrigins: config.allowedOrigins,
-      getEnvironment: (location, mode) => environmentService.getSnapshot(location, mode),
-      understandActivity: (request) => activityIntentService.understand(request),
-      createRecommendation: (request) => recommendationService.create(request),
-      answerFollowUp: (request) => followUpService.answer(request),
+      getEnvironment: (location, mode) =>
+        environmentGate.run(() => environmentService.getSnapshot(location, mode)),
+      understandActivity: (request) => aiGate.run(() => activityIntentService.understand(request)),
+      createRecommendation: (request) => aiGate.run(() => recommendationService.create(request)),
+      answerFollowUp: (request) => aiGate.run(() => followUpService.answer(request)),
       isReady: async () => !config.databaseRequired || (await store?.isHealthy()) === true,
     }),
   };

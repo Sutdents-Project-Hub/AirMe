@@ -20,7 +20,7 @@ describe('evaluateActivityRules', () => {
     });
 
     expect(result.minimumRiskLevel).toBe(expected);
-    expect(result.rulesVersion).toBe('moe-school-aqi-2026.1');
+    expect(result.rulesVersion).toBe('moe-school-aqi-2023-12-18.v1');
   });
 
   it('raises the minimum risk for a sensitive teen doing vigorous activity', () => {
@@ -34,7 +34,35 @@ describe('evaluateActivityRules', () => {
 
     expect(result.minimumRiskLevel).toBe('high');
     expect(result.reasonCodes).toContain('SENSITIVE_GROUP');
-    expect(result.restrictions).toContain('避免長時間或劇烈戶外活動');
+    expect(result.restrictions).toContain('減少體力消耗與戶外活動，必要外出時採一般防護');
+  });
+
+  it('keeps a sensitive student indoors at red AQI', () => {
+    const result = evaluateActivityRules({
+      aqi: 175,
+      activityIntensity: 'light',
+      ageGroup: 'teen',
+      sensitiveConditions: ['allergy-sensitive'],
+      stale: false,
+    });
+
+    expect(result.minimumRiskLevel).toBe('high');
+    expect(result.restrictions).toContain(
+      '留在室內並減少體力消耗活動，必要外出時採一般防護',
+    );
+  });
+
+  it('stops all outdoor activity above red AQI', () => {
+    const result = evaluateActivityRules({
+      aqi: 225,
+      activityIntensity: 'light',
+      ageGroup: 'teen',
+      sensitiveConditions: [],
+      stale: false,
+    });
+
+    expect(result.minimumRiskLevel).toBe('very-high');
+    expect(result.restrictions).toContain('立即停止戶外活動，改採室內低強度方案');
   });
 
   it('uses a conservative high risk when current data is missing', () => {

@@ -7,7 +7,11 @@ export interface EnvironmentCacheEntry {
 
 export interface OperationalStore {
   getEnvironmentCache(cacheKey: string): Promise<EnvironmentCacheEntry | null>;
-  setEnvironmentCache(cacheKey: string, snapshot: EnvironmentSnapshot): Promise<void>;
+  setEnvironmentCache(
+    cacheKey: string,
+    snapshot: EnvironmentSnapshot,
+    options?: { preserveStoredAt?: number },
+  ): Promise<void>;
   recordRequestEvent(input: {
     requestId: string;
     route: string;

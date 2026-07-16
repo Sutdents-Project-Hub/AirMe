@@ -56,6 +56,39 @@ describe('local store', () => {
     expect(state.history).toHaveLength(1);
     expect(state.deviceProfile).toBeNull();
   });
+
+  it('loads existing version 2 feedback without inventing discomfort or helpfulness', async () => {
+    const previousVersionTwo = {
+      ...DEFAULT_LOCAL_STATE,
+      feedback: [
+        {
+          id: 'feedback-legacy',
+          recommendationId: 'recommendation-1',
+          completed: true,
+          feeling: 'worse',
+          note: '下次先縮短活動時間',
+          createdAt: '2026-07-13T03:00:00.000Z',
+        },
+      ],
+    };
+    const store = createLocalStore(
+      memoryStorage({ 'airme.local-state': JSON.stringify(previousVersionTwo) }),
+    );
+
+    const state = await store.load();
+
+    expect(state.feedback).toEqual([
+      {
+        id: 'feedback-legacy',
+        recommendationId: 'recommendation-1',
+        completed: true,
+        discomfort: 'prefer-not',
+        helpful: 'unsure',
+        note: '下次先縮短活動時間',
+        createdAt: '2026-07-13T03:00:00.000Z',
+      },
+    ]);
+  });
   it('returns a safe default for first launch or corrupt data', async () => {
     expect(await createLocalStore(memoryStorage()).load()).toEqual(DEFAULT_LOCAL_STATE);
     expect(

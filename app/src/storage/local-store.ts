@@ -27,6 +27,24 @@ export interface KeyValueStorage {
   removeItem(key: string): Promise<void>;
 }
 
+const LegacyFeedbackSchema = z
+  .object({
+    id: z.string().trim().min(1).max(100),
+    recommendationId: z.string().trim().min(1).max(100),
+    completed: z.boolean(),
+    feeling: z.enum(['better', 'same', 'worse', 'not-sure']),
+    note: z.string().trim().max(240).optional(),
+    createdAt: z.iso.datetime(),
+  })
+  .strict()
+  .transform(({ feeling: _feeling, ...feedback }): Feedback => ({
+    ...feedback,
+    discomfort: 'prefer-not',
+    helpful: 'unsure',
+  }));
+
+const StoredFeedbackSchema = z.union([FeedbackSchema, LegacyFeedbackSchema]);
+
 const LegacyLocalStateSchema = z
   .object({
     version: z.literal(1),
@@ -34,7 +52,7 @@ const LegacyLocalStateSchema = z
     savedLocation: LocationSchema.nullable(),
     onboardingCompleted: z.boolean(),
     history: z.array(RecommendationHistoryItemSchema).max(20),
-    feedback: z.array(FeedbackSchema).max(50),
+    feedback: z.array(StoredFeedbackSchema).max(50),
     demoMode: z.boolean(),
   })
   .strict();
@@ -47,7 +65,7 @@ const LocalStateSchema = z
     savedLocation: LocationSchema.nullable(),
     onboardingCompleted: z.boolean(),
     history: z.array(RecommendationHistoryItemSchema).max(20),
-    feedback: z.array(FeedbackSchema).max(50),
+    feedback: z.array(StoredFeedbackSchema).max(50),
     demoMode: z.boolean(),
   })
   .strict();

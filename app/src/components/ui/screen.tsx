@@ -14,7 +14,11 @@ export function Screen({ children, scroll = true, maxWidth = 1120 }: PropsWithCh
   const { width } = useWindowDimensions();
   const horizontal = width >= 768 ? spacing.xl : spacing.lg;
   const content = (
-    <View style={[styles.content, { maxWidth, paddingHorizontal: horizontal }]}>{children}</View>
+    <View
+      role="main"
+      style={[styles.content, { maxWidth, paddingHorizontal: horizontal }]}>
+      {children}
+    </View>
   );
 
   return (

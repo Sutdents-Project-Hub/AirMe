@@ -8,9 +8,10 @@
 - 今日環境摘要、活動自然語言輸入、可見的結構化理解、單一澄清、確認與行動卡。
 - 資料來源、觀測／發布時間、fixture／live／partial／stale 狀態。
 - 受限追問、醫療／離題／緊急情境處理。
-- 五秒回饋與最多 20 筆整合式 Air 日誌，原始自我描述及當下狀況不寫入歷史。
+- 五秒回饋（是否進行、不舒服程度、建議是否有幫助）與最多 20 筆整合式 Air 日誌，原始自我描述及當下狀況不寫入歷史。
 - 安全路線頁：起終點不持久化、出發地環境判斷、外部地圖交接與資料不足聲明。
-- 手機與桌面 responsive layout、淺綠白固定亮色主題、鍵盤 focus 與至少 44pt 觸控目標。
+- 手機與桌面 responsive layout：手機首屏優先活動輸入，桌面保留環境／輸入雙欄；淺綠白固定亮色主題、鍵盤 focus 與至少 44pt 觸控目標。
+- AirMe 原創 icon、splash、favicon 與繁體中文 Web metadata。
 
 ## 前端視覺與導覽
 
@@ -47,7 +48,7 @@ npm run typecheck --workspace airme
 npm run build:web --workspace airme
 ```
 
-`build:web` 產生 `app/dist/`。Web static export 與瀏覽器核心 Demo 已驗證；實體 iOS／Android 尚未驗證。
+`build:web` 產生 `app/dist/`。Web static export、直接網址 hydration 與自動化 UI 流程已驗證；實體 iOS／Android 尚未驗證。前端預設 API timeout 為 22 秒，可由 `EXPO_PUBLIC_API_TIMEOUT_MS` 覆寫。
 
 ## 設定
 

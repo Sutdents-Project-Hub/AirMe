@@ -10,6 +10,15 @@ const input = {
     locale: 'zh-TW' as const,
     timeZone: 'Asia/Taipei',
     dataMode: 'live' as const,
+    confirmedIntent: {
+      activity: '慢跑',
+      time: '下午',
+      location: '學校操場',
+      intensity: 'moderate' as const,
+      durationMinutes: 30,
+      currentCondition: null,
+      userGoal: null,
+    },
   },
   environment: {
     location: { name: '高雄市', latitude: 22.627, longitude: 120.301 },
@@ -22,7 +31,7 @@ const input = {
     minimumRiskLevel: 'moderate' as const,
     reasonCodes: ['AQI_2'],
     restrictions: ['降低活動強度'],
-    rulesVersion: 'moe-school-aqi-2026.1',
+    rulesVersion: 'moe-school-aqi-2023-12-18.v1',
   },
 };
 
@@ -73,6 +82,16 @@ describe('LiangjieAiAdapter', () => {
       model: 'gemini-2.5-flash',
       response_format: { type: 'json_object' },
     });
+    const messages = capturedBody?.messages as { role: string; content: string }[];
+    const providerInput = JSON.parse(messages[1].content) as Record<string, unknown>;
+    expect(providerInput).toMatchObject({
+      activity: { activity: '慢跑', locationType: '操場' },
+      profileContext: { ageGroup: 'teen', sensitiveConditions: [] },
+      selectedArea: '粗略區域已由後端比對',
+    });
+    expect(messages[1].content).not.toContain('22.627');
+    expect(messages[1].content).not.toContain('120.301');
+    expect(messages[1].content).not.toContain('高雄市');
     expect(result.riskLevel).toBe('moderate');
   });
 

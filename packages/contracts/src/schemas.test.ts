@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   ActivityIntentResponseSchema,
   ApiErrorSchema,
+  EnvironmentRequestSchema,
   EnvironmentSnapshotSchema,
+  FeedbackSchema,
   FollowUpRequestSchema,
   RecommendationRequestSchema,
   RecommendationResponseSchema,
@@ -107,9 +109,47 @@ describe('RecommendationRequestSchema', () => {
 
     expect(result.success).toBe(false);
   });
+
+  it('rejects coordinates outside the Taiwan service area', () => {
+    expect(
+      RecommendationRequestSchema.safeParse({
+        activityText: '想散步',
+        profile: {
+          ageGroup: 'teen',
+          sensitiveConditions: [],
+          commuteMode: 'walk',
+        },
+        location: { name: '東京', latitude: 35.681, longitude: 139.767 },
+        locale: 'zh-TW',
+        timeZone: 'Asia/Taipei',
+        dataMode: 'live',
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe('environment and response contracts', () => {
+  it('accepts only the coarse location and requested data mode', () => {
+    expect(
+      EnvironmentRequestSchema.safeParse({
+        location: {
+          name: '高科大第一校區周邊',
+          administrativeArea: '高雄市',
+          latitude: 22.754,
+          longitude: 120.335,
+        },
+        dataMode: 'live',
+      }).success,
+    ).toBe(true);
+    expect(
+      EnvironmentRequestSchema.safeParse({
+        location: environment.location,
+        dataMode: 'live',
+        studentId: 'C123456789',
+      }).success,
+    ).toBe(false);
+  });
+
   it('requires source provenance and update timestamps', () => {
     expect(EnvironmentSnapshotSchema.safeParse(environment).success).toBe(true);
     expect(
@@ -135,7 +175,7 @@ describe('environment and response contracts', () => {
           overall: 'fixture',
           environmentMode: 'fixture',
           aiMode: 'fixture',
-          rulesVersion: 'moe-school-aqi-2026.1',
+          rulesVersion: 'moe-school-aqi-2023-12-18.v1',
         },
       },
       contextToken: 'signed-context-token',
@@ -182,6 +222,34 @@ describe('follow-up and error contracts', () => {
           requestId: 'req_123',
           stack: 'secret stack',
         },
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('five-second feedback contract', () => {
+  it('records activity completion, discomfort and whether the recommendation helped', () => {
+    expect(
+      FeedbackSchema.safeParse({
+        id: 'feedback_1',
+        recommendationId: 'req_1',
+        completed: true,
+        discomfort: 'mild',
+        helpful: 'yes',
+        note: '下次縮短活動時間',
+        createdAt: '2026-07-16T05:00:00.000Z',
+      }).success,
+    ).toBe(true);
+  });
+
+  it('does not accept the superseded general-feeling field as new feedback', () => {
+    expect(
+      FeedbackSchema.safeParse({
+        id: 'feedback_1',
+        recommendationId: 'req_1',
+        completed: true,
+        feeling: 'same',
+        createdAt: '2026-07-16T05:00:00.000Z',
       }).success,
     ).toBe(false);
   });

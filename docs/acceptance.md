@@ -7,17 +7,19 @@
 | 輸入式本機個人檔案與 Demo 首頁 | 通過 | 1280×720 本機瀏覽器操作、profile parser／元件測試；手機實機待驗證 |
 | 活動結構化理解、單一澄清與確認 | 通過 | fixture 瀏覽器流程、API／parser／元件測試 |
 | 結構化行動卡與資料來源 | 通過 | fixture 流程、schema 與元件測試 |
-| 醫療拒答、追問、回饋與 Air 日誌 | 通過 | 自動化測試；改版後完整瀏覽器回饋流程待複驗 |
+| 醫療拒答、追問、回饋與 Air 日誌 | 通過 | 自動化測試與 390px 完整瀏覽器回饋／日誌流程 |
 | 安全路線交接與資料不足 | 通過 | 本機瀏覽器頁面、route fallback 元件測試；未配置即時 provider |
-| Responsive Web | 部分通過 | 1280×720 桌面實際檢查、375px 導覽元件測試；390×844 改版視覺待複驗 |
+| Responsive Web | 通過（本機） | 390px 活動輸入優先、桌面雙欄、導覽、直接網址／重新整理 hydration 無 console 錯誤；實體決賽設備待驗證 |
 | 共用資料契約 | 通過 | Zod runtime schema 與契約測試 |
-| API orchestration、規則與安全處理 | 通過 | fixture／mock 自動化測試；本機 Docker 五 endpoint image 已重建 |
+| API orchestration、規則與安全處理 | 通過 | fixture／mock 自動化測試；本機 Docker 五 endpoint、緊急 422 與 malformed JSON 400 已實際驗證 |
 | 30 個安全評估案例 | 通過 | `npm run evaluate` 30/30 |
 | Web production static export | 通過 | `npm run build:web --workspace airme` |
-| 自動化品質基線 | 通過 | lint、typecheck、99 項測試、production build 與安全評估 30/30 |
+| 自動化品質基線 | 通過 | lint、typecheck、170 項測試（12 + 106 + 52）、production build、Expo Doctor 20/20 與安全評估 30/30 |
 | 真實 MOENV／CWA 呼叫 | 未驗證 | adapter 已完成；尚未使用真實 key |
 | 真實量界智算呼叫 | 未驗證 | adapter 已完成；尚未以真實 token 與 model ID 執行 |
 | Coolify／PostgreSQL 部署 | 未驗證 | Compose 與 migration 已完成，沒有 production URL |
+| 本機 Compose／PostgreSQL | 通過 | `airme` 三容器 healthy，API 以 non-root `node` 執行；migration 後僅有 `environment_cache`、`schema_migrations`、`service_events` |
+| 官方 Azure 概念驗證 | 阻擋 | 簡章為 25% 且限指定雲端平台；Coolify／量界替代路徑尚無書面核准 |
 | 實體 iOS／Android | 未驗證 | 尚未在決賽設備執行 |
 
 ## 核心流程驗收
@@ -36,7 +38,7 @@
 
 ## API 驗收
 
-- 非法欄位、超長文字、無效列舉或高精度座標回 `INVALID_REQUEST`。
+- 非法欄位、超長文字、無效列舉、臺灣範圍外或高精度座標回 `INVALID_REQUEST`；縣市／測站距離錯配不混合成 live 資料。
 - 環境來源包含 provider、URL、observedAt、fetchedAt、stale 與 provenance。
 - 資料缺失採高風險保守處理；資料過期再提高一級風險。
 - 模型輸出無效或含醫療因果時不顯示原文，使用安全降級。
@@ -46,6 +48,7 @@
 ## 發布前剩餘門檻
 
 - 以團隊量界 token 與指定 model ID 執行真實 AI 流程並保存不含秘密的證據。
+- 先確認競賽 Azure／指定雲端規則；若無 Coolify／量界例外，需將決賽概念驗證改用主辦單位指定資源。
 - 以真實 MOENV／CWA 帳號驗證欄位、額度、attribution、更新頻率與 fallback。
 - 部署 preview 後驗證同源 `/api`、API／PostgreSQL healthcheck、P50／P95、429、timeout 與 log／資料庫 redaction。
 - 在至少一台 Android 實機與決賽 Web 瀏覽器重跑核心流程。

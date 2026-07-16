@@ -1,4 +1,9 @@
-import type { Location, Profile } from '@airme/contracts';
+import {
+  LocationSchema,
+  TaiwanAdministrativeAreaSchema,
+  type Location,
+  type Profile,
+} from '@airme/contracts';
 
 export interface ProfileUnderstanding {
   profile: Profile;
@@ -9,15 +14,30 @@ export interface ProfileUnderstanding {
 const KNOWN_LOCATIONS: { pattern: RegExp; location: Location }[] = [
   {
     pattern: /第一校區|燕巢|高科大一校/iu,
-    location: { name: '高科大第一校區周邊', latitude: 22.754, longitude: 120.335 },
+    location: {
+      name: '高科大第一校區周邊',
+      administrativeArea: '高雄市',
+      latitude: 22.75,
+      longitude: 120.34,
+    },
   },
   {
     pattern: /建工|高科大建工/iu,
-    location: { name: '高科大建工校區周邊', latitude: 22.651, longitude: 120.328 },
+    location: {
+      name: '高科大建工校區周邊',
+      administrativeArea: '高雄市',
+      latitude: 22.65,
+      longitude: 120.33,
+    },
   },
   {
     pattern: /前鎮/iu,
-    location: { name: '高雄市前鎮區', latitude: 22.6, longitude: 120.31 },
+    location: {
+      name: '高雄市前鎮區',
+      administrativeArea: '高雄市',
+      latitude: 22.6,
+      longitude: 120.31,
+    },
   },
 ];
 
@@ -78,11 +98,22 @@ export function createManualLocation(input: {
   latitude: string;
   longitude: string;
 }): Location | null {
-  const latitude = Math.round(Number(input.latitude) * 1_000) / 1_000;
-  const longitude = Math.round(Number(input.longitude) * 1_000) / 1_000;
+  const latitude = Math.round(Number(input.latitude) * 100) / 100;
+  const longitude = Math.round(Number(input.longitude) * 100) / 100;
   if (!input.name.trim() || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
   if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
-  return { name: input.name.trim().slice(0, 80), latitude, longitude };
+  const name = input.name.trim().slice(0, 80);
+  const normalizedAdministrativeName = name.replace(/^台(?=北|中|南|東)/u, '臺');
+  const administrativeArea = TaiwanAdministrativeAreaSchema.safeParse(
+    normalizedAdministrativeName.match(/^(.*?[縣市])/u)?.[1],
+  );
+  const parsed = LocationSchema.safeParse({
+    name,
+    ...(administrativeArea.success ? { administrativeArea: administrativeArea.data } : {}),
+    latitude,
+    longitude,
+  });
+  return parsed.success ? parsed.data : null;
 }
 
 export const ACTIVITY_LABEL: Record<NonNullable<Profile['commonActivities']>[number], string> = {

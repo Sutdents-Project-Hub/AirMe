@@ -13,6 +13,9 @@ const ACTIVITY_PATTERNS: Array<[RegExp, string]> = [
   [/散步|走路|步行/iu, '步行'],
   [/騎車|單車|腳踏車|自行車/iu, '騎單車'],
   [/籃球|排球|足球|球類|打球/iu, '球類活動'],
+  [/羽球|網球|桌球|棒球/iu, '球拍或球類活動'],
+  [/游泳/iu, '游泳'],
+  [/爬山|登山|健行/iu, '登山健行'],
   [/體育課|戶外課/iu, '戶外課程'],
   [/通勤|上學|放學/iu, '通勤'],
 ];
@@ -54,7 +57,7 @@ export function parseActivityIntent(text: string): ActivityIntent {
     ? 'vigorous'
     : /輕鬆|低強度|慢慢|散步/iu.test(text)
       ? 'light'
-      : /跑|球|騎|單車|中強度/iu.test(text)
+      : /跑|球|騎|單車|游泳|爬山|登山|健行|中強度/iu.test(text)
         ? 'moderate'
         : 'unspecified';
   return {

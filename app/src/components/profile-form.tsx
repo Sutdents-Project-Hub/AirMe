@@ -124,7 +124,7 @@ export function ProfileForm({ onSubmit, submitting, initialName = '' }: ProfileF
               label="區域名稱"
               value={locationName}
               onChangeText={setLocationName}
-              placeholder="例如：楠梓區住家周邊"
+              placeholder="例如：高雄市楠梓區住家周邊"
             />
             <View style={styles.coordinateRow}>
               <View style={styles.coordinateField}>
@@ -132,7 +132,7 @@ export function ProfileForm({ onSubmit, submitting, initialName = '' }: ProfileF
                   label="緯度"
                   value={latitude}
                   onChangeText={setLatitude}
-                  placeholder="22.754"
+                  placeholder="22.75"
                   keyboardType="decimal-pad"
                 />
               </View>
@@ -141,7 +141,7 @@ export function ProfileForm({ onSubmit, submitting, initialName = '' }: ProfileF
                   label="經度"
                   value={longitude}
                   onChangeText={setLongitude}
-                  placeholder="120.335"
+                  placeholder="120.34"
                   keyboardType="decimal-pad"
                 />
               </View>
@@ -175,7 +175,7 @@ export function ProfileForm({ onSubmit, submitting, initialName = '' }: ProfileF
         <AppText variant="title-small" weight="800">
           免登入，只建立這台裝置的個人檔案
         </AppText>
-        <AppText variant="body-small" tone="muted">
+        <AppText variant="body-small" style={{ color: palette.text }}>
           不收 Email、密碼、學號或病歷；沒有雲端帳號與跨裝置同步。
         </AppText>
       </Card>

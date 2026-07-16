@@ -7,11 +7,15 @@ export function parseActivityIntentLocally(text: string): ActivityIntentResponse
       ? '步行'
       : /騎車|單車|腳踏車|自行車/iu.test(text)
         ? '騎單車'
-        : /籃球|排球|足球|球類|打球/iu.test(text)
+        : /羽球|籃球|排球|足球|網球|桌球|棒球|球類|打球/iu.test(text)
           ? '球類活動'
-          : /通勤|上學|放學/iu.test(text)
-            ? '通勤'
-            : '尚未確認的活動';
+          : /游泳/iu.test(text)
+            ? '游泳'
+            : /爬山|登山|健行/iu.test(text)
+              ? '登山健行'
+              : /通勤|上學|放學/iu.test(text)
+                ? '通勤'
+                : '尚未確認的活動';
   const minutes = Number(text.match(/(\d{1,3})\s*分鐘/u)?.[1] ?? 0);
   const hours = Number(text.match(/(\d+(?:\.\d+)?)\s*(?:小時|鐘頭)/u)?.[1] ?? 0);
   const durationMinutes = minutes > 0 ? Math.min(minutes, 720) : hours > 0 ? Math.min(Math.round(hours * 60), 720) : null;
@@ -29,7 +33,7 @@ export function parseActivityIntentLocally(text: string): ActivityIntentResponse
         ? 'moderate'
         : 'unspecified';
   const currentCondition =
-    text.match(/(?:今天|現在|當下)?[^，。！？,!?]{0,12}(?:鼻子|喉嚨|呼吸|胸口|身體)[^，。！？,!?]{0,24}/u)?.[0]?.trim() ?? null;
+    text.match(/(?:今天|現在|當下)?[^，。！？,!?]{0,12}(?:鼻子|鼻塞|喉嚨|呼吸|胸口|身體)[^，。！？,!?]{0,24}/u)?.[0]?.trim() ?? null;
   const intent: ActivityIntent = {
     activity,
     time,

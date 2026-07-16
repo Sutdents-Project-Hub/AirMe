@@ -47,7 +47,8 @@ export function parseCwaResponse(
   const locations = records?.location;
   if (!Array.isArray(locations)) throw new Error('CWA_INVALID_RESPONSE');
 
-  const cityName = location.name.match(/^(.*?[縣市])/)?.[1] ?? location.name;
+  const cityName =
+    location.administrativeArea ?? location.name.match(/^(.*?[縣市])/)?.[1] ?? location.name;
   const selected = locations
     .map(asRecord)
     .filter((item): item is Record<string, unknown> => item !== null)

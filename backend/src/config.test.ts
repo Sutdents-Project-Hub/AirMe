@@ -15,6 +15,27 @@ describe('readApiConfig', () => {
     expect(() => readApiConfig({ AI_MODE: 'live' })).toThrow('CONTEXT_SIGNING_SECRET_REQUIRED');
   });
 
+  it('rejects a configured context secret shorter than 32 bytes', () => {
+    expect(() =>
+      readApiConfig({ AI_MODE: 'live', CONTEXT_SIGNING_SECRET: 'too-short' }),
+    ).toThrow('CONTEXT_SIGNING_SECRET_TOO_SHORT');
+  });
+
+  it('reads AI cost-protection limits', () => {
+    const config = readApiConfig({
+      AI_MODE: 'fixture',
+      AI_MAX_REQUESTS_PER_MINUTE: '30',
+      AI_MAX_CONCURRENCY: '2',
+      ENVIRONMENT_MAX_REQUESTS_PER_MINUTE: '90',
+      ENVIRONMENT_MAX_CONCURRENCY: '6',
+    });
+
+    expect(config.aiMaxRequestsPerMinute).toBe(30);
+    expect(config.aiMaxConcurrency).toBe(2);
+    expect(config.environmentMaxRequestsPerMinute).toBe(90);
+    expect(config.environmentMaxConcurrency).toBe(6);
+  });
+
   it('builds a safely encoded PostgreSQL URL from Coolify-style settings', () => {
     const config = readApiConfig({
       AI_MODE: 'fixture',
