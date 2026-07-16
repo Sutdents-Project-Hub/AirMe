@@ -52,4 +52,4 @@
 - 以真實 MOENV／CWA 帳號驗證欄位、額度、attribution、更新頻率與 fallback。
 - 部署 preview 後驗證同源 `/api`、API／PostgreSQL healthcheck、P50／P95、429、timeout 與 log／資料庫 redaction。
 - 在至少一台 Android 實機與決賽 Web 瀏覽器重跑核心流程。
-- 完成素材、字型、開放資料、競賽規則與 LICENSE 人工審查。
+- 完成素材、字型、開放資料、競賽規則與第三方授權人工審查；原始碼 MIT License 已加入，個別資料與素材授權仍須逐項確認。

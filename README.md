@@ -188,4 +188,4 @@ docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.loc
 
 - 未執行 commit、push、PR、release 或實際部署。
 - 這些操作都需要使用者個別明確授權，且執行前必須依 [AGENTS.md](AGENTS.md) 掃描秘密、個資與不應提交文件。
-- LICENSE 尚未決定，需先確認團隊著作權、競賽規則、資料與素材授權。
+- 原始碼採 MIT License（著作權標示為 `AirMe contributors`）；政府資料、第三方套件、字型與外部素材仍依各自授權與 attribution，不被本 LICENSE 取代。

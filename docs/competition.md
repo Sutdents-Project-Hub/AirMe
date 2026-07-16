@@ -70,4 +70,4 @@
 - App／Web 主流程、安全案例與 fallback 已排練。
 - 測試資料全為虛構，不含真實學生個資。
 - repository、build、簡報與口頭說法一致。
-- LICENSE、素材來源、字型、圖片與開放資料 attribution 已檢查。
+- 原始碼 MIT License 已加入；素材來源、字型、圖片與開放資料 attribution 仍需逐項檢查，不由 MIT License 自動涵蓋。

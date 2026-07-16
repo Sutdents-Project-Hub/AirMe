@@ -72,7 +72,7 @@
 - 採用 React Native、Expo Router 與 TypeScript，以單一前端專案輸出 iOS、Android 與 Web
 - 後端採 Fastify、Node.js 22 與 TypeScript，所有外部 API 與 AI 呼叫皆經後端
 - 決賽 P0 不包含班級統計、教師工作台、正式登入／同步、即時 route provider／完整導航、Line Bot、推播、Power BI 或健康中心串接
-- 目前不自動建立 LICENSE，待確認團隊著作權、競賽規則、資料集與素材授權後再決定
+- 已依使用者明確要求加入 MIT License；著作權標示為 `AirMe contributors`。政府資料、資料集、套件、字型與素材仍須依各自授權及競賽規則處理
 - Coolify、VPS、PostgreSQL 與量界智算為規劃部署目標；本機實作已完成，但尚未執行 production 部署
 
 ## 未決定事項
