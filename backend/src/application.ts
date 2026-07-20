@@ -5,13 +5,18 @@ import { createCwaLoader } from './adapters/environment/cwa';
 import { EnvironmentService } from './adapters/environment/service';
 import { getEnvironmentFixture } from './adapters/environment/fixture';
 import { createMoenvLoader } from './adapters/environment/moenv';
+import { createPhotonGeocodingAdapter } from './adapters/geocoding/photon';
+import { createValhallaRoutingAdapter } from './adapters/routing/valhalla';
 import { readApiConfig } from './config';
 import { PostgresStore } from './database/postgres-store';
 import type { OperationalStore } from './database/types';
 import { ContextTokenService } from './domain/context-token';
 import { ActivityIntentService } from './domain/activity-intent';
+import { AccountAuthService } from './domain/account-auth';
+import { createGeocodingService } from './domain/geocoding/service';
 import { FollowUpService } from './domain/follow-up';
 import { RecommendationService } from './domain/recommendation';
+import { createRoutingService } from './domain/routing/service';
 import { createApiHandlers } from './http/handlers';
 import { RequestGate } from './lib/request-gate';
 
@@ -68,6 +73,23 @@ export function createApplication(): AirMeApplication {
   });
   const followUpService = new FollowUpService({ contextTokens, ai });
   const activityIntentService = new ActivityIntentService(ai);
+  const accountAuthService = new AccountAuthService({
+    store,
+    sessionHmacSecret: config.authSessionHmacSecret,
+    sessionTtlSeconds: config.authSessionTtlSeconds,
+  });
+  const routingService = createRoutingService({
+    live: createValhallaRoutingAdapter({
+      endpoint: config.valhallaRouteUrl,
+      timeoutMs: config.requestTimeoutMs,
+    }),
+  });
+  const geocodingService = createGeocodingService({
+    live: createPhotonGeocodingAdapter({
+      endpoint: config.photonSearchUrl,
+      timeoutMs: config.requestTimeoutMs,
+    }),
+  });
   const aiGate = new RequestGate({
     maxRequests: config.aiMaxRequestsPerMinute,
     windowMs: 60_000,
@@ -77,6 +99,11 @@ export function createApplication(): AirMeApplication {
     maxRequests: config.environmentMaxRequestsPerMinute,
     windowMs: 60_000,
     maxConcurrent: config.environmentMaxConcurrency,
+  });
+  const routingGate = new RequestGate({
+    maxRequests: config.routingMaxRequestsPerMinute,
+    windowMs: 60_000,
+    maxConcurrent: config.routingMaxConcurrency,
   });
 
   return {
@@ -89,6 +116,9 @@ export function createApplication(): AirMeApplication {
       understandActivity: (request) => aiGate.run(() => activityIntentService.understand(request)),
       createRecommendation: (request) => aiGate.run(() => recommendationService.create(request)),
       answerFollowUp: (request) => aiGate.run(() => followUpService.answer(request)),
+      auth: accountAuthService,
+      getRoute: (request) => routingGate.run(() => routingService.getRoute(request)),
+      searchPlaces: (request) => routingGate.run(() => geocodingService.search(request)),
       isReady: async () => !config.databaseRequired || (await store?.isHealthy()) === true,
     }),
   };

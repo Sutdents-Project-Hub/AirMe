@@ -1,10 +1,10 @@
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { EnvironmentSnapshotSchema } from '@airme/contracts';
+import { AccountSchema, EnvironmentSnapshotSchema } from '@airme/contracts';
 import { Pool } from 'pg';
 
-import type { EnvironmentCacheEntry, OperationalStore } from './types';
+import type { AccountRecord, EnvironmentCacheEntry, OperationalStore, StoredSession } from './types';
 
 export class PostgresStore implements OperationalStore {
   private readonly pool: Pool;
@@ -66,6 +66,117 @@ export class PostgresStore implements OperationalStore {
        VALUES ($1, $2, $3, $4)`,
       [input.requestId, input.route, input.statusCode, Math.max(0, Math.round(input.durationMs))],
     );
+  }
+
+  async createAccountWithSession(input: {
+    account: AccountRecord;
+    privacyConsentedAt: Date;
+    session: { id: string; tokenDigest: string; expiresAt: Date; createdAt: Date };
+  }): Promise<void> {
+    await this.pool.query(
+      `WITH created_account AS (
+        INSERT INTO accounts (
+          id, email, display_name, password_hash, privacy_consented_at, created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id
+      )
+      INSERT INTO account_sessions (id, account_id, token_digest, expires_at, created_at)
+      SELECT $7, id, $8, $9, $10 FROM created_account`,
+      [
+        input.account.id,
+        input.account.email,
+        input.account.displayName,
+        input.account.passwordHash,
+        input.privacyConsentedAt,
+        new Date(input.account.createdAt),
+        input.session.id,
+        input.session.tokenDigest,
+        input.session.expiresAt,
+        input.session.createdAt,
+      ],
+    );
+  }
+
+  async findAccountByEmail(email: string): Promise<AccountRecord | null> {
+    const result = await this.pool.query<{
+      id: string;
+      email: string;
+      display_name: string;
+      password_hash: string;
+      created_at: Date;
+    }>(
+      `SELECT id, email, display_name, password_hash, created_at
+       FROM accounts
+       WHERE email = $1`,
+      [email],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+    const account = AccountSchema.safeParse({
+      id: row.id,
+      email: row.email,
+      displayName: row.display_name,
+      createdAt: new Date(row.created_at).toISOString(),
+    });
+    if (!account.success) throw new Error('INVALID_ACCOUNT_ROW');
+    return { ...account.data, passwordHash: row.password_hash };
+  }
+
+  async createSession(input: {
+    id: string;
+    accountId: string;
+    tokenDigest: string;
+    expiresAt: Date;
+    createdAt: Date;
+  }): Promise<void> {
+    await this.pool.query(
+      `INSERT INTO account_sessions (id, account_id, token_digest, expires_at, created_at)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [input.id, input.accountId, input.tokenDigest, input.expiresAt, input.createdAt],
+    );
+  }
+
+  async findSessionByTokenDigest(tokenDigest: string): Promise<StoredSession | null> {
+    const result = await this.pool.query<{
+      id: string;
+      email: string;
+      display_name: string;
+      created_at: Date;
+      expires_at: Date;
+    }>(
+      `SELECT a.id, a.email, a.display_name, a.created_at, s.expires_at
+       FROM account_sessions s
+       INNER JOIN accounts a ON a.id = s.account_id
+       WHERE s.token_digest = $1
+         AND s.revoked_at IS NULL
+         AND s.expires_at > NOW()`,
+      [tokenDigest],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+    const expiresAt = new Date(row.expires_at);
+    if (Number.isNaN(expiresAt.getTime())) throw new Error('INVALID_SESSION_ROW');
+    const account = AccountSchema.safeParse({
+      id: row.id,
+      email: row.email,
+      displayName: row.display_name,
+      createdAt: new Date(row.created_at).toISOString(),
+    });
+    if (!account.success) throw new Error('INVALID_SESSION_ROW');
+    return { account: account.data, expiresAt };
+  }
+
+  async revokeSessionByTokenDigest(tokenDigest: string): Promise<void> {
+    await this.pool.query(
+      `UPDATE account_sessions
+       SET revoked_at = NOW()
+       WHERE token_digest = $1 AND revoked_at IS NULL`,
+      [tokenDigest],
+    );
+  }
+
+  async deleteAccount(accountId: string): Promise<void> {
+    await this.pool.query('DELETE FROM accounts WHERE id = $1', [accountId]);
   }
 
   async isHealthy(): Promise<boolean> {

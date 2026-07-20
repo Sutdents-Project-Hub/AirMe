@@ -1,19 +1,28 @@
 import {
   ActivityIntentRequestSchema,
+  LoginRequestSchema,
+  RegisterRequestSchema,
   EnvironmentRequestSchema,
   FollowUpRequestSchema,
+  GeocodingSearchRequestSchema,
   RecommendationRequestSchema,
+  RouteRequestSchema,
   type ActivityIntentRequest,
   type ActivityIntentResponse,
   type EnvironmentSnapshot,
   type FollowUpRequest,
   type FollowUpResponse,
+  type GeocodingSearchRequest,
+  type GeocodingSearchResponse,
   type RecommendationRequest,
   type RecommendationResponse,
+  type RouteRequest,
+  type RouteResponse,
 } from '@airme/contracts';
 import { ZodError } from 'zod';
 
 import { ContextTokenError } from '../domain/context-token';
+import { AccountAuthError, extractBearerToken, type AccountAuthService } from '../domain/account-auth';
 import { FIXED_SAFETY_MESSAGES } from '../domain/safety';
 import { corsHeaders } from './cors';
 import { errorResponse, jsonResponse, type HttpResponse } from './respond';
@@ -34,6 +43,9 @@ interface ApiHandlerDependencies {
   ) => Promise<EnvironmentSnapshot>;
   createRecommendation: (request: RecommendationRequest) => Promise<RecommendationResponse>;
   answerFollowUp: (request: FollowUpRequest) => Promise<FollowUpResponse>;
+  getRoute?: (request: RouteRequest) => Promise<RouteResponse>;
+  searchPlaces?: (request: GeocodingSearchRequest) => Promise<GeocodingSearchResponse>;
+  auth?: Pick<AccountAuthService, 'register' | 'login' | 'getSession' | 'logout' | 'deleteAccount'>;
   isReady?: () => Promise<boolean>;
   requestId?: () => string;
 }
@@ -44,6 +56,13 @@ export interface ApiHandlers {
   activityIntents(request: ApiRequest): Promise<HttpResponse>;
   recommendations(request: ApiRequest): Promise<HttpResponse>;
   followUps(request: ApiRequest): Promise<HttpResponse>;
+  register(request: ApiRequest): Promise<HttpResponse>;
+  login(request: ApiRequest): Promise<HttpResponse>;
+  session(request: ApiRequest): Promise<HttpResponse>;
+  logout(request: ApiRequest): Promise<HttpResponse>;
+  deleteAccount(request: ApiRequest): Promise<HttpResponse>;
+  routes(request: ApiRequest): Promise<HttpResponse>;
+  geocodingSearch(request: ApiRequest): Promise<HttpResponse>;
 }
 
 async function readJson(request: ApiRequest): Promise<unknown> {
@@ -87,6 +106,36 @@ export function createApiHandlers(deps: ApiHandlerDependencies): ApiHandlers {
           headers,
         });
       }
+      if (error instanceof AccountAuthError) {
+        const authErrors = {
+          'email-exists': {
+            status: 409,
+            code: 'AUTH_EMAIL_EXISTS',
+            message: '此 Email 已註冊，請直接登入。',
+            retryable: false,
+          },
+          'invalid-credentials': {
+            status: 401,
+            code: 'AUTH_INVALID_CREDENTIALS',
+            message: 'Email 或密碼錯誤。',
+            retryable: false,
+          },
+          'session-expired': {
+            status: 401,
+            code: 'AUTH_SESSION_EXPIRED',
+            message: '登入狀態已失效，請重新登入。',
+            retryable: false,
+          },
+          unavailable: {
+            status: 503,
+            code: 'AUTH_UNAVAILABLE',
+            message: '帳號服務暫時無法使用，請稍後再試。',
+            retryable: true,
+          },
+        } as const;
+        const authError = authErrors[error.reason];
+        return errorResponse({ ...authError, requestId: id, headers });
+      }
       const message = error instanceof Error ? error.message : '';
       const safetyErrors = {
         OUT_OF_SCOPE: { code: 'OUT_OF_SCOPE', message: FIXED_SAFETY_MESSAGES['out-of-scope'] },
@@ -123,6 +172,26 @@ export function createApiHandlers(deps: ApiHandlerDependencies): ApiHandlers {
           status: 429,
           code: 'RATE_LIMITED',
           message: '目前同時使用人數較多，請稍後再試。',
+          retryable: true,
+          requestId: id,
+          headers,
+        });
+      }
+      if (message === 'ROUTING_UNAVAILABLE') {
+        return errorResponse({
+          status: 503,
+          code: 'ROUTING_UNAVAILABLE',
+          message: '路線服務暫時無法使用，請稍後再試或開啟外部地圖。',
+          retryable: true,
+          requestId: id,
+          headers,
+        });
+      }
+      if (message === 'GEOCODING_UNAVAILABLE') {
+        return errorResponse({
+          status: 503,
+          code: 'GEOCODING_UNAVAILABLE',
+          message: '地點搜尋服務暫時無法使用，請稍後再試。',
           retryable: true,
           requestId: id,
           headers,
@@ -172,6 +241,58 @@ export function createApiHandlers(deps: ApiHandlerDependencies): ApiHandlers {
         if (request.method.toUpperCase() !== 'POST') throw new ZodError([]);
         const parsed = FollowUpRequestSchema.parse(await readJson(request));
         return jsonResponse(200, await deps.answerFollowUp(parsed), headers);
+      }),
+    register: (request) =>
+      execute(request, async (headers) => {
+        if (request.method.toUpperCase() !== 'POST') throw new ZodError([]);
+        const parsed = RegisterRequestSchema.parse(await readJson(request));
+        if (!deps.auth) throw new AccountAuthError('unavailable');
+        return jsonResponse(201, await deps.auth.register(parsed), headers);
+      }),
+    login: (request) =>
+      execute(request, async (headers) => {
+        if (request.method.toUpperCase() !== 'POST') throw new ZodError([]);
+        const parsed = LoginRequestSchema.parse(await readJson(request));
+        if (!deps.auth) throw new AccountAuthError('unavailable');
+        return jsonResponse(200, await deps.auth.login(parsed), headers);
+      }),
+    session: (request) =>
+      execute(request, async (headers) => {
+        if (request.method.toUpperCase() !== 'GET') throw new ZodError([]);
+        if (!deps.auth) throw new AccountAuthError('unavailable');
+        return jsonResponse(
+          200,
+          await deps.auth.getSession(extractBearerToken(request.headers.get('authorization'))),
+          headers,
+        );
+      }),
+    logout: (request) =>
+      execute(request, async (headers) => {
+        if (request.method.toUpperCase() !== 'POST') throw new ZodError([]);
+        if (!deps.auth) throw new AccountAuthError('unavailable');
+        await deps.auth.logout(extractBearerToken(request.headers.get('authorization')));
+        return jsonResponse(204, undefined, headers);
+      }),
+    deleteAccount: (request) =>
+      execute(request, async (headers) => {
+        if (request.method.toUpperCase() !== 'DELETE') throw new ZodError([]);
+        if (!deps.auth) throw new AccountAuthError('unavailable');
+        await deps.auth.deleteAccount(extractBearerToken(request.headers.get('authorization')));
+        return jsonResponse(204, undefined, headers);
+      }),
+    routes: (request) =>
+      execute(request, async (headers) => {
+        if (request.method.toUpperCase() !== 'POST') throw new ZodError([]);
+        const parsed = RouteRequestSchema.parse(await readJson(request));
+        if (!deps.getRoute) throw new Error('ROUTING_UNAVAILABLE');
+        return jsonResponse(200, await deps.getRoute(parsed), headers);
+      }),
+    geocodingSearch: (request) =>
+      execute(request, async (headers) => {
+        if (request.method.toUpperCase() !== 'POST') throw new ZodError([]);
+        const parsed = GeocodingSearchRequestSchema.parse(await readJson(request));
+        if (!deps.searchPlaces) throw new Error('GEOCODING_UNAVAILABLE');
+        return jsonResponse(200, await deps.searchPlaces(parsed), headers);
       }),
   };
 }

@@ -23,16 +23,16 @@ AirMe 讓使用者用自然語言描述想做的活動，再把 AQI、天氣、�
 ## 目前可操作的產品
 
 - 同一套 Expo App 支援 iOS、Android 與 Web。
-- 免登入的裝置端個人檔案：以一句自由描述建立受控的敏感條件、粗略地點、通勤與常見活動；原始自我描述不保存。
+- 裝置端個人檔案與可選 AirMe 帳號：個人敏感條件、日誌與回饋預設留在裝置；帳號只保存 Email、顯示名稱、密碼 verifier、同意時間與登入工作階段，不會自動同步敏感資料。
 - 自然語言活動輸入會先整理成活動、時間、地點、強度、時長與當下狀況，缺資料只問一個問題，使用者確認後才產生建議。
 - 環境部 AQI 與中央氣象署資料 adapter，保留來源、時間、新鮮度與降級狀態。
 - 量界智算 OpenAI 相容 `chat/completions` adapter，以 JSON object 產生固定格式行動卡。
 - 程式規則先決定不可突破的風險底線，後端再次驗證模型輸出、資料引用與未經支持的保證，決定性規則會取代衝突建議。
 - 限定在空品、活動安全與一般自我保護範圍內追問；醫療、緊急、離題與提示注入有固定處理。
 - Air 日誌整合最多 20 筆活動、環境、建議摘要與最多 50 筆活動後回饋（是否進行、不舒服程度、建議是否有幫助、選填註記），只保存在裝置端。
-- 路線頁可輸入起點、終點、時間與方式，顯示出發地環境判斷並由使用者主動交接外部地圖；尚未連接即時 route provider，不捏造距離、時間或街道級空品。
+- 路線頁可搜尋臺灣地點、以開源 Valhalla 規劃步行／單車／道路方案，並以 MapLibre 預覽路線與比較估算；未配置自架服務時保留清楚標示的 fixture 與外部地圖 fallback，不捏造即時導航或街道級空品。
 - 全面採用淺綠、白色、柔和圓角與留白的亮色介面，AQI 黃／橙／紅只保留為風險語意。
-- PostgreSQL 僅保存共享環境快取與不含 payload 的技術事件，不保存個人設定、活動內容、回饋或模型全文。
+- PostgreSQL 保存共享環境快取、不含 payload 的技術事件，以及最小化帳號／session 驗證資料；不保存個人設定、活動內容、回饋、精確路線或模型全文。
 - 清楚標示的離線示範模式；外部服務不可用時不冒充即時 AI 結果。
 
 完整範圍與驗收標準見 [產品規格](docs/product-spec.md) 與 [驗收清單](docs/acceptance.md)。
@@ -57,12 +57,14 @@ flowchart LR
   F --> R["版本化官方規則"]
   F --> E["環境部／中央氣象署"]
   F --> A["量界智算 API"]
+  F --> M["Valhalla／Photon（自架，尚待部署）"]
   F --> P["PostgreSQL：環境快取／匿名技術事件"]
   R --> V["Schema 與安全驗證"]
   E --> V
   A --> V
   V --> U
   U --> L["裝置端設定、紀錄與回饋"]
+  U --> G["MapLibre 地圖預覽"]
 ```
 
 後端是唯一可信任邊界。App／Web 不直接持有量界智算、環境部、中央氣象署或 PostgreSQL 的秘密。
@@ -103,12 +105,12 @@ npm run evaluate
 
 本次架構遷移實際驗證：
 
-- 共用契約、API 與 App 共 170 項自動化測試通過（12 + 106 + 52）。
+- 共用契約、API 與 App 共 206 項自動化測試通過（12 + 138 + 56），涵蓋帳號 session、路線／地點 adapter 與 Web session 回歸。
 - 固定安全評估 30/30 通過。
-- `npm run lint`、三個 workspace typecheck、production Web build、Expo Doctor 20/20 與 Compose config 解析通過。
+- `npm run lint`、三個 workspace typecheck、production Web build、安全評估 30/30 與 Playwright fixture E2E 已於本輪通過。
 - Node 22.22.3 下的 Playwright fixture E2E 已通過：首次設定、活動理解、行動卡、醫療與緊急邊界、回饋與 Air 日誌皆可在無後端時完成。
-- 本機 AirMe Compose 三服務重建並健康；API 以 `node` 非 root 使用者執行，runtime production dependencies audit 為 0 漏洞，五個 endpoint、緊急 422、malformed JSON 400、migration 與三張預期 table 已實際驗證。
-- 尚未對 VPS／Coolify production、真實量界／政府 key 或實體 iOS／Android 執行驗收。
+- 既有本機 AirMe Compose 三服務與五個核心 AI／環境 endpoint 曾完成驗證；本輪新增的帳號 migration、Valhalla／Photon 與 MapLibre production provider 尚未在 Compose／VPS 實際部署。
+- 尚未對 VPS／Coolify production、真實量界／政府 key、Valhalla／Photon、production tiles 或實體 iOS／Android 執行驗收。
 
 ## 環境變數
 
@@ -118,6 +120,7 @@ npm run evaluate
 
 - `EXPO_PUBLIC_API_BASE_URL`
 - `EXPO_PUBLIC_API_TIMEOUT_MS`
+- `EXPO_PUBLIC_MAP_STYLE_URL`
 
 API 的核心設定：
 
@@ -129,6 +132,8 @@ API 的核心設定：
 - `ALLOWED_ORIGINS`、`REQUEST_TIMEOUT_MS`
 - `AI_MAX_REQUESTS_PER_MINUTE`、`AI_MAX_CONCURRENCY`
 - `CONTEXT_SIGNING_SECRET`、`CONTEXT_TTL_SECONDS`
+- `AUTH_SESSION_HMAC_SECRET`、`AUTH_SESSION_TTL_SECONDS`
+- `VALHALLA_ROUTE_URL`、`PHOTON_SEARCH_URL`、`ROUTING_MAX_REQUESTS_PER_MINUTE`、`ROUTING_MAX_CONCURRENCY`
 
 所有 `EXPO_PUBLIC_*` 都會進入 bundle，不能放 secret。正式值只放 Coolify Environment Variables 或本機忽略的 `.env`。
 
@@ -141,6 +146,11 @@ API 的核心設定：
 | `POST` | `/api/activity-intents` | 不持久化的活動結構化理解與單一澄清問題 |
 | `POST` | `/api/recommendations` | 規則約束的結構化行動卡 |
 | `POST` | `/api/follow-ups` | 原情境內的限定追問與固定拒答 |
+| `POST` | `/api/auth/register`、`/api/auth/login` | 建立帳號或登入，回傳 opaque session token |
+| `GET` | `/api/auth/session` | 驗證目前 Bearer session |
+| `POST` / `DELETE` | `/api/auth/logout`、`/api/auth/account` | 登出目前裝置／刪除帳號及全部 sessions |
+| `POST` | `/api/geocoding/search` | 僅當次的臺灣地點搜尋 |
+| `POST` | `/api/routes` | 僅當次的 Valhalla 路線比較 |
 
 Request／response 型別由 `packages/contracts` 共用；HTTP 錯誤使用穩定代碼，不回傳 stack trace、provider 原始錯誤或秘密。
 
@@ -148,13 +158,19 @@ Request／response 型別由 `packages/contracts` 共用；HTTP 錯誤使用穩�
 
 此 repository 根目錄的 [docker-compose.yml](docker-compose.yml) 定義 `web`、`api`、`postgres` 三個服務。Coolify 將公開網域指向 `web:80`；Nginx 會把同源 `/api/*` 反向代理到 API 容器，因此 Web 不必設定公開 API 網域或 CORS。
 
-Coolify + 量界智算是競賽展示的部署路徑。部署前需在 Coolify 填入必要的 PostgreSQL 密碼、context signing secret、量界與政府 API key，並依 [部署計畫](docs/deployment.md) 完成第一次 migration、health check 與線上驗收。GitHub Actions 已設定 Node 22 的品質與 fixture E2E 檢查；目前仍無 production URL、release 或實際 VPS 部署驗證。
+Coolify + 量界智算是競賽展示的部署路徑。部署前需在 Coolify 填入必要的 PostgreSQL 密碼、context／session signing secret、量界與政府 API key，並提供自架 Valhalla、Photon 與 MapLibre 圖磚樣式端點。GitHub Actions 已設定 Node 22 的品質與 fixture E2E 檢查；目前仍無 production URL、release、路由圖資或實際 VPS 部署驗證。
 
 本機 Docker fixture 測試使用同一個 Compose 專案的三個服務，不會碰觸其他專案：
 
 ```bash
 cp .env.local.example .env.local
 docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml up --build -d
+```
+
+若要在本機驗證真實量界 AI，請將 `AI_MODE=live`、`LIANGJIE_AI_BASE_URL`、`LIANGJIE_AI_MODEL` 與 `LIANGJIE_AI_API_KEY` 放在另一個本機忽略的 env 檔，並在啟動指令中將它列為第二個 `--env-file`。預設 fixture 指令不會呼叫真實 AI。
+
+```bash
+docker compose --env-file .env.local --env-file .env.ai.local -f docker-compose.yml -f docker-compose.local.yml up --build -d
 ```
 
 完成後開啟 `http://localhost:8080`；停止時只停止 AirMe：
@@ -165,9 +181,11 @@ docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.loc
 
 ## 隱私與安全
 
-- 不蒐集 Email、密碼、姓名、學號、學校、聯絡方式、病歷或長期 GPS 軌跡；可選裝置暱稱只留在本機且不傳後端。
+- 帳號只蒐集 Email、顯示名稱、經 scrypt 處理的密碼 verifier、同意時間與 session digest；不保存密碼明文。未登入也可使用裝置端個人檔案。
+- 不蒐集姓名、學號、學校、聯絡方式、病歷或長期 GPS 軌跡；可選裝置暱稱只留在本機且不傳後端。
 - 新增地點持久化前四捨五入到小數二位（約公里級），API 為舊資料相容最多接受三位，且只接受臺灣服務範圍；後端只接收當次推論必要內容。
 - 個人設定、回饋、行動紀錄、路線輸入與完整活動文字不寫入 PostgreSQL。
+- 路線與地點搜尋的精確座標只存在請求記憶體；不寫入 PostgreSQL cache、service event 或 App 日誌。
 - PostgreSQL 只保存環境快取與 request ID、路徑、狀態碼、耗時等匿名技術事件。
 - 嚴重呼吸困難、昏厥等緊急描述會停止一般建議並提示立即尋求身邊成人與當地緊急協助。
 

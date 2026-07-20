@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const port = 8081;
+const port = Number(process.env.E2E_PORT ?? 4181);
 const baseURL = `http://127.0.0.1:${port}`;
 
 export default defineConfig({
@@ -23,7 +23,9 @@ export default defineConfig({
   webServer: {
     command: `npm run build:web --workspace airme && node tests/e2e/static-server.mjs --port ${port}`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    // A reused local server can belong to another project and turn an E2E run
+    // into a false result. Always start the static export that this config built.
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });

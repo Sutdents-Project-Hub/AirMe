@@ -1,7 +1,7 @@
 services:
   api:
     environment:
-      AI_MODE: fixture
+      AI_MODE: ${AI_MODE:-fixture}
       DATABASE_REQUIRED: "true"
       MOENV_API_KEY: ""
       CWA_API_KEY: ""

@@ -1,11 +1,14 @@
 import type {
   EnvironmentSnapshot,
   FollowUpResponse,
+  GeocodingSearchResponse,
   RecommendationResponse,
+  RouteResponse,
 } from '@airme/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ContextTokenError } from '../domain/context-token';
+import { AccountAuthService } from '../domain/account-auth';
 import { createApiHandlers, type ApiRequest } from './handlers';
 
 const environment: EnvironmentSnapshot = {
@@ -56,6 +59,43 @@ const followUp: FollowUpResponse = {
   requestId: 'req_follow',
 };
 
+const route: RouteResponse = {
+  origin: { name: '高雄車站', latitude: 22.639381, longitude: 120.302791 },
+  destination: { name: '高雄市立美術館', latitude: 22.6533, longitude: 120.281 },
+  mode: 'cycling',
+  alternatives: [
+    {
+      id: 'fixture-1',
+      distanceMeters: 3_000,
+      durationSeconds: 720,
+      coordinates: [
+        [120.302791, 22.639381],
+        [120.281, 22.6533],
+      ],
+      steps: [{ instruction: '從高雄車站出發', distanceMeters: 3_000, durationSeconds: 720 }],
+    },
+  ],
+  generatedAt: '2026-07-20T04:00:00.000Z',
+  provenance: 'fixture',
+  provider: 'airme-fixture',
+  attribution: 'AirMe 固定路線示範資料，非即時導航。',
+};
+
+const places: GeocodingSearchResponse = {
+  results: [
+    {
+      id: 'fixture-kaohsiung-station',
+      name: '高雄車站',
+      administrativeArea: '高雄市',
+      latitude: 22.639381,
+      longitude: 120.302791,
+    },
+  ],
+  provenance: 'fixture',
+  provider: 'airme-fixture',
+  attribution: 'AirMe 固定地點示範資料，非即時地名搜尋。',
+};
+
 function request(init: RequestInit & { url?: string } = {}): ApiRequest {
   const nativeRequest = new Request(init.url ?? 'http://localhost/api/test', init);
   return {
@@ -86,6 +126,8 @@ function createHandlers(overrides: Record<string, unknown> = {}) {
     }),
     createRecommendation: vi.fn().mockResolvedValue(recommendation),
     answerFollowUp: vi.fn().mockResolvedValue(followUp),
+    getRoute: vi.fn().mockResolvedValue(route),
+    searchPlaces: vi.fn().mockResolvedValue(places),
     requestId: () => 'req_http',
     ...overrides,
   });
@@ -107,6 +149,119 @@ describe('AirMe HTTP handlers', () => {
     expect(response.status).toBe(204);
     expect(response.headers).toMatchObject({
       'access-control-allow-origin': 'http://localhost:8081',
+    });
+  });
+
+  it('keeps precise route points in a POST body and returns the explicitly labelled route source', async () => {
+    const getRoute = vi.fn().mockResolvedValue(route);
+    const response = await createHandlers({ getRoute }).routes(
+      request({
+        method: 'POST',
+        body: JSON.stringify({
+          origin: route.origin,
+          destination: route.destination,
+          mode: 'cycling',
+          alternatives: 2,
+          dataMode: 'fixture',
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(getRoute).toHaveBeenCalledWith({
+      origin: route.origin,
+      destination: route.destination,
+      mode: 'cycling',
+      alternatives: 2,
+      dataMode: 'fixture',
+    });
+    expect(response.jsonBody).toMatchObject({ provenance: 'fixture', provider: 'airme-fixture' });
+  });
+
+  it('does not expose a failed route provider and returns a stable retryable error', async () => {
+    const response = await createHandlers({
+      getRoute: vi.fn().mockRejectedValue(new Error('ROUTING_UNAVAILABLE')),
+    }).routes(
+      request({
+        method: 'POST',
+        body: JSON.stringify({
+          origin: route.origin,
+          destination: route.destination,
+          mode: 'cycling',
+          dataMode: 'live',
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(503);
+    expect((response.jsonBody as { error: { code: string; retryable: boolean } }).error).toEqual(
+      expect.objectContaining({ code: 'ROUTING_UNAVAILABLE', retryable: true }),
+    );
+  });
+
+  it('returns an account session after registration and permits authorization headers in CORS', async () => {
+    const register = vi.fn().mockResolvedValue({
+      account: {
+        id: 'fb3dc15f-473e-4561-8b32-6e5d858d8f2b',
+        email: 'student@example.com',
+        displayName: '小明',
+        createdAt: '2026-07-20T03:00:00.000Z',
+      },
+      accessToken: 'a'.repeat(43),
+      expiresAt: '2026-08-19T03:00:00.000Z',
+    });
+    const response = await createHandlers({
+      auth: {
+        register,
+        login: vi.fn(),
+        getSession: vi.fn(),
+        logout: vi.fn(),
+        deleteAccount: vi.fn(),
+      },
+    }).register(
+      request({
+        method: 'POST',
+        headers: { origin: 'http://localhost:8081' },
+        body: JSON.stringify({
+          email: 'student@example.com',
+          password: 'correct horse battery staple',
+          displayName: '小明',
+          privacyConsent: true,
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    expect(register).toHaveBeenCalledWith({
+      email: 'student@example.com',
+      password: 'correct horse battery staple',
+      displayName: '小明',
+      privacyConsent: true,
+    });
+    expect(response.headers).toMatchObject({
+      'access-control-allow-origin': 'http://localhost:8081',
+      'access-control-allow-headers': expect.stringContaining('Authorization'),
+    });
+  });
+
+  it('returns AUTH_UNAVAILABLE instead of a generic failure without a database-backed auth service', async () => {
+    const response = await createHandlers({
+      auth: new AccountAuthService({
+        store: null,
+        sessionHmacSecret: 'this-is-a-test-only-session-hmac-secret',
+        sessionTtlSeconds: 3_600,
+      }),
+    }).login(
+      request({
+        method: 'POST',
+        body: JSON.stringify({ email: 'student@example.com', password: 'correct horse battery staple' }),
+      }),
+    );
+
+    expect(response.status).toBe(503);
+    expect((response.jsonBody as any).error).toMatchObject({
+      code: 'AUTH_UNAVAILABLE',
+      retryable: true,
     });
   });
 

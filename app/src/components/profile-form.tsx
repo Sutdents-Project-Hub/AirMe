@@ -173,10 +173,10 @@ export function ProfileForm({ onSubmit, submitting, initialName = '' }: ProfileF
     <View style={styles.container}>
       <Card style={{ backgroundColor: palette.accentSoft }}>
         <AppText variant="title-small" weight="800">
-          免登入，只建立這台裝置的個人檔案
+          先建立這台裝置的個人檔案
         </AppText>
         <AppText variant="body-small" style={{ color: palette.text }}>
-          不收 Email、密碼、學號或病歷；沒有雲端帳號與跨裝置同步。
+          不需要 Email、密碼、學號或病歷。日後可自行建立帳號，但不會自動上傳這份設定或活動紀錄。
         </AppText>
       </Card>
 

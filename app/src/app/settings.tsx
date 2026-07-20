@@ -85,11 +85,21 @@ export default function SettingsScreen() {
               { backgroundColor: palette.teal, borderColor: palette.ink },
             ]}>
             <AppText variant="title-small" weight="800">
-              免登入的隱私邊界
+              帳號與隱私
             </AppText>
-            <AppText>• 沒有 Email、密碼或雲端帳號；個人檔案、日誌與回饋只在這台裝置。</AppText>
+            <AppText>
+              {app.account
+                ? `• 已登入：${app.account.email}`
+                : '• 尚未登入；可以繼續使用這台裝置上的 AirMe。'}
+            </AppText>
+            <AppText>• 個人檔案、日誌與回饋仍只在這台裝置，不會因登入自動同步。</AppText>
             <AppText>• Live 模式只把當次推論必要內容送往 AirMe 後端。</AppText>
             <AppText>• AirMe 不做醫療診斷、不判定症狀原因，也不取代緊急協助。</AppText>
+            <AppButton
+              label={app.account ? '查看帳號' : '建立帳號或登入'}
+              onPress={() => router.push('/account' as Href)}
+              variant="secondary"
+            />
           </Card>
           <Card
             pattern="dots"

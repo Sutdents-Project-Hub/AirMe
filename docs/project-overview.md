@@ -7,8 +7,8 @@
 ## P0
 
 - 單一 Expo 專案支援 iOS、Android、Web。
-- 輸入式本機個人檔案、活動理解確認、真實 AQI／天氣、行動卡、追問、五秒回饋與整合 Air 日誌。
-- 淺綠白跨平台 UI；安全版通勤／戶外時間頁在未配置 provider 時只顯示出發地環境、資料不足與外部地圖交接。
+- 輸入式本機個人檔案、可選帳號登入、活動理解確認、真實 AQI／天氣、行動卡、追問、五秒回饋與整合 Air 日誌。
+- 淺綠白跨平台 UI；MapLibre 地圖預覽、Photon 地點搜尋與 Valhalla 路線 adapter。自架服務未配置時明示 fixture／資料不足並保留外部地圖交接。
 - Coolify Web + Node.js/Fastify API + PostgreSQL + 量界智算的真實核心流程。
 - JSON runtime schema、領域限制、醫療界線、資料新鮮度與錯誤處理。
 - 30 個 AI／安全測試案例與清楚標示的離線備援。
@@ -16,17 +16,17 @@
 ## 非 P0
 
 - 教師工作台、班級統計或角色分流。
-- 具可信 provider 的即時路線比較、內嵌導航、街道級污染路線、Line Bot、推播、Power BI、健康中心整合。
-- 正式登入、跨裝置同步、雲端個人健康資料庫與醫療預測。
+- 大眾運輸、背景／語音導航、街道級污染路線、Line Bot、推播、Power BI、健康中心整合。
+- 跨裝置敏感資料同步、雲端個人健康資料庫與醫療預測。
 - 用 PostgreSQL 保存個人設定、活動、回饋或模型對話。
 
 ## 元件
 
 | 元件 | 路徑 | 現況 | 下一個外部驗收結果 |
 |---|---|---|---|
-| AirMe App／Web | `app` | 輸入式個人檔案、理解確認、Air 日誌、安全路線交接、LIVE API client、responsive UI、Nginx image | Coolify preview URL／實體 iOS、Android |
-| Fastify API | `backend` | 五 endpoint、政府資料 adapter、活動意圖、規則、量界 adapter、安全與評估 | 真實量界／MOENV／CWA／PostgreSQL 端到端呼叫 |
-| PostgreSQL | `backend/database` | 快取、匿名事件與 versioned migration | Coolify volume、backup、restore 驗證 |
+| AirMe App／Web | `app` | 輸入式個人檔案、帳號頁、理解確認、Air 日誌、MapLibre 路線預覽、LIVE API client、responsive UI、Nginx image | Coolify preview URL／實體 iOS、Android development build |
+| Fastify API | `backend` | 帳號 session、七項既有流程加地點搜尋／路線 adapter、政府資料、規則、量界、安全與評估 | 真實量界／MOENV／CWA／Valhalla／Photon／PostgreSQL 端到端呼叫 |
+| PostgreSQL | `backend/database` | 環境快取、匿名事件、帳號與 session digest 的 versioned migration | Coolify volume、backup、restore 驗證 |
 | 共用契約 | `packages/contracts` | Zod runtime schema 與 TypeScript 型別 | 部署前契約相容性複驗 |
 
 ## 驗收摘要

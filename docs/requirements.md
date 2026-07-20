@@ -20,7 +20,8 @@
 | R-08 | Air 日誌 | 最多 20 筆活動／環境／建議摘要與 50 筆回饋以 recommendation ID 整合；可全部清除且不保存 currentCondition |
 | R-09 | 可重播備援 | 沒有網路或外部服務時仍能展示完整流程，並清楚標示 fixture／非即時 AI |
 | R-10 | API 邊界 | 所有秘密與外部呼叫只在 Coolify API 後端，公開錯誤不含 provider 細節 |
-| R-11 | 安全路線交接 | 起終點、時間與方式不持久化；未配置 route provider 時顯示資料不足，只由使用者主動開啟外部地圖 |
+| R-11 | 開源路線規劃 | 起終點精確座標只存在當次 request；Live 使用自架 Valhalla／Photon，Demo 明確標示 fixture，MapLibre 僅預覽且可交接外部地圖 |
+| R-12 | 帳號與登入 | Email、顯示名稱、至少 12 字元密碼與明示同意可建立帳號；密碼只保存 scrypt verifier，session token 僅在裝置安全儲存與資料庫 HMAC digest 中出現 |
 
 ## 安全與隱私需求
 
@@ -41,7 +42,7 @@
 
 ## 不在 P0
 
-教師端、班級統計、正式登入與跨裝置同步、雲端個人資料庫、即時 route provider／完整導航／街道級污染路線、Line Bot、推播、Power BI、健康中心串接、醫療預測或個人敏感閾值模型。
+教師端、班級統計、跨裝置敏感資料同步、雲端個人健康資料庫、背景／語音導航、街道級污染路線、Line Bot、推播、Power BI、健康中心串接、醫療預測或個人敏感閾值模型。
 
 ## 外部決策與限制
 

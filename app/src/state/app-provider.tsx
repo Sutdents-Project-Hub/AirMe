@@ -1,12 +1,19 @@
 import type {
+  Account,
   ActivityIntent,
   ActivityIntentResponse,
   EnvironmentSnapshot,
   Feedback,
   FollowUpResponse,
+  GeocodingSearchResponse,
+  LoginRequest,
   Location,
   Profile,
+  RegisterRequest,
   RecommendationResponse,
+  RouteMode,
+  RoutePoint,
+  RouteResponse,
 } from '@airme/contracts';
 import {
   createContext,
@@ -31,6 +38,7 @@ import {
   type createLocalStore,
   DEFAULT_LOCAL_STATE,
 } from '../storage/local-store';
+import { authTokenStore, type AuthTokenStore } from '../storage/auth-session';
 import { buildRecommendationRequest, toHistoryItem } from './app-model';
 
 type LocalStore = ReturnType<typeof createLocalStore>;
@@ -42,7 +50,18 @@ interface AppContextValue {
   environmentLoading: boolean;
   environment: EnvironmentSnapshot | null;
   currentRecommendation: RecommendationResponse | null;
+  route: RouteResponse | null;
+  routeLoading: boolean;
+  routeError: string | null;
   error: string | null;
+  account: Account | null;
+  authBusy: boolean;
+  registerAccount(input: RegisterRequest): Promise<boolean>;
+  loginAccount(input: LoginRequest): Promise<boolean>;
+  logout(): Promise<void>;
+  deleteAccount(): Promise<boolean>;
+  searchPlaces(query: string): Promise<GeocodingSearchResponse | null>;
+  planRoute(input: { origin: RoutePoint; destination: RoutePoint; mode: RouteMode }): Promise<RouteResponse | null>;
   saveOnboarding(profile: Profile, location: Location, deviceProfile: DeviceProfile): Promise<void>;
   refreshEnvironment(): Promise<void>;
   understandActivity(activityText: string): Promise<ActivityIntentResponse | null>;
@@ -60,7 +79,8 @@ export function AppProvider({
   children,
   api = airMeApi,
   store = localStore,
-}: PropsWithChildren<{ api?: AirMeApi; store?: LocalStore }>) {
+  tokenStore = authTokenStore,
+}: PropsWithChildren<{ api?: AirMeApi; store?: LocalStore; tokenStore?: AuthTokenStore }>) {
   const [local, setLocal] = useState<LocalState>(DEFAULT_LOCAL_STATE);
   const [hydrated, setHydrated] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -69,6 +89,11 @@ export function AppProvider({
   const [currentRecommendation, setCurrentRecommendation] =
     useState<RecommendationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [route, setRoute] = useState<RouteResponse | null>(null);
+  const [routeLoading, setRouteLoading] = useState(false);
+  const [routeError, setRouteError] = useState<string | null>(null);
+  const [account, setAccount] = useState<Account | null>(null);
+  const [authBusy, setAuthBusy] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -86,6 +111,21 @@ export function AppProvider({
         setLocal({ ...DEFAULT_LOCAL_STATE, history: [], feedback: [] });
         setEnvironment(null);
         setError('無法讀取這台裝置上的 AirMe 設定，已改用安全的初始狀態。');
+      }
+
+      try {
+        const token = await tokenStore.load();
+        if (token) {
+          try {
+            const session = await api.getSession(token);
+            if (!active) return;
+            setAccount(session.account);
+          } catch {
+            await tokenStore.clear().catch(() => undefined);
+          }
+        }
+      } catch {
+        await tokenStore.clear().catch(() => undefined);
       } finally {
         if (active) setHydrated(true);
       }
@@ -95,7 +135,7 @@ export function AppProvider({
     return () => {
       active = false;
     };
-  }, [store]);
+  }, [api, store, tokenStore]);
 
   const saveOnboarding = async (profile: Profile, location: Location, deviceProfile: DeviceProfile) => {
     setBusy(true);
@@ -214,6 +254,103 @@ export function AppProvider({
     setError(null);
   };
 
+  const persistSession = async (session: { accessToken: string; account: Account }) => {
+    await tokenStore.save(session.accessToken);
+    setAccount(session.account);
+  };
+
+  const registerAccount = async (input: RegisterRequest) => {
+    setAuthBusy(true);
+    setError(null);
+    try {
+      await persistSession(await api.register(input));
+      return true;
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : '無法建立帳號。');
+      return false;
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const loginAccount = async (input: LoginRequest) => {
+    setAuthBusy(true);
+    setError(null);
+    try {
+      await persistSession(await api.login(input));
+      return true;
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : '無法登入帳號。');
+      return false;
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const logout = async () => {
+    setAuthBusy(true);
+    try {
+      const token = await tokenStore.load();
+      if (token) await api.logout(token).catch(() => undefined);
+      await tokenStore.clear();
+      setAccount(null);
+    } catch {
+      setError('無法清除這台裝置的登入狀態，請稍後再試。');
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const deleteAccount = async () => {
+    setAuthBusy(true);
+    setError(null);
+    try {
+      const token = await tokenStore.load();
+      if (!token) throw new Error('登入已失效，請重新登入後再刪除帳號。');
+      await api.deleteAccount(token);
+      await tokenStore.clear();
+      setAccount(null);
+      return true;
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : '無法刪除帳號。');
+      return false;
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const searchPlaces = async (query: string) => {
+    try {
+      return await api.searchPlaces({
+        query,
+        dataMode: local.demoMode ? 'fixture' : 'live',
+      });
+    } catch (caught) {
+      setRouteError(caught instanceof Error ? caught.message : '無法搜尋地點。');
+      return null;
+    }
+  };
+
+  const planRoute = async (input: { origin: RoutePoint; destination: RoutePoint; mode: RouteMode }) => {
+    setRouteLoading(true);
+    setRouteError(null);
+    try {
+      const response = await api.getRoutes({
+        ...input,
+        alternatives: 2,
+        dataMode: local.demoMode ? 'fixture' : 'live',
+      });
+      setRoute(response);
+      return response;
+    } catch (caught) {
+      setRoute(null);
+      setRouteError(caught instanceof Error ? caught.message : '無法規劃路線。');
+      return null;
+    } finally {
+      setRouteLoading(false);
+    }
+  };
+
   if (!hydrated) {
     return (
       <View accessibilityLabel="AirMe 正在載入" style={styles.loading}>
@@ -232,7 +369,18 @@ export function AppProvider({
         environmentLoading,
         environment,
         currentRecommendation,
+        route,
+        routeLoading,
+        routeError,
         error,
+        account,
+        authBusy,
+        registerAccount,
+        loginAccount,
+        logout,
+        deleteAccount,
+        searchPlaces,
+        planRoute,
         saveOnboarding,
         refreshEnvironment,
         understandActivity,

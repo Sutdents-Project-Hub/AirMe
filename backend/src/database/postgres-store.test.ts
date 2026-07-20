@@ -48,4 +48,32 @@ describe('PostgresStore environment cache', () => {
       ['22.600,120.310', JSON.stringify(snapshot), storedAt],
     );
   });
+
+  it('inserts the password verifier and session digest without any raw token field', async () => {
+    const store = new PostgresStore('postgresql://example.invalid/airme');
+    const createdAt = new Date('2026-07-20T03:00:00.000Z');
+
+    await store.createAccountWithSession({
+      account: {
+        id: 'fb3dc15f-473e-4561-8b32-6e5d858d8f2b',
+        email: 'student@example.com',
+        displayName: '小明',
+        createdAt: createdAt.toISOString(),
+        passwordHash: 'scrypt$N=16384,r=8,p=1$fake-salt$fake-key',
+      },
+      privacyConsentedAt: createdAt,
+      session: {
+        id: '856c1424-3fb1-4d4d-b737-53364d93bf8a',
+        tokenDigest: 'hmac-digest-only',
+        expiresAt: new Date('2026-08-19T03:00:00.000Z'),
+        createdAt,
+      },
+    });
+
+    expect(pool.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO account_sessions'),
+      expect.arrayContaining(['scrypt$N=16384,r=8,p=1$fake-salt$fake-key', 'hmac-digest-only']),
+    );
+    expect(pool.query.mock.calls[0]![0]).not.toContain('access_token');
+  });
 });

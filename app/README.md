@@ -4,12 +4,12 @@
 
 ## 已實作
 
-- 輸入優先的免登入裝置個人檔案、version 1 → 2 本機資料 migration 與資料清除。
+- 輸入優先的免登入裝置個人檔案、可選 Email 帳號 session、version 1 → 2 本機資料 migration 與資料清除；登入不會同步本機健康內容。
 - 今日環境摘要、活動自然語言輸入、可見的結構化理解、單一澄清、確認與行動卡。
 - 資料來源、觀測／發布時間、fixture／live／partial／stale 狀態。
 - 受限追問、醫療／離題／緊急情境處理。
 - 五秒回饋（是否進行、不舒服程度、建議是否有幫助）與最多 20 筆整合式 Air 日誌，原始自我描述及當下狀況不寫入歷史。
-- 安全路線頁：起終點不持久化、出發地環境判斷、外部地圖交接與資料不足聲明。
+- 安全路線頁：起終點不持久化、Photon 地點搜尋、Valhalla 路線選項、MapLibre 預覽、外部地圖交接與資料不足聲明；不宣稱街道級空品或 turn-by-turn 導航。
 - 手機與桌面 responsive layout：手機首屏優先活動輸入，桌面保留環境／輸入雙欄；淺綠白固定亮色主題、鍵盤 focus 與至少 44pt 觸控目標。
 - AirMe 原創 icon、splash、favicon 與繁體中文 Web metadata。
 
@@ -20,7 +20,7 @@
 - 900px 以上 Web 使用上方導覽；手機與窄版 Web 使用安全區內的底部導覽。
 - 個人檔案、今日、行動卡、追問、回饋、Air 日誌、路線與設定使用相同資訊層級與狀態語言。
 
-裝置暱稱、個人設定、歷史與回饋使用 AsyncStorage，只保存在裝置端；個人描述原稿與路線起終點只留在當次 UI 記憶體。前端不直接呼叫量界智算、環境部、中央氣象署或 PostgreSQL。
+裝置暱稱、個人設定、歷史與回饋使用 AsyncStorage，只保存在裝置端；登入 token 在 iOS／Android 使用 Expo SecureStore，在 Web 只留於目前瀏覽器 tab 的 sessionStorage。個人描述原稿與路線起終點只留在當次 UI／API request 記憶體。前端不直接呼叫量界智算、環境部、中央氣象署、Valhalla、Photon 或 PostgreSQL。
 
 ## 執行
 
@@ -67,8 +67,9 @@ npx eas-cli@latest build --platform ios --profile production
 
 - `EXPO_PUBLIC_API_BASE_URL`：本機或 Coolify HTTPS API 的 `/api` base URL。Coolify Web image 以同源 `/api` build。
 - `EXPO_PUBLIC_API_TIMEOUT_MS`：前端逾時毫秒數。
+- `EXPO_PUBLIC_MAP_STYLE_URL`：production MapLibre style URL；必須是具備授權、attribution 與用量策略的公開 URL。Demo 可使用內建示範 style，不可視為 production 服務。
 
-所有 `EXPO_PUBLIC_*` 都會進入 App／Web bundle，不得放 secret。預設 Demo fixture 不需要任何環境變數；LIVE 只有在使用者明確切換後才呼叫 API。
+所有 `EXPO_PUBLIC_*` 都會進入 App／Web bundle，不得放 secret。預設 Demo fixture 不需要任何環境變數；LIVE 只有在使用者明確切換後才呼叫 API。MapLibre 原生地圖需要 Expo development build 或正式 build，不能在 Expo Go 中驗收。
 
 ## 主要路徑
 

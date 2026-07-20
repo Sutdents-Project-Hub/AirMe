@@ -21,6 +21,26 @@ describe('readApiConfig', () => {
     ).toThrow('CONTEXT_SIGNING_SECRET_TOO_SHORT');
   });
 
+  it('creates an ephemeral session HMAC key for fixture mode but requires one in live mode', () => {
+    const first = readApiConfig({ AI_MODE: 'fixture' });
+    const second = readApiConfig({ AI_MODE: 'fixture' });
+
+    expect(first.authSessionHmacSecret).toHaveLength(43);
+    expect(second.authSessionHmacSecret).not.toBe(first.authSessionHmacSecret);
+    expect(() =>
+      readApiConfig({
+        AI_MODE: 'live',
+        CONTEXT_SIGNING_SECRET: 'a context signing secret that is at least 32 bytes',
+      }),
+    ).toThrow('AUTH_SESSION_HMAC_SECRET_REQUIRED');
+  });
+
+  it('rejects short configured session HMAC keys', () => {
+    expect(() =>
+      readApiConfig({ AI_MODE: 'fixture', AUTH_SESSION_HMAC_SECRET: 'too-short' }),
+    ).toThrow('AUTH_SESSION_HMAC_SECRET_TOO_SHORT');
+  });
+
   it('reads AI cost-protection limits', () => {
     const config = readApiConfig({
       AI_MODE: 'fixture',
@@ -34,6 +54,21 @@ describe('readApiConfig', () => {
     expect(config.aiMaxConcurrency).toBe(2);
     expect(config.environmentMaxRequestsPerMinute).toBe(90);
     expect(config.environmentMaxConcurrency).toBe(6);
+  });
+
+  it('uses internal mapping defaults and applies their independent limits', () => {
+    const config = readApiConfig({
+      AI_MODE: 'fixture',
+      VALHALLA_ROUTE_URL: 'http://routing.internal/route/',
+      PHOTON_SEARCH_URL: 'http://places.internal/api/',
+      ROUTING_MAX_REQUESTS_PER_MINUTE: '18',
+      ROUTING_MAX_CONCURRENCY: '2',
+    });
+
+    expect(config.valhallaRouteUrl).toBe('http://routing.internal/route');
+    expect(config.photonSearchUrl).toBe('http://places.internal/api');
+    expect(config.routingMaxRequestsPerMinute).toBe(18);
+    expect(config.routingMaxConcurrency).toBe(2);
   });
 
   it('builds a safely encoded PostgreSQL URL from Coolify-style settings', () => {

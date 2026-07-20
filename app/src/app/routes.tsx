@@ -29,12 +29,25 @@ export default function RoutesScreen() {
             先比較怎麼走，{`\n`}再決定何時出發。
           </AppText>
           <AppText tone="muted">
-            目前提供出發前環境判斷與外部地圖交接，不冒充即時導航或街道級空品。
+            以開源地圖與路線服務規劃步行、單車或道路行程；不冒充即時導航、交通班次或街道級空品。
           </AppText>
         </View>
         <RoutePlanner
-          defaultOrigin={app.local.savedLocation?.name ?? ''}
+          defaultOrigin={
+            app.local.savedLocation
+              ? {
+                  name: app.local.savedLocation.name,
+                  latitude: app.local.savedLocation.latitude,
+                  longitude: app.local.savedLocation.longitude,
+                }
+              : null
+          }
           environment={app.environment}
+          onPlanRoute={app.planRoute}
+          onSearchPlaces={app.searchPlaces}
+          route={app.route}
+          routeError={app.routeError}
+          routeLoading={app.routeLoading}
         />
       </Screen>
     </PageShell>

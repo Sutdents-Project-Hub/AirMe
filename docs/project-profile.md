@@ -35,7 +35,7 @@
 | `api` | `backend` | `backend` | Node.js／Fastify | npm workspace | `test`、`typecheck`、`build`、`evaluate`、`db:migrate` | `true` |
 | `contracts` | `packages/contracts` | `library` | Zod／TypeScript | npm workspace | `test`、`typecheck`、`build` | `false` |
 
-三個 workspace 共用根目錄 `package-lock.json`。輸入式個人檔案、活動理解確認、Air 日誌、安全路線交接、五個 API endpoint、共用 schema、自動化測試、Web Demo、Coolify Compose 與 PostgreSQL migration 已完成；實際 VPS、真實外部 API 呼叫、即時 route provider 與實體 Mobile 仍未完成驗證。
+三個 workspace 共用根目錄 `package-lock.json`。輸入式個人檔案、可選帳號 session、活動理解確認、Air 日誌、MapLibre 路線介面、地點／路線 API、共用 schema、自動化測試、Web Demo、Coolify Compose 與 PostgreSQL migration 已完成；實際 VPS、真實外部 API 呼叫、Valhalla／Photon provider 與實體 Mobile 仍未完成驗證。
 
 ## 功能領域
 
@@ -47,7 +47,7 @@
 - 在空品、活動安全與一般自我保護範圍內追問，離題與醫療診斷必須拒答
 - 活動後五秒回饋與個人紀錄，決賽版不宣稱醫療因果或成熟預測模型
 - 使用者確認的活動結構化理解、整合活動／環境／建議／回饋的 Air 日誌
-- 起終點不持久化的路線交接；沒有 provider 時明確顯示無法分辨沿途空品差異
+- 起終點不持久化的路線預覽與外部地圖交接；沒有 provider 時明確安全降級，且不宣稱沿途空品差異
 - 可重播的決賽示範情境與外部服務失敗時的降級展示
 
 ## 專案限制
@@ -71,7 +71,7 @@
 
 - 採用 React Native、Expo Router 與 TypeScript，以單一前端專案輸出 iOS、Android 與 Web
 - 後端採 Fastify、Node.js 22 與 TypeScript，所有外部 API 與 AI 呼叫皆經後端
-- 決賽 P0 不包含班級統計、教師工作台、正式登入／同步、即時 route provider／完整導航、Line Bot、推播、Power BI 或健康中心串接
+- 決賽 P0 不包含班級統計、教師工作台、個人資料雲端同步、完整 turn-by-turn 導航、Line Bot、推播、Power BI 或健康中心串接
 - 已依使用者明確要求加入 MIT License；著作權標示為 `AirMe contributors`。政府資料、資料集、套件、字型與素材仍須依各自授權及競賽規則處理
 - Coolify、VPS、PostgreSQL 與量界智算為規劃部署目標；本機實作已完成，但尚未執行 production 部署
 
@@ -81,4 +81,4 @@
 - Coolify preview、真實量界／政府 API 與完整 provenance 的端到端驗證
 - 團隊尚未指派 VPS／Coolify 發布、監控、備份與回滾負責人
 - `app/eas.json` 已提供 development、Android APK preview、Android App Bundle／iOS production archive profile；實際 EAS project、簽章、商店帳號與實機驗收仍待團隊帳號確認
-- 跨裝置登入與雲端同步涉及未成年人資料與身份驗證，決賽 P0 先不承諾
+- 可選登入只提供最小 session 身份驗證；Email 驗證、密碼重設、MFA 與跨裝置個人資料同步仍涉及未成年人資料與身份驗證，尚未承諾

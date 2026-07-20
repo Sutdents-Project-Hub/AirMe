@@ -9,6 +9,12 @@ export interface ApiConfig {
   environmentMaxConcurrency: number;
   contextSigningSecret: string;
   contextTtlSeconds: number;
+  authSessionHmacSecret: string;
+  authSessionTtlSeconds: number;
+  valhallaRouteUrl: string;
+  photonSearchUrl: string;
+  routingMaxRequestsPerMinute: number;
+  routingMaxConcurrency: number;
   moenvApiKey: string | null;
   cwaApiKey: string | null;
   liangjieAiBaseUrl: string;
@@ -66,6 +72,21 @@ function readContextSigningSecret(
   throw new Error('CONTEXT_SIGNING_SECRET_REQUIRED');
 }
 
+function readAuthSessionHmacSecret(
+  env: NodeJS.ProcessEnv,
+  aiMode: ApiConfig['aiMode'],
+): string {
+  const configured = env.AUTH_SESSION_HMAC_SECRET?.trim();
+  if (configured) {
+    if (Buffer.byteLength(configured, 'utf8') < 32) {
+      throw new Error('AUTH_SESSION_HMAC_SECRET_TOO_SHORT');
+    }
+    return configured;
+  }
+  if (aiMode === 'fixture') return randomBytes(32).toString('base64url');
+  throw new Error('AUTH_SESSION_HMAC_SECRET_REQUIRED');
+}
+
 export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   const aiMode = env.AI_MODE === 'live' ? 'live' : 'fixture';
   const databaseUrl = buildDatabaseUrl(env);
@@ -85,6 +106,12 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     environmentMaxConcurrency: positiveInteger(env.ENVIRONMENT_MAX_CONCURRENCY, 8),
     contextSigningSecret: readContextSigningSecret(env, aiMode),
     contextTtlSeconds: positiveInteger(env.CONTEXT_TTL_SECONDS, 1_800),
+    authSessionHmacSecret: readAuthSessionHmacSecret(env, aiMode),
+    authSessionTtlSeconds: positiveInteger(env.AUTH_SESSION_TTL_SECONDS, 60 * 60 * 24 * 30),
+    valhallaRouteUrl: (env.VALHALLA_ROUTE_URL?.trim() || 'http://router:8002/route').replace(/\/$/, ''),
+    photonSearchUrl: (env.PHOTON_SEARCH_URL?.trim() || 'http://geocoder:2322/api/').replace(/\/$/, ''),
+    routingMaxRequestsPerMinute: positiveInteger(env.ROUTING_MAX_REQUESTS_PER_MINUTE, 30),
+    routingMaxConcurrency: positiveInteger(env.ROUTING_MAX_CONCURRENCY, 4),
     moenvApiKey: env.MOENV_API_KEY?.trim() || null,
     cwaApiKey: env.CWA_API_KEY?.trim() || null,
     liangjieAiBaseUrl: (env.LIANGJIE_AI_BASE_URL?.trim() || 'https://liangjiewis.com').replace(/\/$/, ''),

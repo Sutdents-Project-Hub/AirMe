@@ -10,6 +10,16 @@ const coordinate = (minimum: number, maximum: number) =>
       message: '座標最多保留小數點後三位。',
     });
 
+const preciseCoordinate = (minimum: number, maximum: number) =>
+  z
+    .number()
+    .finite()
+    .min(minimum)
+    .max(maximum)
+    .refine((value) => Math.abs(value * 1_000_000 - Math.round(value * 1_000_000)) < 1e-8, {
+      message: '導航座標最多保留小數點後六位。',
+    });
+
 export const DataModeSchema = z.enum(['live', 'fixture']);
 export const ProvenanceModeSchema = z.enum(['live', 'partial', 'fixture']);
 export const RiskLevelSchema = z.enum(['low', 'moderate', 'high', 'very-high']);
@@ -235,6 +245,12 @@ export const ErrorCodeSchema = z.enum([
   'AI_UNAVAILABLE',
   'CONTEXT_EXPIRED',
   'RATE_LIMITED',
+  'AUTH_EMAIL_EXISTS',
+  'AUTH_INVALID_CREDENTIALS',
+  'AUTH_SESSION_EXPIRED',
+  'AUTH_UNAVAILABLE',
+  'ROUTING_UNAVAILABLE',
+  'GEOCODING_UNAVAILABLE',
   'INTERNAL_ERROR',
 ]);
 
@@ -284,6 +300,126 @@ export const RecommendationHistoryItemSchema = z
   })
   .strict();
 
+export const AccountSchema = z
+  .object({
+    id: z.uuid(),
+    email: z.email().max(254),
+    displayName: z.string().trim().min(1).max(40),
+    createdAt: z.iso.datetime(),
+  })
+  .strict();
+
+export const RegisterRequestSchema = z
+  .object({
+    email: z.email().max(254),
+    password: z.string().min(12).max(128),
+    displayName: z.string().trim().min(1).max(40),
+    privacyConsent: z.literal(true),
+  })
+  .strict();
+
+export const LoginRequestSchema = z
+  .object({
+    email: z.email().max(254),
+    password: z.string().min(1).max(128),
+  })
+  .strict();
+
+export const AuthSessionSchema = z
+  .object({
+    account: AccountSchema,
+    accessToken: z.string().min(32).max(512),
+    expiresAt: z.iso.datetime(),
+  })
+  .strict();
+
+export const SessionStatusSchema = z
+  .object({
+    account: AccountSchema,
+    expiresAt: z.iso.datetime(),
+  })
+  .strict();
+
+export const RoutePointSchema = z
+  .object({
+    name: z.string().trim().min(1).max(120),
+    latitude: preciseCoordinate(21.7, 26.5),
+    longitude: preciseCoordinate(118, 122.5),
+  })
+  .strict();
+
+export const RouteModeSchema = z.enum(['walking', 'cycling', 'driving']);
+
+export const RouteRequestSchema = z
+  .object({
+    origin: RoutePointSchema,
+    destination: RoutePointSchema,
+    mode: RouteModeSchema,
+    alternatives: z.number().int().min(1).max(3).default(2),
+    dataMode: DataModeSchema.default('live'),
+  })
+  .strict();
+
+export const RouteStepSchema = z
+  .object({
+    instruction: z.string().trim().min(1).max(240),
+    distanceMeters: z.number().finite().min(0).max(2_000_000),
+    durationSeconds: z.number().finite().min(0).max(172_800),
+  })
+  .strict();
+
+export const RouteAlternativeSchema = z
+  .object({
+    id: z.string().trim().min(1).max(80),
+    distanceMeters: z.number().finite().min(0).max(2_000_000),
+    durationSeconds: z.number().finite().min(0).max(172_800),
+    coordinates: z
+      .array(z.tuple([preciseCoordinate(118, 122.5), preciseCoordinate(21.7, 26.5)]))
+      .min(2)
+      .max(5_000),
+    steps: z.array(RouteStepSchema).min(1).max(80),
+  })
+  .strict();
+
+export const RouteResponseSchema = z
+  .object({
+    origin: RoutePointSchema,
+    destination: RoutePointSchema,
+    mode: RouteModeSchema,
+    alternatives: z.array(RouteAlternativeSchema).min(1).max(3),
+    generatedAt: z.iso.datetime(),
+    provenance: z.enum(['live', 'fixture']),
+    provider: z.enum(['valhalla', 'airme-fixture']),
+    attribution: z.string().trim().min(1).max(240),
+  })
+  .strict();
+
+export const GeocodingSearchRequestSchema = z
+  .object({
+    query: z.string().trim().min(2).max(120),
+    dataMode: DataModeSchema.default('live'),
+  })
+  .strict();
+
+export const GeocodingResultSchema = z
+  .object({
+    id: z.string().trim().min(1).max(160),
+    name: z.string().trim().min(1).max(160),
+    administrativeArea: TaiwanAdministrativeAreaSchema.optional(),
+    latitude: preciseCoordinate(21.7, 26.5),
+    longitude: preciseCoordinate(118, 122.5),
+  })
+  .strict();
+
+export const GeocodingSearchResponseSchema = z
+  .object({
+    results: z.array(GeocodingResultSchema).max(8),
+    provenance: z.enum(['live', 'fixture']),
+    provider: z.enum(['photon', 'airme-fixture']),
+    attribution: z.string().trim().min(1).max(240),
+  })
+  .strict();
+
 export type DataMode = z.infer<typeof DataModeSchema>;
 export type ProvenanceMode = z.infer<typeof ProvenanceModeSchema>;
 export type RiskLevel = z.infer<typeof RiskLevelSchema>;
@@ -306,3 +442,17 @@ export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 export type ApiError = z.infer<typeof ApiErrorSchema>;
 export type Feedback = z.infer<typeof FeedbackSchema>;
 export type RecommendationHistoryItem = z.infer<typeof RecommendationHistoryItemSchema>;
+export type Account = z.infer<typeof AccountSchema>;
+export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
+export type LoginRequest = z.infer<typeof LoginRequestSchema>;
+export type AuthSession = z.infer<typeof AuthSessionSchema>;
+export type SessionStatus = z.infer<typeof SessionStatusSchema>;
+export type RoutePoint = z.infer<typeof RoutePointSchema>;
+export type RouteMode = z.infer<typeof RouteModeSchema>;
+export type RouteRequest = z.infer<typeof RouteRequestSchema>;
+export type RouteStep = z.infer<typeof RouteStepSchema>;
+export type RouteAlternative = z.infer<typeof RouteAlternativeSchema>;
+export type RouteResponse = z.infer<typeof RouteResponseSchema>;
+export type GeocodingSearchRequest = z.infer<typeof GeocodingSearchRequestSchema>;
+export type GeocodingResult = z.infer<typeof GeocodingResultSchema>;
+export type GeocodingSearchResponse = z.infer<typeof GeocodingSearchResponseSchema>;

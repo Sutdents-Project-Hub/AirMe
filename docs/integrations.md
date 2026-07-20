@@ -40,14 +40,17 @@
 - App 以 `POST /api/environment` 的 JSON body 傳送粗略地點，避免地點與座標出現在 reverse proxy access-log URL。
 - MOENV 失敗時只能使用可接受時效內的 stale MOENV AQI，否則整體改為 fixture；不把 fixture AQI 混成即時部分資料。CWA 失敗時先用 stale weather，沒有時才使用明示 fixture weather 的 partial 結果。
 - migration：`backend/database/migrations/`；由 `npm run db:migrate --workspace airme-api` 執行。
-- AirMe PostgreSQL 不保存：帳號、IP、個人設定、活動文字、症狀、回饋、完整 prompt、context token、模型回應或精確位置；外層 Coolify／VPS proxy 的連線 IP log 需另設保存政策。
+- AirMe PostgreSQL 不保存：IP、裝置端個人設定、活動文字、症狀、回饋、完整 prompt、context token、模型回應或精確位置；可選帳號僅保存 Email、顯示名稱、password hash、同意／建立時間與 session token digest。外層 Coolify／VPS proxy 的連線 IP log 需另設保存政策。
 - Compose 內部 service 名稱：`postgres`；資料 volume：`airme-postgres`。不公開資料庫 port。
 
-## 路線與外部地圖
+## 路線、地點搜尋與地圖
 
-- 目前沒有 Google Routes、Mapbox 或其他 route provider 的 API 整合、金鑰、帳務或沿途空品資料。
-- Client 只產生使用者可見的 Google Maps Directions URL；使用者明示點擊後才離開 AirMe 查看路線，AirMe 不讀回距離、時間或路徑。
-- 因此路線頁必須標示資料不足，不得稱為 Live 路線比較；未來若導入 provider，須先新增後端 adapter、timeout、provenance、attribution、成本與隱私驗收。
+- 路線 adapter：`backend/src/adapters/routing/valhalla.ts`，呼叫內部 `VALHALLA_ROUTE_URL` 的 Valhalla `/route`。它只傳送當次座標與移動方式，回傳距離、預估時間、polyline 與機器可讀 maneuver；請求／回應不持久化。
+- 地點搜尋 adapter：`backend/src/adapters/geocoding/photon.ts`，呼叫內部 `PHOTON_SEARCH_URL`，只接受台灣範圍結果。它不保存查詢文字或座標。
+- UI：MapLibre React Native／MapLibre GL 顯示路線。`EXPO_PUBLIC_MAP_STYLE_URL` 必須指向已授權的 production style；Demo 才使用公開示範 style。Map data／style 必須保留 OpenStreetMap 與其供應者要求的 attribution。
+- Valhalla 與 Photon 都是可自架的開源元件，但目前並未隨此 repository 的三服務 Compose 部署；VPS 要先準備台灣 OpenStreetMap 圖資、索引、CPU／記憶體／磁碟、更新策略、timeout 與監控，才能切換到真正的 live 路線／搜尋。
+- route provider 不可用時 API 回傳安全的 unavailable 錯誤，App 顯示降級訊息與使用者主動開啟的外部地圖交接。功能不計算沿途空品、不宣稱最低污染或安全路線，也不是 turn-by-turn 導航。
+- 參考： [Valhalla](https://valhalla.github.io/valhalla/) 採 MIT 授權並使用 OpenStreetMap 資料；[MapLibre React Native Expo 設定](https://maplibre.org/maplibre-react-native/docs/setup/expo/) 說明原生地圖需要 development build，不能在 Expo Go 執行。
 
 ## 官方規則
 

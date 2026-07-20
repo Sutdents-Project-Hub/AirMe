@@ -1,9 +1,14 @@
 import {
   ActivityIntentResponseSchema,
   ApiErrorSchema,
+  AuthSessionSchema,
   EnvironmentSnapshotSchema,
   FollowUpResponseSchema,
+  GeocodingSearchResponseSchema,
   RecommendationResponseSchema,
+  RouteResponseSchema,
+  SessionStatusSchema,
+  type AuthSession,
   type ActivityIntentRequest,
   type ActivityIntentResponse,
   type DataMode,
@@ -11,9 +16,16 @@ import {
   type ErrorCode,
   type FollowUpRequest,
   type FollowUpResponse,
+  type GeocodingSearchRequest,
+  type GeocodingSearchResponse,
   type Location,
   type RecommendationRequest,
   type RecommendationResponse,
+  type LoginRequest,
+  type RegisterRequest,
+  type RouteRequest,
+  type RouteResponse,
+  type SessionStatus,
 } from '@airme/contracts';
 import type { ZodType } from 'zod';
 
@@ -38,10 +50,17 @@ interface AirMeApiOptions {
 }
 
 export interface AirMeApi {
+  register(input: RegisterRequest): Promise<AuthSession>;
+  login(input: LoginRequest): Promise<AuthSession>;
+  getSession(accessToken: string): Promise<SessionStatus>;
+  logout(accessToken: string): Promise<void>;
+  deleteAccount(accessToken: string): Promise<void>;
   understandActivity(request: ActivityIntentRequest): Promise<ActivityIntentResponse>;
   getEnvironment(location: Location, mode: DataMode): Promise<EnvironmentSnapshot>;
   createRecommendation(request: RecommendationRequest): Promise<RecommendationResponse>;
   followUp(request: FollowUpRequest): Promise<FollowUpResponse>;
+  getRoutes(request: RouteRequest): Promise<RouteResponse>;
+  searchPlaces(request: GeocodingSearchRequest): Promise<GeocodingSearchResponse>;
 }
 
 export function createAirMeApi(options: AirMeApiOptions): AirMeApi {
@@ -93,7 +112,80 @@ export function createAirMeApi(options: AirMeApiOptions): AirMeApi {
     return parsed.data;
   }
 
+  async function callEmpty(path: string, init: RequestInit): Promise<void> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), options.timeoutMs);
+    let response: Response;
+    try {
+      response = await fetcher(`${baseUrl}/${path}`, { ...init, signal: controller.signal });
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new AirMeApiError('TIMEOUT', '連線逾時，請稍後再試。', true);
+      }
+      throw new AirMeApiError('NETWORK_ERROR', '無法連上 AirMe 服務。', true);
+    } finally {
+      clearTimeout(timeout);
+    }
+    if (response.status === 204) return;
+    let payload: unknown = null;
+    try {
+      payload = (await response.json()) as unknown;
+    } catch {
+      if (response.ok) return;
+    }
+    if (!response.ok) {
+      const root = typeof payload === 'object' && payload !== null ? payload : {};
+      const publicError = ApiErrorSchema.safeParse({
+        error: (root as Record<string, unknown>).error,
+      });
+      if (publicError.success) {
+        throw new AirMeApiError(
+          publicError.data.error.code,
+          publicError.data.error.message,
+          publicError.data.error.retryable,
+          publicError.data.error.requestId,
+        );
+      }
+      throw new AirMeApiError('INVALID_RESPONSE', '服務暫時無法完成。', response.status >= 500);
+    }
+  }
+
+  function bearer(accessToken: string): HeadersInit {
+    return { authorization: `Bearer ${accessToken}` };
+  }
+
   return {
+    register(input) {
+      return call(
+        'auth/register',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(input),
+        },
+        AuthSessionSchema,
+      );
+    },
+    login(input) {
+      return call(
+        'auth/login',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(input),
+        },
+        AuthSessionSchema,
+      );
+    },
+    getSession(accessToken) {
+      return call('auth/session', { method: 'GET', headers: bearer(accessToken) }, SessionStatusSchema);
+    },
+    logout(accessToken) {
+      return callEmpty('auth/logout', { method: 'POST', headers: bearer(accessToken) });
+    },
+    deleteAccount(accessToken) {
+      return callEmpty('auth/account', { method: 'DELETE', headers: bearer(accessToken) });
+    },
     understandActivity(request) {
       return call(
         'activity-intents',
@@ -136,6 +228,28 @@ export function createAirMeApi(options: AirMeApiOptions): AirMeApi {
           body: JSON.stringify(request),
         },
         FollowUpResponseSchema,
+      );
+    },
+    getRoutes(request) {
+      return call(
+        'routes',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(request),
+        },
+        RouteResponseSchema,
+      );
+    },
+    searchPlaces(request) {
+      return call(
+        'geocoding/search',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(request),
+        },
+        GeocodingSearchResponseSchema,
       );
     },
   };

@@ -56,7 +56,7 @@ export function createServer(input: {
     return sendResponse(response, reply);
   });
   const register = (
-    method: 'GET' | 'POST',
+    method: 'GET' | 'POST' | 'DELETE',
     path: string,
     handler: (request: ApiRequest) => Promise<HttpResponse>,
   ) => {
@@ -72,6 +72,13 @@ export function createServer(input: {
   register('POST', '/api/activity-intents', input.handlers.activityIntents);
   register('POST', '/api/recommendations', input.handlers.recommendations);
   register('POST', '/api/follow-ups', input.handlers.followUps);
+  register('POST', '/api/auth/register', input.handlers.register);
+  register('POST', '/api/auth/login', input.handlers.login);
+  register('GET', '/api/auth/session', input.handlers.session);
+  register('POST', '/api/auth/logout', input.handlers.logout);
+  register('DELETE', '/api/auth/account', input.handlers.deleteAccount);
+  register('POST', '/api/routes', input.handlers.routes);
+  register('POST', '/api/geocoding/search', input.handlers.geocodingSearch);
 
   server.addHook('onResponse', async (request, reply) => {
     const route = request.routeOptions.url ?? '';

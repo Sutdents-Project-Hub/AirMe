@@ -11,6 +11,13 @@ function handlers(): ApiHandlers {
     activityIntents: unused,
     recommendations: unused,
     followUps: unused,
+    register: unused,
+    login: unused,
+    session: unused,
+    logout: unused,
+    deleteAccount: unused,
+    routes: unused,
+    geocodingSearch: unused,
   };
 }
 
