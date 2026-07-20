@@ -175,6 +175,7 @@ docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.loc
 
 ## 文件索引
 
+- [學生前端協作與開發教學（Git、GitHub、VS Code、Expo）](docs/student-frontend-guide.md)
 - [需求基準](docs/requirements.md)
 - [產品規格](docs/product-spec.md)
 - [驗收清單](docs/acceptance.md)
