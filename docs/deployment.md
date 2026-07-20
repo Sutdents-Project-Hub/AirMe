@@ -80,7 +80,7 @@ Coolify Web 因同源可使用 `/api`。iOS／Android bundle 不可使用相對 
 EXPO_PUBLIC_API_BASE_URL=https://<your-domain>/api npm run build:web --workspace airme
 ```
 
-真正的 mobile delivery（development build、APK、AAB 或 TestFlight）尚未決定；上例只說明環境變數，不能取代原生發佈流程。
+原生 App 的 EAS profile 已在 `app/eas.json` 準備：`development` 供開發 client、`preview` 產生 Android APK、`production` 產生 Android App Bundle 與 iOS archive。實際 EAS project、簽章、商店帳號與實機驗收仍未執行；上例只說明 Web bundle 的環境變數，不能取代原生發佈流程。
 
 前端 `EXPO_PUBLIC_API_TIMEOUT_MS` 預設為 `22000`，覆蓋環境資料與 AI 串接的正常上限；依線上 P95 調整時必須同步 App Docker build arg 與元件 README。
 
@@ -109,4 +109,4 @@ EXPO_PUBLIC_API_BASE_URL=https://<your-domain>/api npm run build:web --workspace
 - 量界與政府 API 真實 key 的 quota、rate limit、JSON 相容性與服務條款。
 - PostgreSQL 備份、restore、監控與 retention。
 - 正式 mobile build 與實體裝置流程。
-- 競賽簡章的 Azure 25% 是否允許以 Coolify／量界替代；在取得書面確認前，完成 Coolify 部署不等於完成官方概念驗證。
+- Coolify preview、真實量界／政府 API、VPS 資源與決賽設備的端到端驗證；完成前不得把 fixture 結果說成線上展示。

@@ -3,7 +3,7 @@
 > 競賽版跨平台產品｜決賽：2026-07-26
 > 部署目標：自有 VPS 的 Coolify + PostgreSQL + 量界智算
 
-> 競賽合規提醒：官方簡章將「概念驗證（Azure）」列為 25%，且要求雲端資源使用主辦單位指定平台。目前 Coolify／量界方案只能在取得主辦單位書面許可後作為正式概念驗證；否則需保留或恢復指定 Azure 資源路徑。
+> 競賽展示部署路徑：Coolify + PostgreSQL + 量界智算。正式展示前仍須完成真實外部服務、VPS 與決賽設備的端到端驗證。
 
 AirMe 讓使用者用自然語言描述想做的活動，再把 AQI、天氣、最低限度個人敏感條件與官方安全底線，整理成可執行、可解釋且受安全邊界限制的個人行動卡。
 
@@ -105,7 +105,8 @@ npm run evaluate
 
 - 共用契約、API 與 App 共 170 項自動化測試通過（12 + 106 + 52）。
 - 固定安全評估 30/30 通過。
-- `npm run lint`、三個 workspace typecheck、production build、Expo Doctor 20/20 與 Compose config 解析通過。
+- `npm run lint`、三個 workspace typecheck、production Web build、Expo Doctor 20/20 與 Compose config 解析通過。
+- Node 22.22.3 下的 Playwright fixture E2E 已通過：首次設定、活動理解、行動卡、醫療與緊急邊界、回饋與 Air 日誌皆可在無後端時完成。
 - 本機 AirMe Compose 三服務重建並健康；API 以 `node` 非 root 使用者執行，runtime production dependencies audit 為 0 漏洞，五個 endpoint、緊急 422、malformed JSON 400、migration 與三張預期 table 已實際驗證。
 - 尚未對 VPS／Coolify production、真實量界／政府 key 或實體 iOS／Android 執行驗收。
 
@@ -147,7 +148,7 @@ Request／response 型別由 `packages/contracts` 共用；HTTP 錯誤使用穩�
 
 此 repository 根目錄的 [docker-compose.yml](docker-compose.yml) 定義 `web`、`api`、`postgres` 三個服務。Coolify 將公開網域指向 `web:80`；Nginx 會把同源 `/api/*` 反向代理到 API 容器，因此 Web 不必設定公開 API 網域或 CORS。
 
-部署前只需在 Coolify 填入必要的 PostgreSQL 密碼、context signing secret、量界與政府 API key，然後依 [部署計畫](docs/deployment.md) 完成第一次 migration、health check 與線上驗收。Coolify 是產品部署目標，不等於競賽官方 Azure 概念驗證已合規；這項仍需主辦單位書面確認。沒有 production URL、CI/CD、remote、release 或實際 VPS 部署已被宣稱完成。
+Coolify + 量界智算是競賽展示的部署路徑。部署前需在 Coolify 填入必要的 PostgreSQL 密碼、context signing secret、量界與政府 API key，並依 [部署計畫](docs/deployment.md) 完成第一次 migration、health check 與線上驗收。GitHub Actions 已設定 Node 22 的品質與 fixture E2E 檢查；目前仍無 production URL、release 或實際 VPS 部署驗證。
 
 本機 Docker fixture 測試使用同一個 Compose 專案的三個服務，不會碰觸其他專案：
 
@@ -184,8 +185,8 @@ docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.loc
 - [部署計畫](docs/deployment.md)
 - [競賽展示](docs/competition.md)
 
-## Git 與授權
+## 版本控制與授權
 
-- 未執行 commit、push、PR、release 或實際部署。
-- 這些操作都需要使用者個別明確授權，且執行前必須依 [AGENTS.md](AGENTS.md) 掃描秘密、個資與不應提交文件。
+- Repository 已有版本控制與遠端連線；commit、push、PR、release 與部署仍都需要使用者個別明確授權。
+- 每次對版本控制或遠端操作前，必須依 [AGENTS.md](AGENTS.md) 掃描秘密、個資與不應提交文件。
 - 原始碼採 MIT License（著作權標示為 `AirMe contributors`）；政府資料、第三方套件、字型與外部素材仍依各自授權與 attribution，不被本 LICENSE 取代。

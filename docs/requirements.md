@@ -46,7 +46,7 @@
 ## 外部決策與限制
 
 - 量界智算 model ID、額度、rate limit、JSON 相容性由團隊帳號確認。
-- 競賽官方的「概念驗證（Azure）」25% 與指定雲端平台要求尚未取得 Coolify／量界書面例外；無例外時核心驗證必須使用主辦指定資源。
+- Coolify／量界是競賽展示部署路徑；決賽前仍須確認量界 model ID、額度、JSON 相容性、VPS 健康檢查與真實環境資料流程。
 - VPS、Coolify 與 PostgreSQL 為團隊管理環境；未經 owner 允許不建立、修改或刪除其他專案資源。
 - Mobile 最終交付形式與團隊發布／監控／回滾 owner 尚未決定。
 - 原始碼採 MIT License；政府資料、第三方套件、字型與素材仍須依各自授權、attribution 與競賽規則處理。

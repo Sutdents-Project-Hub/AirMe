@@ -26,11 +26,11 @@
 - PostgreSQL container restart 後快取、Coolify healthcheck、同源 proxy、production volume 與正式 TLS；本機 migration 與 schema 已驗證。
 - VPS backup、restore、監控、disk capacity 與防火牆。
 - iOS／Android 實體裝置與最終安裝包形式。
-- 官方 Azure 25% 是否可以 Coolify／量界替代；目前沒有書面核准證據。
+- Coolify preview、真實量界／政府 API 與完整 provenance 的端到端驗證。
 
 ## 尚未建立且不是本次已完成範圍
 
-- VPS／Coolify application、production secret、production URL、CI/CD、remote 或 GitHub repository。
+- VPS／Coolify application、production secret 與 production URL；GitHub Actions 已覆蓋 Node 22 的品質與 fixture E2E 檢查，但尚未連結部署。
 - 正式登入、雲端個人資料庫、跨裝置同步、教師／班級功能。
 - Push notification、內嵌地圖、即時 route provider／街道級污染路線、健康預測或醫療串接。
 

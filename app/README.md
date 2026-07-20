@@ -46,9 +46,22 @@ npm run test --workspace airme
 npm run lint --workspace airme
 npm run typecheck --workspace airme
 npm run build:web --workspace airme
+npm run test:e2e
 ```
 
-`build:web` 產生 `app/dist/`。Web static export、直接網址 hydration 與自動化 UI 流程已驗證；實體 iOS／Android 尚未驗證。前端預設 API timeout 為 22 秒，可由 `EXPO_PUBLIC_API_TIMEOUT_MS` 覆寫。
+`build:web` 產生 `app/dist/`。Web static export、直接網址 hydration 與 Desktop Chromium fixture E2E 已驗證；實體 iOS／Android 與真實 API 尚未驗證。前端預設 API timeout 為 22 秒，可由 `EXPO_PUBLIC_API_TIMEOUT_MS` 覆寫。
+
+## 原生交付
+
+`eas.json` 已準備三個不含秘密的交付 profile：`development` 供開發 client、`preview` 產生 Android APK 供內部安裝、`production` 產生 Android App Bundle，iOS 則使用 EAS 的 production archive 流程。實際 EAS 專案連結、Apple／Google 帳號、簽章與發佈仍由團隊帳號處理，尚未在本 repository 執行。
+
+在已設定團隊 Expo／EAS 權限的環境，可從 `app/` 使用：
+
+```bash
+npx eas-cli@latest build --platform android --profile preview
+npx eas-cli@latest build --platform android --profile production
+npx eas-cli@latest build --platform ios --profile production
+```
 
 ## 設定
 

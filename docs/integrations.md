@@ -62,6 +62,6 @@
 - 對外展示清楚區分即時資料、快取資料與 fixture。
 - 串接前確認 API 使用條款、attribution、額度與競賽公開展示權。
 
-## 競賽指定雲端
+## 競賽展示部署
 
-官方簡章將「概念驗證（Azure）」列為 25%，並要求雲端資源使用主辦單位指定平台。Coolify／量界是目前產品部署與 AI adapter，不代表已符合該項競賽要求。決賽前必須取得書面例外，或把核心概念驗證切回 Azure／主辦指定資源。
+Coolify + PostgreSQL + 量界智算是競賽展示部署路徑。正式展示前要以真實 model ID、環境資料 API、Coolify preview 與來源／provenance 畫面完成端到端驗證；在此前只可展示明確標示的 fixture 流程。

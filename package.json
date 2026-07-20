@@ -14,10 +14,12 @@
     "build": "npm run build --workspace @airme/contracts && npm run build --workspace airme-api && npm run build:web --workspace airme",
     "evaluate": "npm run evaluate --workspace airme-api",
     "lint": "npm run lint --workspaces --if-present",
+    "test:e2e": "playwright test",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "eslint": "^9.39.5",
     "inline-style-prefixer": "7.0.1",
     "postcss-value-parser": "4.2.0"

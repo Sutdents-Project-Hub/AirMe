@@ -14,10 +14,10 @@
 | 問題理解度 | 10% | 中學生在空品數字與實際活動決策之間的缺口 |
 | 創新性 | 10% | 相同 AQI 下依活動、強度與敏感條件產生可解釋的不同行動 |
 | 企劃完整度 | 20% | 契約、官方規則、安全邊界、隱私、降級與驗收記錄 |
-| 概念驗證（Azure） | 25% | 必須以主辦單位指定資源或書面核准的替代方案展示真實 AI 核心流程 |
+| 概念驗證 | 25% | 以 Coolify API、量界智算與真實環境資料展示可操作的 AI 核心流程 |
 | 簡報表達 | 35% | 90 秒主流程、一張架構／安全證據、可重播備援與問答資料 |
 
-官方簡章另要求雲端資源使用主辦單位指定平台。目前 Coolify／量界方案不能自動視為 Azure 25% 合規；尚待主辦單位書面確認。未取得例外前，這是決賽第一優先風險。
+Coolify／量界是 AirMe 的競賽展示部署路徑。決賽第一優先風險是尚未完成真實量界／政府資料、VPS 與決賽設備的端到端驗證，而非 fixture 功能本身。
 
 ## 90 秒主流程（可擴充為 3–5 分鐘）
 
@@ -33,7 +33,7 @@
 
 ## 目前 Demo 證據
 
-- 170 項自動化測試（12 契約 + 106 API + 52 App）、production static export、Expo Doctor 20/20 與自動化手機／桌面流程測試通過。
+- 170 項自動化測試（12 契約 + 106 API + 52 App）、production static export、Expo Doctor 20/20、安全評估與 Playwright fixture 核心流程 E2E 已通過。
 - 本機 `airme` Compose 三服務 healthy，五個 API endpoint、PostgreSQL migration／三張 table、緊急與 malformed JSON 錯誤路徑已實際驗證。
 - 手機首屏已改為活動輸入優先，Live 錯誤可一鍵切換清楚標示的 Demo；實體手機仍待驗收。
 - 30 個固定 AI／安全案例 30/30。
@@ -45,7 +45,7 @@
 - AI 做了什麼：理解自然語言、組合條件、產生個人化行動與可解釋理由。
 - 為何不是儀表板：相同環境下，活動與個人情境改變會得到不同方案。
 - 如何不跑題：領域守門、官方底線、Structured Outputs、後處理與固定拒答測試。
-- AI 在哪裡：Recommendation 實際經 Coolify API 呼叫量界智算，而不是只畫在簡報。
+- AI 在哪裡：正式線上 Demo 會讓 Recommendation 經 Coolify API 呼叫量界智算；live 驗證完成前，必須明示目前展示的是 fixture。
 
 ## 展示備援
 
@@ -65,7 +65,7 @@
 ## 提交前清單
 
 - 比賽規則、簡報格式、Demo 時間、網路、設備與帳號已確認。
-- Azure 25% 與「主辦單位指定雲端平台」已取得書面解釋，或核心驗證已回到指定 Azure 資源。
+- Coolify preview、量界 AI 與真實環境資料的端到端流程已取得不含秘密的驗證證據。
 - 量界 model ID、quota、JSON mode、VPS／Coolify healthcheck 與環境 API key 已事前驗證。
 - App／Web 主流程、安全案例與 fallback 已排練。
 - 測試資料全為虛構，不含真實學生個資。
