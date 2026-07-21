@@ -8,14 +8,14 @@
 | 活動結構化理解、單一澄清與確認 | 通過 | fixture 瀏覽器流程、API／parser／元件測試 |
 | 結構化行動卡與資料來源 | 通過 | fixture 流程、schema 與元件測試 |
 | 醫療拒答、追問、回饋與 Air 日誌 | 通過 | 自動化測試與 390px 完整瀏覽器回饋／日誌流程 |
-| 可選帳號註冊／登入／登出／刪除 | 通過（自動化） | scrypt／session HMAC、API handler 與 App 元件測試；真實 SMTP／Email 驗證尚未建立 |
+| 必要帳號註冊／登入／登出／刪除 | 通過（自動化） | 未登入會導向帳號入口；scrypt／session HMAC、API handler 與 App 元件測試；真實 SMTP／Email 驗證尚未建立 |
 | 路線規劃與地圖安全降級 | 通過（fixture／元件） | Valhalla／Photon adapter、MapLibre route 元件與 fallback 測試；自架 live provider 尚未部署 |
 | Responsive Web | 部分通過（本機） | Web static export、390px／桌面版面與元件測試已通過；Desktop Chromium 的 Playwright fixture 核心流程 E2E 已通過，實體決賽設備待驗證 |
 | 共用資料契約 | 通過 | Zod runtime schema 與契約測試 |
 | API orchestration、規則與安全處理 | 通過 | fixture／mock 自動化測試；本機 Docker 五 endpoint、緊急 422 與 malformed JSON 400 已實際驗證 |
 | 30 個安全評估案例 | 通過 | `npm run evaluate` 30/30 |
 | Web production static export | 通過 | `npm run build:web --workspace airme` |
-| 自動化品質基線 | 通過（本輪） | lint、三個 workspace typecheck、206 項測試（12 + 138 + 56）、production Web export、安全評估 30/30 與 Playwright fixture E2E 已通過 |
+| 自動化品質基線 | 通過（本輪） | lint、三個 workspace typecheck、207 項測試（12 + 138 + 57）、production Web export、安全評估 30/30 與 Playwright fixture E2E 已通過 |
 | 真實 MOENV／CWA 呼叫 | 未驗證 | adapter 已完成；尚未使用真實 key |
 | 真實量界智算呼叫 | 未驗證 | adapter 已完成；尚未以真實 token 與 model ID 執行 |
 | Coolify／PostgreSQL 部署 | 未驗證 | Compose 與 migration 已完成，沒有 production URL |
@@ -25,7 +25,7 @@
 
 ## 核心流程驗收
 
-1. 新裝置仍可免登入建立本機個人檔案；只要求裝置暱稱與日常描述，不要求真名、學號或病歷，確認後不保存原始描述。使用者可自願建立 Email 帳號，但不會因此同步本機健康內容。
+1. 新裝置先顯示註冊／登入；完成 Email 帳號驗證後才可建立本機個人檔案。個人檔案只要求裝置暱稱與日常描述，不要求真名、學號或病歷，確認後不保存原始描述，且登入不會同步本機健康內容。
 2. 完成設定後可看到環境資料的來源、時間與資料模式。
 3. 輸入「下午四點想在操場全力跑 30 分鐘」先看到 activity、time、location、intensity、duration 與 currentCondition；確認後才得到固定格式行動卡。
 4. 相同 AQI 下，敏感條件或劇烈活動不得得到比一般短時間活動更寬鬆的風險。

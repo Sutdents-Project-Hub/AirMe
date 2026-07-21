@@ -1,6 +1,34 @@
 import { expect, test } from '@playwright/test';
 
+test('requires an account before allowing access to the personal AirMe flow', async ({ page }) => {
+  for (const path of ['/', '/onboarding', '/routes', '/history', '/settings', '/recommendation']) {
+    await page.goto(path);
+
+    await expect(page).toHaveURL(/\/account$/);
+    await expect(page.getByText('先登入，')).toBeVisible();
+  }
+
+  await expect(page.getByRole('tab', { name: '建立帳號' })).toBeVisible();
+});
+
 test('fixture demo completes the personal air-safety journey without a backend', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('airme.auth-session-token.v1', 'fixture-auth-session-token-for-e2e');
+  });
+  await page.route('**/api/auth/session', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        account: {
+          id: '8de274bc-7161-4f07-8e26-7bded5144c12',
+          email: 'fixture@example.com',
+          displayName: '示範同學',
+          createdAt: '2026-07-21T00:00:00.000Z',
+        },
+        expiresAt: '2026-07-22T00:00:00.000Z',
+      }),
+    });
+  });
   await page.goto('/');
 
   await expect(page.getByText('建立我的 AirMe')).toBeVisible();

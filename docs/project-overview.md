@@ -7,7 +7,7 @@
 ## P0
 
 - 單一 Expo 專案支援 iOS、Android、Web。
-- 輸入式本機個人檔案、可選帳號登入、活動理解確認、真實 AQI／天氣、行動卡、追問、五秒回饋與整合 Air 日誌。
+- 必要帳號登入後的輸入式本機個人檔案、活動理解確認、真實 AQI／天氣、行動卡、追問、五秒回饋與整合 Air 日誌。
 - 淺綠白跨平台 UI；MapLibre 地圖預覽、Photon 地點搜尋與 Valhalla 路線 adapter。自架服務未配置時明示 fixture／資料不足並保留外部地圖交接。
 - Coolify Web + Node.js/Fastify API + PostgreSQL + 量界智算的真實核心流程。
 - JSON runtime schema、領域限制、醫療界線、資料新鮮度與錯誤處理。

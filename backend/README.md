@@ -1,6 +1,6 @@
 # AirMe Node.js API
 
-可信任後端邊界：標準化政府資料、執行官方規則、呼叫量界智算、驗證 JSON 輸出、簽發短效追問情境 token、處理可選帳號 session，以及轉送地點／路線請求，並向 App／Web 回傳穩定契約。API 使用 Node.js 22、Fastify 與 PostgreSQL，為 Coolify container deployment 設計。
+可信任後端邊界：標準化政府資料、執行官方規則、呼叫量界智算、驗證 JSON 輸出、簽發短效追問情境 token、處理產品入口所需的帳號 session，以及轉送地點／路線請求，並向 App／Web 回傳穩定契約。API 使用 Node.js 22、Fastify 與 PostgreSQL，為 Coolify container deployment 設計。
 
 ## Endpoints
 
@@ -11,7 +11,7 @@
 | `POST` | `/api/activity-intents` | 不持久化的活動意圖擷取；只回一個最重要澄清問題 |
 | `POST` | `/api/recommendations` | 規則底線 + 量界／fixture AI + 結構化行動卡 |
 | `POST` | `/api/follow-ups` | 原情境內追問；固定拒答／緊急處理 |
-| `POST` | `/api/auth/register` | 建立可選帳號，保存 scrypt password hash 並簽發 session |
+| `POST` | `/api/auth/register` | 建立產品入口帳號，保存 scrypt password hash 並簽發 session |
 | `POST` | `/api/auth/login` | 驗證帳密並簽發 session；失敗訊息不洩漏帳號是否存在 |
 | `GET` | `/api/auth/session` | 驗證 Bearer session |
 | `POST` | `/api/auth/logout` | 撤銷當前 session |

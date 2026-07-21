@@ -97,7 +97,7 @@ EXPO_PUBLIC_API_BASE_URL=https://<your-domain>/api npm run build:web --workspace
 ## 上線驗收與觀測
 
 - `/api/health`：確認 API 及必要 PostgreSQL 連線；不要公開 `/api` container port。
-- Web：檢查免登入個人檔案、註冊／登入／登出／刪除帳號、帳號刪除後本機資料仍由使用者控制、首頁理解確認、路線降級、Air 日誌、fixture／live 標籤、推薦、追問、回饋與資料清除。
+- Web：檢查未登入一律導向註冊／登入、帳號建立後才可建立個人檔案、登出／刪除帳號、帳號刪除後本機資料仍由使用者控制、首頁理解確認、路線降級、Air 日誌、fixture／live 標籤、推薦、追問、回饋與資料清除。
 - API：除既有 health／environment／recommendations／follow-ups 外，驗證 `POST /api/activity-intents` 不寫入 request body，帳號 token 不進 log，live／fixture provenance 正確。
 - Maps：若已另行部署 Valhalla／Photon，驗證台灣搜尋、三種移動方式、timeout／限流／503 降級、MapLibre attribution，以及不顯示街道級 AQI、最低污染或 turn-by-turn 導航。
 - Live：確認量界模型 ID、JSON output、429、timeout、無效輸出與 provider 失敗都不會洩漏 provider body。

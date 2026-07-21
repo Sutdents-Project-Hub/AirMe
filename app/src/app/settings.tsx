@@ -1,4 +1,4 @@
-import { useRouter, type Href } from 'expo-router';
+import { Redirect, useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Switch, useWindowDimensions, View } from 'react-native';
 
@@ -18,6 +18,14 @@ export default function SettingsScreen() {
   const [confirmClear, setConfirmClear] = useState(false);
   const { width } = useWindowDimensions();
   const wide = width >= 760;
+
+  if (app.hydrated && !app.account) {
+    return <Redirect href={'/account' as Href} />;
+  }
+  if (app.hydrated && !app.local.onboardingCompleted) {
+    return <Redirect href={'/onboarding' as Href} />;
+  }
+
   return (
     <PageShell>
       <Screen maxWidth={1000}>
@@ -88,15 +96,13 @@ export default function SettingsScreen() {
               帳號與隱私
             </AppText>
             <AppText>
-              {app.account
-                ? `• 已登入：${app.account.email}`
-                : '• 尚未登入；可以繼續使用這台裝置上的 AirMe。'}
+              {`• 已登入：${app.account?.email ?? '帳號狀態載入中'}`}
             </AppText>
             <AppText>• 個人檔案、日誌與回饋仍只在這台裝置，不會因登入自動同步。</AppText>
             <AppText>• Live 模式只把當次推論必要內容送往 AirMe 後端。</AppText>
             <AppText>• AirMe 不做醫療診斷、不判定症狀原因，也不取代緊急協助。</AppText>
             <AppButton
-              label={app.account ? '查看帳號' : '建立帳號或登入'}
+              label="查看帳號"
               onPress={() => router.push('/account' as Href)}
               variant="secondary"
             />

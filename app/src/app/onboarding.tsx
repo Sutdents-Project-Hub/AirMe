@@ -1,4 +1,4 @@
-import { useRouter, type Href } from 'expo-router';
+import { Redirect, useRouter, type Href } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { ProfileForm } from '../components/profile-form';
@@ -11,6 +11,11 @@ export default function OnboardingScreen() {
   const app = useApp();
   const palette = usePalette();
   const router = useRouter();
+
+  if (!app.hydrated) return null;
+  if (!app.account) return <Redirect href={'/account' as Href} />;
+  if (app.local.onboardingCompleted) return <Redirect href={'/' as Href} />;
+
   return (
     <Screen maxWidth={920}>
       <View style={styles.hero}>
@@ -23,7 +28,7 @@ export default function OnboardingScreen() {
           一句話，讓 AirMe{`\n`}先理解你的日常。
         </AppText>
         <AppText tone="muted">
-          免登入、免填表格；確認結構化結果後，原始自我描述不會被保存。
+          你的帳號已驗證；確認結構化結果後，原始自我描述不會被保存。
         </AppText>
       </View>
       <ProfileForm

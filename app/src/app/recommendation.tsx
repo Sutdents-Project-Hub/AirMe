@@ -1,4 +1,4 @@
-import { useRouter, type Href } from 'expo-router';
+import { Redirect, useRouter, type Href } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { ActionCard } from '../components/action-card';
@@ -17,6 +17,9 @@ export default function RecommendationScreen() {
   const app = useApp();
   const router = useRouter();
   const recommendation = app.currentRecommendation;
+
+  if (app.hydrated && !app.account) return <Redirect href={'/account' as Href} />;
+  if (app.hydrated && !app.local.onboardingCompleted) return <Redirect href={'/onboarding' as Href} />;
 
   if (!recommendation) {
     return (

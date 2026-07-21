@@ -12,6 +12,9 @@ import { useApp } from '../state/app-provider';
 export default function HistoryScreen() {
   const app = useApp();
   const palette = usePalette();
+  if (app.hydrated && !app.account) {
+    return <Redirect href={'/account' as Href} />;
+  }
   if (app.hydrated && !app.local.onboardingCompleted) {
     return <Redirect href={'/onboarding' as Href} />;
   }

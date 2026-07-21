@@ -35,7 +35,7 @@
 | `api` | `backend` | `backend` | Node.js／Fastify | npm workspace | `test`、`typecheck`、`build`、`evaluate`、`db:migrate` | `true` |
 | `contracts` | `packages/contracts` | `library` | Zod／TypeScript | npm workspace | `test`、`typecheck`、`build` | `false` |
 
-三個 workspace 共用根目錄 `package-lock.json`。輸入式個人檔案、可選帳號 session、活動理解確認、Air 日誌、MapLibre 路線介面、地點／路線 API、共用 schema、自動化測試、Web Demo、Coolify Compose 與 PostgreSQL migration 已完成；實際 VPS、真實外部 API 呼叫、Valhalla／Photon provider 與實體 Mobile 仍未完成驗證。
+三個 workspace 共用根目錄 `package-lock.json`。必要帳號 session、登入後的輸入式個人檔案、活動理解確認、Air 日誌、MapLibre 路線介面、地點／路線 API、共用 schema、自動化測試、Web Demo、Coolify Compose 與 PostgreSQL migration 已完成；實際 VPS、真實外部 API 呼叫、Valhalla／Photon provider 與實體 Mobile 仍未完成驗證。
 
 ## 功能領域
 
@@ -81,4 +81,4 @@
 - Coolify preview、真實量界／政府 API 與完整 provenance 的端到端驗證
 - 團隊尚未指派 VPS／Coolify 發布、監控、備份與回滾負責人
 - `app/eas.json` 已提供 development、Android APK preview、Android App Bundle／iOS production archive profile；實際 EAS project、簽章、商店帳號與實機驗收仍待團隊帳號確認
-- 可選登入只提供最小 session 身份驗證；Email 驗證、密碼重設、MFA 與跨裝置個人資料同步仍涉及未成年人資料與身份驗證，尚未承諾
+- 必要登入目前只提供最小 session 身份驗證；Email 驗證、密碼重設、MFA 與跨裝置個人資料同步仍涉及未成年人資料與身份驗證，尚未承諾

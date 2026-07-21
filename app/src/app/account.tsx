@@ -1,4 +1,4 @@
-import { useRouter, type Href } from 'expo-router';
+import { Redirect, useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -17,6 +17,11 @@ export default function AccountScreen() {
   const palette = usePalette();
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  if (!app.hydrated) return null;
+  if (app.account && !app.local.onboardingCompleted) {
+    return <Redirect href={'/onboarding' as Href} />;
+  }
 
   if (app.account) {
     return (
@@ -78,10 +83,10 @@ export default function AccountScreen() {
             </AppText>
           </View>
           <AppText variant="display" weight="900">
-            安全登入，{`\n`}資料仍由你決定。
+            先登入，{`\n`}再建立你的 AirMe。
           </AppText>
           <AppText tone="muted">
-            帳號讓你能管理 AirMe 存取；不會自動把這台裝置上的敏感設定、活動或回饋同步到雲端。
+            建立帳號後才能使用 AirMe。接著會建立只保存在這台裝置的個人情境；敏感設定、活動與回饋不會自動同步到雲端。
           </AppText>
         </View>
         <AccountForm />

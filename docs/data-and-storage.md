@@ -8,8 +8,8 @@
 | 個人自我描述原稿 | 表單記憶體 | 結構化確認後丟棄，不寫 AsyncStorage、API、log 或 PostgreSQL |
 | Air 日誌 | 裝置端 | 最多 20 筆結構化活動、環境與建議摘要；不保存 currentCondition、完整活動文字或模型對話 |
 | 活動後回饋 | 裝置端 | 最多 50 筆，只保留是否進行、不舒服程度、建議是否有幫助、短註記與時間 |
-| 可選帳號 | PostgreSQL `accounts` | 小寫 Email、顯示名稱、scrypt password hash、隱私同意與建立時間；不包含裝置個人檔案或健康內容 |
-| 可選帳號 session | PostgreSQL `account_sessions` + 裝置 SecureStore | 伺服器只保存 HMAC token digest、到期與撤銷資訊；原始 token 只留在使用者裝置安全儲存 |
+| 必要帳號 | PostgreSQL `accounts` | 小寫 Email、顯示名稱、scrypt password hash、隱私同意與建立時間；不包含裝置個人檔案或健康內容 |
+| 必要帳號 session | PostgreSQL `account_sessions` + 裝置 SecureStore | 伺服器只保存 HMAC token digest、到期與撤銷資訊；原始 token 只留在使用者裝置安全儲存 |
 | 當次 recommendation request | API 記憶體 | 回應後不寫入資料庫或 log；送入量界前移除自訂地點名與座標 |
 | 當次 activity intent request | API 記憶體 | 回應後不寫入資料庫或 log；最多回一個澄清問題 |
 | 路線起點、終點、時間與方式 | 路線頁與 API request 記憶體 | 僅為當次地點搜尋／Valhalla 路線請求轉送；AirMe 不持久化、不建立軌跡；使用者主動開啟外部地圖時才另受該服務政策約束 |
@@ -19,7 +19,7 @@
 
 ## PostgreSQL 的用途與邊界
 
-使用 PostgreSQL 是為了讓 Coolify API container restart 後仍可重用公開環境資料快取、保存匿名技術事件，並提供最小化的可選帳號驗證。它不是個人健康資料庫，也不作為跨裝置個人資料同步資料庫。
+使用 PostgreSQL 是為了讓 Coolify API container restart 後仍可重用公開環境資料快取、保存匿名技術事件，並提供最小化的必要帳號驗證。它不是個人健康資料庫，也不作為跨裝置個人資料同步資料庫。
 
 - migration 是版本化 SQL，放在 `backend/database/migrations/`。
 - API 只使用 internal Compose network 連線；不對 Internet 公開 `5432`。

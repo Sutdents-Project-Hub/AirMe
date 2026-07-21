@@ -17,7 +17,7 @@ Expo 仍適合決賽的單一跨平台產品；Fastify 讓 API 在 VPS 容器中
 
 ### `app`
 
-- 唯一產品前端，負責淺綠白 UI、可選的 Email 帳號、輸入式裝置端個人檔案、Air 日誌、MapLibre 路線預覽、回饋與離線 fixture。
+- 唯一產品前端，負責淺綠白 UI、必要的 Email 帳號入口、登入後輸入式裝置端個人檔案、Air 日誌、MapLibre 路線預覽、回饋與離線 fixture。
 - Web image 以 Nginx 提供靜態輸出，並把 `/api/*` 反向代理到 API container。
 - 不持有 API key、資料庫帳密或任何伺服器端秘密。
 - 裝置暱稱、受控個人設定、回饋與日誌只保留在裝置端，不因登入而同步；個人描述原稿及路線起終點不持久化。session token 只放在 Expo SecureStore。
@@ -99,7 +99,7 @@ Web 的正式 build 以 `EXPO_PUBLIC_API_BASE_URL=/api` 產生。瀏覽器請求
 | `POST` | `/api/activity-intents` | 活動結構化理解、最多一個澄清問題與 AI／fixture provenance |
 | `POST` | `/api/recommendations` | 規則底線 + AI／fixture 行動卡 |
 | `POST` | `/api/follow-ups` | 原情境內追問；離題、醫療與緊急固定處理 |
-| `POST` | `/api/auth/register`、`/api/auth/login` | 建立或驗證可選帳號，回傳不透明 session token |
+| `POST` | `/api/auth/register`、`/api/auth/login` | 建立或驗證產品入口帳號，回傳不透明 session token |
 | `GET` | `/api/auth/session` | 驗證目前 session，不回傳 password hash |
 | `POST` | `/api/auth/logout` | 撤銷當前 session |
 | `DELETE` | `/api/auth/account` | 刪除帳號與所有 server session；不觸及裝置端資料 |

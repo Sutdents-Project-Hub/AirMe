@@ -21,7 +21,7 @@
 | R-09 | 可重播備援 | 沒有網路或外部服務時仍能展示完整流程，並清楚標示 fixture／非即時 AI |
 | R-10 | API 邊界 | 所有秘密與外部呼叫只在 Coolify API 後端，公開錯誤不含 provider 細節 |
 | R-11 | 開源路線規劃 | 起終點精確座標只存在當次 request；Live 使用自架 Valhalla／Photon，Demo 明確標示 fixture，MapLibre 僅預覽且可交接外部地圖 |
-| R-12 | 帳號與登入 | Email、顯示名稱、至少 12 字元密碼與明示同意可建立帳號；密碼只保存 scrypt verifier，session token 僅在裝置安全儲存與資料庫 HMAC digest 中出現 |
+| R-12 | 帳號與登入 | App／Web 首次進入必須先以 Email、顯示名稱、至少 12 字元密碼註冊或登入；密碼只保存 scrypt verifier，session token 僅在裝置安全儲存與資料庫 HMAC digest 中出現 |
 
 ## 安全與隱私需求
 

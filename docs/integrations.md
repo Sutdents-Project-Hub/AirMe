@@ -40,7 +40,7 @@
 - App 以 `POST /api/environment` 的 JSON body 傳送粗略地點，避免地點與座標出現在 reverse proxy access-log URL。
 - MOENV 失敗時只能使用可接受時效內的 stale MOENV AQI，否則整體改為 fixture；不把 fixture AQI 混成即時部分資料。CWA 失敗時先用 stale weather，沒有時才使用明示 fixture weather 的 partial 結果。
 - migration：`backend/database/migrations/`；由 `npm run db:migrate --workspace airme-api` 執行。
-- AirMe PostgreSQL 不保存：IP、裝置端個人設定、活動文字、症狀、回饋、完整 prompt、context token、模型回應或精確位置；可選帳號僅保存 Email、顯示名稱、password hash、同意／建立時間與 session token digest。外層 Coolify／VPS proxy 的連線 IP log 需另設保存政策。
+- AirMe PostgreSQL 不保存：IP、裝置端個人設定、活動文字、症狀、回饋、完整 prompt、context token、模型回應或精確位置；必要帳號僅保存 Email、顯示名稱、password hash、同意／建立時間與 session token digest。外層 Coolify／VPS proxy 的連線 IP log 需另設保存政策。
 - Compose 內部 service 名稱：`postgres`；資料 volume：`airme-postgres`。不公開資料庫 port。
 
 ## 路線、地點搜尋與地圖

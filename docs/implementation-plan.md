@@ -15,7 +15,7 @@
 - M2 本機完成、live 待驗證：MOENV／CWA adapter、來源時間、timeout、cache、partial／stale／fixture 降級已完成；PostgreSQL cache migration 已加入。
 - M3 完成：淺綠白設計系統、輸入式裝置個人檔案、活動理解確認／單一澄清、行動卡、限定追問、五秒回饋、整合 Air 日誌與 responsive Web 已完成。
 - M4 完成：30 個固定案例、安全錯誤路徑與離線示範 fixture 已完成；緊急狀況在離線 Demo 也會停止一般建議。
-- M4.1 完成：可選帳號 session（scrypt + token digest）、MapLibre 路線預覽、Valhalla／Photon adapter 與安全降級已完成；帳號不同步本機敏感資料，起終點不持久化。
+- M4.1 完成：必要帳號 session（scrypt + token digest）與登入入口、MapLibre 路線預覽、Valhalla／Photon adapter 與安全降級已完成；帳號不同步本機敏感資料，起終點不持久化。
 - M5 待執行：尚未取得 VPS／Coolify／量界／政府 API production 設定，沒有實體 mobile 或線上部署證據。
 
 ## 剩餘里程碑

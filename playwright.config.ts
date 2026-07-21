@@ -21,7 +21,7 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   webServer: {
-    command: `npm run build:web --workspace airme && node tests/e2e/static-server.mjs --port ${port}`,
+    command: `EXPO_PUBLIC_API_BASE_URL=/api npm run build:web --workspace airme && node tests/e2e/static-server.mjs --port ${port}`,
     url: baseURL,
     // A reused local server can belong to another project and turn an E2E run
     // into a false result. Always start the static export that this config built.

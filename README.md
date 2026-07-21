@@ -23,7 +23,7 @@ AirMe 讓使用者用自然語言描述想做的活動，再把 AQI、天氣、�
 ## 目前可操作的產品
 
 - 同一套 Expo App 支援 iOS、Android 與 Web。
-- 裝置端個人檔案與可選 AirMe 帳號：個人敏感條件、日誌與回饋預設留在裝置；帳號只保存 Email、顯示名稱、密碼 verifier、同意時間與登入工作階段，不會自動同步敏感資料。
+- AirMe 帳號是產品入口：完成 Email 註冊／登入後才建立裝置端個人檔案；個人敏感條件、日誌與回饋預設留在裝置，帳號不會自動同步敏感資料。
 - 自然語言活動輸入會先整理成活動、時間、地點、強度、時長與當下狀況，缺資料只問一個問題，使用者確認後才產生建議。
 - 環境部 AQI 與中央氣象署資料 adapter，保留來源、時間、新鮮度與降級狀態。
 - 量界智算 OpenAI 相容 `chat/completions` adapter，以 JSON object 產生固定格式行動卡。
@@ -105,7 +105,7 @@ npm run evaluate
 
 本次架構遷移實際驗證：
 
-- 共用契約、API 與 App 共 206 項自動化測試通過（12 + 138 + 56），涵蓋帳號 session、路線／地點 adapter 與 Web session 回歸。
+- 共用契約、API 與 App 共 207 項自動化測試通過（12 + 138 + 57），涵蓋帳號 session、強制登入入口、路線／地點 adapter 與 Web session 回歸。
 - 固定安全評估 30/30 通過。
 - `npm run lint`、三個 workspace typecheck、production Web build、安全評估 30/30 與 Playwright fixture E2E 已於本輪通過。
 - Node 22.22.3 下的 Playwright fixture E2E 已通過：首次設定、活動理解、行動卡、醫療與緊急邊界、回饋與 Air 日誌皆可在無後端時完成。
@@ -181,7 +181,7 @@ docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.loc
 
 ## 隱私與安全
 
-- 帳號只蒐集 Email、顯示名稱、經 scrypt 處理的密碼 verifier、同意時間與 session digest；不保存密碼明文。未登入也可使用裝置端個人檔案。
+- 帳號只蒐集 Email、顯示名稱、經 scrypt 處理的密碼 verifier、同意時間與 session digest；不保存密碼明文。登入是產品入口，但不等於同意同步裝置端健康內容。
 - 不蒐集姓名、學號、學校、聯絡方式、病歷或長期 GPS 軌跡；可選裝置暱稱只留在本機且不傳後端。
 - 新增地點持久化前四捨五入到小數二位（約公里級），API 為舊資料相容最多接受三位，且只接受臺灣服務範圍；後端只接收當次推論必要內容。
 - 個人設定、回饋、行動紀錄、路線輸入與完整活動文字不寫入 PostgreSQL。

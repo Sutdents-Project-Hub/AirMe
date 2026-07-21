@@ -27,6 +27,7 @@ export default function HomeScreen() {
       </View>
     );
   }
+  if (!app.account) return <Redirect href={'/account' as Href} />;
   if (!app.local.onboardingCompleted) return <Redirect href={'/onboarding' as Href} />;
 
   const submit = async (activityText: string, intent: Parameters<typeof app.createRecommendation>[1]) => {

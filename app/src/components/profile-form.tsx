@@ -176,7 +176,7 @@ export function ProfileForm({ onSubmit, submitting, initialName = '' }: ProfileF
           先建立這台裝置的個人檔案
         </AppText>
         <AppText variant="body-small" style={{ color: palette.text }}>
-          不需要 Email、密碼、學號或病歷。日後可自行建立帳號，但不會自動上傳這份設定或活動紀錄。
+          已登入 AirMe 帳號；這份設定與活動紀錄仍只保存在這台裝置，不會自動上傳。
         </AppText>
       </Card>
 

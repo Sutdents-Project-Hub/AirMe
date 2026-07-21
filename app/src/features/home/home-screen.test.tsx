@@ -7,7 +7,7 @@ import HomeScreen from '../../app/index';
 import { useApp } from '../../state/app-provider';
 
 vi.mock('expo-router', () => ({
-  Redirect: () => null,
+  Redirect: ({ href }: { href: string }) => <div>{`redirect:${href}`}</div>,
   usePathname: () => '/',
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
@@ -55,7 +55,12 @@ function createAppState(overrides: Record<string, unknown> = {}) {
     routeLoading: false,
     routeError: null,
     error: null,
-    account: null,
+    account: {
+      id: 'account_test',
+      displayName: '小空',
+      email: 'test@example.com',
+      createdAt: '2026-07-21T00:00:00.000Z',
+    },
     authBusy: false,
     registerAccount: vi.fn(),
     loginAccount: vi.fn(),
@@ -81,6 +86,14 @@ function appearsBefore(first: HTMLElement, second: HTMLElement) {
 }
 
 describe('HomeScreen recovery and responsive priority', () => {
+  it('sends unauthenticated visitors to the account entry flow', () => {
+    mockedUseApp.mockReturnValue(createAppState({ account: null }) as ReturnType<typeof useApp>);
+
+    render(<HomeScreen />);
+
+    expect(screen.getByText('redirect:/account')).toBeTruthy();
+  });
+
   it('places the activity composer before the environment card at 390px', () => {
     setViewport(390);
     mockedUseApp.mockReturnValue(createAppState() as ReturnType<typeof useApp>);
