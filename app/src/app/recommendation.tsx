@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { Redirect, useRouter, type Href } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
