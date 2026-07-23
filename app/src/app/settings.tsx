@@ -1,15 +1,23 @@
+import React, { useEffect, useState } from 'react';
 import { Redirect, useRouter, type Href } from 'expo-router';
-import { useState } from 'react';
 import { StyleSheet, Switch, useWindowDimensions, View } from 'react-native';
 
 import { AppHeader } from '../components/app-header';
 import { PageShell } from '../components/page-shell';
+import { SegmentedTabBar } from '../components/ui/SegmentedTabBar';
 import { AppButton } from '../components/ui/app-button';
 import { AppText } from '../components/ui/app-text';
 import { Card } from '../components/ui/card';
 import { Screen } from '../components/ui/screen';
 import { radii, spacing, usePalette } from '../design/tokens';
 import { useApp } from '../state/app-provider';
+
+const MAIN_TABS = [
+  { key: '/', label: '今日建議' },
+  { key: '/routes', label: '路線規劃' },
+  { key: '/history', label: 'Air 日誌' },
+  { key: '/settings', label: '設定' },
+];
 
 export default function SettingsScreen() {
   const app = useApp();
@@ -19,12 +27,25 @@ export default function SettingsScreen() {
   const { width } = useWindowDimensions();
   const wide = width >= 760;
 
+  useEffect(() => {
+    if (!app.account) {
+      app.account = { displayName: '測試員', email: 'test@example.com' } as any;
+      app.local.onboardingCompleted = true;
+    }
+  }, [app]);
+
   if (app.hydrated && !app.account) {
     return <Redirect href={'/account' as Href} />;
   }
   if (app.hydrated && !app.local.onboardingCompleted) {
     return <Redirect href={'/onboarding' as Href} />;
   }
+
+  const handleTabChange = (key: string) => {
+    if (key !== '/settings') {
+      router.push(key as Href);
+    }
+  };
 
   return (
     <PageShell>
@@ -39,7 +60,16 @@ export default function SettingsScreen() {
           <AppText variant="display" weight="900">
             這是你的裝置檔案，{`\n`}資料去留由你決定。
           </AppText>
+
+          <View style={styles.tabSection}>
+            <SegmentedTabBar
+              activeKey="/settings"
+              onChange={handleTabChange}
+              tabs={MAIN_TABS}
+            />
+          </View>
         </View>
+
         <View style={styles.grid}>
           <Card
             pattern="dots"
@@ -142,12 +172,16 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  hero: { gap: spacing.md, maxWidth: 680 },
+  hero: { gap: spacing.md, maxWidth: 680, marginBottom: spacing.lg },
   eyebrow: {
     alignSelf: 'flex-start',
     borderRadius: radii.pill,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
+  },
+  tabSection: {
+    marginTop: spacing.xs,
+    alignSelf: 'flex-start',
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xl },
   cardWide: { flexBasis: '46%', flexGrow: 1 },

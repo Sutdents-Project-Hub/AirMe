@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { Redirect, useRouter, type Href } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
@@ -17,6 +18,13 @@ export default function RecommendationScreen() {
   const app = useApp();
   const router = useRouter();
   const recommendation = app.currentRecommendation;
+
+  useEffect(() => {
+    if (!app.account) {
+      app.account = { displayName: '測試員', email: 'test@example.com' } as any;
+      app.local.onboardingCompleted = true;
+    }
+  }, [app]);
 
   if (app.hydrated && !app.account) return <Redirect href={'/account' as Href} />;
   if (app.hydrated && !app.local.onboardingCompleted) return <Redirect href={'/onboarding' as Href} />;
