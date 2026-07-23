@@ -11,6 +11,7 @@
 - 本機 Docker Compose project：`airme`；主要 `docker-compose.yml` 必須明確設定頂層 `name: airme`。
 - Coolify project：`airme`；Coolify services：`airme-web`、`airme-api`、`airme-postgres`。
 - Compose services 使用 `web`、`api`、`postgres`，不設定 `container_name`；容器名稱由 Compose project 與 service role 產生。
+- `docker-compose.yml`、`docker-compose.local.yml` 與可選 `docker-compose.maps.yml` 只供本機整合／維運驗證；Coolify production 使用 `app/Dockerfile`、`backend/Dockerfile` 與受管 PostgreSQL 的獨立 Resources。地圖服務若日後上線，也須各自建立受資源限制的 Resource，不得把本機 Compose 當正式入口。
 - 產品型態：`hybrid`
 - Bootstrap 模式：`executable`
 
@@ -126,6 +127,7 @@
 
 - 部署不是初始化的一部分；未經明確要求，不建立 Coolify／雲端資源、資料庫、DNS、bucket、secret、release 或 production 連線。
 - 有 `docs/deployment.md` 時以其為部署依據；設定尚未驗證時保持「尚未驗證」，不得複製其他專案的 port、domain、Docker 或 healthcheck。
+- 每個獨立 Coolify Resource 必須記錄自己的 base directory、Dockerfile、port、healthcheck、public／private route、build／runtime variables、備份與 rollback；production Compose 只有明確核准的例外才能使用。
 - 交接給學生前，確認 README 能說明目前能做什麼、如何啟動與驗證、已知限制、環境變數來源、部署狀態及下一步。
 
 ## 完成回報
