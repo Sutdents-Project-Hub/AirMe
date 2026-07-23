@@ -19,13 +19,6 @@ export default function RecommendationScreen() {
   const router = useRouter();
   const recommendation = app.currentRecommendation;
 
-  useEffect(() => {
-    if (!app.account) {
-      app.account = { displayName: '測試員', email: 'test@example.com' } as any;
-      app.local.onboardingCompleted = true;
-    }
-  }, [app]);
-
   if (app.hydrated && !app.account) return <Redirect href={'/account' as Href} />;
   if (app.hydrated && !app.local.onboardingCompleted) return <Redirect href={'/onboarding' as Href} />;
 

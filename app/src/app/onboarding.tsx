@@ -102,12 +102,6 @@ export default function OnboardingScreen() {
   const palette = usePalette();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!app.account) {
-      app.account = { displayName: '測試員', email: 'test@example.com' } as any;
-    }
-  }, [app]);
-
   if (!app.hydrated) return null;
   if (!app.account) return <Redirect href={'/account' as Href} />;
   if (app.local.onboardingCompleted) return <Redirect href={'/' as Href} />;

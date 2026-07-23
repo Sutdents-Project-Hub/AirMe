@@ -116,18 +116,21 @@ export default function AccountScreen() {
   const palette = usePalette();
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
+    useEffect(() => {
+
+    if (!app.account) {
+
+      app.account = { displayName: '測試員', email: 'test@example.com' } as any;
+
+      app.local.onboardingCompleted = true;
+
+    }
+
+  }, [app]);
 
   // 滑動與淡出動畫值
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
-
-  // 安全寫入測試資料
-  useEffect(() => {
-    if (!app.account) {
-      app.account = { displayName: '測試員', email: 'test@example.com' } as any;
-      app.local.onboardingCompleted = true;
-    }
-  }, [app]);
 
   // 觸發向左滑出 + 淡出動畫
   const triggerSlideLeft = (onComplete?: () => void) => {
