@@ -29,10 +29,23 @@ async function main(): Promise<void> {
   } finally {
     await store.close();
   }
-  process.stdout.write('AirMe database migration: complete.\n');
 }
 
-void main().catch((error: unknown) => {
-  process.stderr.write(`AirMe database migration failed [${migrationFailureCode(error)}].\n`);
-  process.exitCode = 1;
-});
+void main()
+  .then(
+    () =>
+      new Promise<void>((resolve) => {
+        process.stdout.write('AirMe database migration: complete.\n', () => resolve());
+      }),
+  )
+  .then(() => {
+    // pg can retain a DNS/network handle after Pool#end resolves. This command is a
+    // one-shot deployment step, so terminate only after the pool and stdout flush.
+    process.exit(0);
+  })
+  .catch((error: unknown) => {
+    process.stderr.write(
+      `AirMe database migration failed [${migrationFailureCode(error)}].\n`,
+      () => process.exit(1),
+    );
+  });
