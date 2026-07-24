@@ -161,7 +161,7 @@ export function RoutePlanner({
             <AppText weight="800">目前無法取得內嵌路線</AppText>
             <AppText>{routeError}</AppText>
             {origin && destination ? (
-              <AppButton label="改用外部地圖查看" onPress={() => void openExternalMap()} variant="secondary" />
+              <AppButton label="在外部地圖開啟導航" onPress={() => void openExternalMap()} />
             ) : null}
           </View>
         </Card>
@@ -180,20 +180,24 @@ export function RoutePlanner({
                 <AppText variant="title-small" weight="800">
                   選擇的方案
                 </AppText>
-                <AppText weight="800">
+                <AppText variant="title" weight="900">
                   {formatDistance(selectedRoute.distanceMeters)} · 約 {formatDuration(selectedRoute.durationSeconds)}
                 </AppText>
-                <AppText tone="muted">
-                  以上是路線引擎估算，不包含即時路況、交通班次或背景導航。
-                </AppText>
-                <View style={styles.steps}>
-                  {selectedRoute.steps.slice(0, 4).map((step, index) => (
-                    <AppText key={`${index}-${step.instruction}`} variant="body-small">
-                      {index + 1}. {step.instruction}
-                    </AppText>
-                  ))}
+                <View style={styles.timeline}>
+                  <View style={styles.timelineRow}>
+                    <View style={[styles.timelineMarker, { backgroundColor: palette.success }]} />
+                    <View style={styles.timelineCopy}><AppText variant="caption" tone="muted">起點</AppText><AppText weight="800">{origin?.name}</AppText></View>
+                  </View>
+                  <View style={[styles.timelineLine, { backgroundColor: palette.border }]} />
+                  <View style={styles.timelineRow}>
+                    <View style={[styles.timelineMarker, { backgroundColor: palette.destructive }]} />
+                    <View style={styles.timelineCopy}><AppText variant="caption" tone="muted">終點</AppText><AppText weight="800">{destination?.name}</AppText></View>
+                  </View>
                 </View>
-                <AppButton label="改用外部地圖導航" onPress={() => void openExternalMap()} variant="secondary" />
+                <AppButton label="在外部地圖開啟導航" onPress={() => void openExternalMap()} />
+                <AppText variant="caption" tone="muted" style={styles.disclaimer}>
+                  AirMe 決賽示範資料；距離與時間為路線引擎估算，不含即時路況、交通班次或背景導航。
+                </AppText>
               </View>
             </Card>
           ) : null}
@@ -313,5 +317,10 @@ const styles = StyleSheet.create({
   alert: { gap: spacing.sm },
   results: { gap: spacing.lg },
   summary: { gap: spacing.sm },
-  steps: { gap: spacing.xs },
+  timeline: { gap: spacing.xs, paddingVertical: spacing.sm },
+  timelineRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
+  timelineMarker: { borderRadius: 999, height: 16, marginHorizontal: 4, width: 16 },
+  timelineCopy: { gap: 2 },
+  timelineLine: { height: 28, marginLeft: 12, width: 2 },
+  disclaimer: { marginTop: spacing.xs },
 });

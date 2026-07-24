@@ -31,11 +31,23 @@ export function ActivityComposer({
   const [value, setValue] = useState(initialValue);
   const [understanding, setUnderstanding] = useState<ActivityIntentResponse | null>(null);
   const [clarification, setClarification] = useState('');
+  const [supplements, setSupplements] = useState<string[]>([]);
+  const [addingSupplement, setAddingSupplement] = useState(false);
   const trimmed = value.trim();
 
-  const understand = async (nextValue = trimmed) => {
+  const buildActivityText = (extra: string[] = supplements) =>
+    [trimmed, ...extra.map((item) => `補充：${item}`)].filter(Boolean).join('\n');
+  const clarificationPlaceholder = getClarificationPlaceholder(
+    understanding?.clarificationQuestion,
+    addingSupplement,
+  );
+
+  const understand = async (nextValue = buildActivityText()) => {
     const result = await onUnderstand(nextValue);
-    if (result) setUnderstanding(result);
+    if (result) {
+      setUnderstanding(result);
+      setAddingSupplement(false);
+    }
   };
 
   if (understanding) {
@@ -70,16 +82,20 @@ export function ActivityComposer({
           <IntentRow label="當下狀況" value={intent.currentCondition ?? '未提及'} />
         </View>
 
-        {understanding.clarificationQuestion ? (
+        {understanding.clarificationQuestion || addingSupplement ? (
           <View style={[styles.clarification, { backgroundColor: palette.warningSoft }]}>
-            <AppText weight="800">只需要再確認一件事</AppText>
-            <AppText>{understanding.clarificationQuestion}</AppText>
+            <AppText weight="800">
+              {understanding.clarificationQuestion ? '只需要再確認一件事' : '補充更多活動資訊'}
+            </AppText>
+            <AppText>
+              {understanding.clarificationQuestion ?? '例如活動時長、強度、地點或當下狀況。'}
+            </AppText>
             <TextInput
               accessibilityLabel="補充活動資訊"
               editable={!loading}
               maxLength={160}
               onChangeText={setClarification}
-              placeholder="例如：大約 30 分鐘"
+              placeholder={clarificationPlaceholder}
               placeholderTextColor={palette.textMuted}
               style={[
                 styles.input,
@@ -90,10 +106,11 @@ export function ActivityComposer({
             <AppButton
               label={loading ? '正在重新整理' : '加入補充並重新整理'}
               onPress={async () => {
-                const combined = `${trimmed}；補充：${clarification.trim()}`;
-                setValue(combined);
+                const nextSupplements = [...supplements, clarification.trim()];
+                setSupplements(nextSupplements);
+                setClarification('');
                 setUnderstanding(null);
-                await understand(combined);
+                await understand(buildActivityText(nextSupplements));
               }}
               disabled={clarification.trim().length < 1}
               loading={loading}
@@ -101,10 +118,27 @@ export function ActivityComposer({
           </View>
         ) : (
           <View style={styles.actions}>
-            <AppButton label="返回修改" onPress={() => setUnderstanding(null)} variant="ghost" />
+            <AppButton
+              label="補充更多資訊"
+              onPress={() => {
+                setClarification('');
+                setAddingSupplement(true);
+              }}
+              variant="secondary"
+            />
+            <AppButton
+              label="修改活動描述"
+              onPress={() => {
+                setClarification('');
+                setSupplements([]);
+                setAddingSupplement(false);
+                setUnderstanding(null);
+              }}
+              variant="ghost"
+            />
             <AppButton
               label={loading ? '正在分析環境與活動' : '確認，產生我的行動卡'}
-              onPress={() => onSubmit(trimmed, intent)}
+              onPress={() => onSubmit(buildActivityText(), intent)}
               loading={loading}
             />
           </View>
@@ -173,6 +207,20 @@ function IntentRow({ label, value }: { label: string; value: string }) {
       </AppText>
     </View>
   );
+}
+
+function getClarificationPlaceholder(question: string | undefined, addingSupplement: boolean) {
+  if (addingSupplement && !question) return '例如：我想改在學校體育館，活動約 20 分鐘';
+  const prompt = question ?? '';
+  if (/哪一種活動|什麼活動|活動種類|活動類型|要做什麼/iu.test(prompt)) {
+    return '例如：慢跑、快走、騎單車或籃球';
+  }
+  if (/多久|持續|時長|幾分|分鐘|幾小時/iu.test(prompt)) return '例如：大約 30 分鐘';
+  if (/地點|哪裡|在哪|何處|哪個|場所/iu.test(prompt)) return '例如：在學校操場或室內體育館';
+  if (/強度|速度|激烈|多大|多快|全力/iu.test(prompt)) return '例如：低強度快走，不會全力跑';
+  if (/時間|何時|幾點|時候|日期|早上|下午|晚上/iu.test(prompt)) return '例如：今天下午四點';
+  if (/狀況|不舒服|感受/iu.test(question ?? '')) return '例如：目前只有輕微鼻塞，沒有其他不舒服';
+  return '例如：大約 30 分鐘，在室內進行';
 }
 
 const styles = StyleSheet.create({

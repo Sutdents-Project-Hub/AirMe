@@ -145,10 +145,12 @@ export function createLocalStore(storage: KeyValueStorage = AsyncStorage) {
     async addFeedback(item: Feedback): Promise<LocalState> {
       const current = await load();
       const parsed = FeedbackSchema.parse(item);
-      const feedback = [parsed, ...current.feedback.filter((entry) => entry.id !== parsed.id)].slice(
-        0,
-        50,
-      );
+      const feedback = [
+        parsed,
+        ...current.feedback.filter(
+          (entry) => entry.id !== parsed.id && entry.recommendationId !== parsed.recommendationId,
+        ),
+      ].slice(0, 50);
       return write({ ...current, feedback });
     },
     async clear(): Promise<LocalState> {

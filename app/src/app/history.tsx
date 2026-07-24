@@ -35,7 +35,11 @@ export default function HistoryScreen() {
             只保存去識別化摘要與主觀回饋，不宣稱環境與感受之間的醫療因果。
           </AppText>
         </View>
-        <HistoryList items={app.local.history} feedback={app.local.feedback} />
+        <HistoryList
+          items={app.local.history}
+          feedback={app.local.feedback}
+          onSubmitFeedback={app.submitFeedback}
+        />
       </Screen>
     </PageShell>
   );
