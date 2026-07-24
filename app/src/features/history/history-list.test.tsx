@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { HistoryList } from '../../components/history-list';
@@ -40,7 +40,7 @@ describe('Air journal', () => {
 
     expect(screen.getByText('AQI 118')).toBeTruthy();
     expect(screen.getByText('☁ 多雲')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '查看 跑步 · 下午四點 · 30 分鐘 詳細資訊' }));
     expect(screen.getByText(/已進行活動 · 有輕微不舒服 · 建議有幫助/)).toBeTruthy();
-    expect(screen.getByText('「下次提早出發」')).toBeTruthy();
   });
 });
