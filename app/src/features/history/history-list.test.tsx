@@ -9,6 +9,7 @@ describe('Air journal', () => {
   it('joins a recommendation snapshot with its local feedback', () => {
     render(
       <HistoryList
+        onSubmitFeedback={async () => undefined}
         items={[
           {
             id: 'req_1',
@@ -37,7 +38,8 @@ describe('Air journal', () => {
       />,
     );
 
-    expect(screen.getByText('AQI 118 · 多雲')).toBeTruthy();
+    expect(screen.getByText('AQI 118')).toBeTruthy();
+    expect(screen.getByText('☁ 多雲')).toBeTruthy();
     expect(screen.getByText(/已進行活動 · 有輕微不舒服 · 建議有幫助/)).toBeTruthy();
     expect(screen.getByText('「下次提早出發」')).toBeTruthy();
   });

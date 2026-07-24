@@ -38,7 +38,7 @@ export function ActivityComposer({
   const buildActivityText = (extra: string[] = supplements) =>
     [trimmed, ...extra.map((item) => `補充：${item}`)].filter(Boolean).join('\n');
   const clarificationPlaceholder = getClarificationPlaceholder(
-    understanding?.clarificationQuestion,
+    understanding?.clarificationQuestion ?? undefined,
     addingSupplement,
   );
 
