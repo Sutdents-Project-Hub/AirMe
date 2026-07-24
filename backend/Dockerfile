@@ -33,4 +33,4 @@ USER node
 EXPOSE 3000
 HEALTHCHECK --interval=15s --timeout=5s --start-period=90s --retries=5 \
   CMD wget -q -O /dev/null http://127.0.0.1:3000/api/health || exit 1
-CMD ["sh", "-c", "npm run db:migrate && node dist/src/server.js"]
+CMD ["sh", "-c", "node dist/src/database/migrate.js && exec node dist/src/server.js"]

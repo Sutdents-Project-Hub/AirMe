@@ -238,32 +238,36 @@ export class PostgresStore implements OperationalStore {
   }
 
   async migrate(): Promise<void> {
-    await this.pool.query(
-      `CREATE TABLE IF NOT EXISTS schema_migrations (
-        name TEXT PRIMARY KEY,
-        applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )`,
-    );
-    const migrationsDir = path.resolve(process.cwd(), 'database/migrations');
-    const migrations = (await readdir(migrationsDir)).filter((name) => name.endsWith('.sql')).sort();
+    const client = await this.pool.connect();
+    try {
+      // Fail rather than leave a deployment waiting indefinitely for a DDL lock.
+      await client.query("SET lock_timeout = '5s'");
+      await client.query(
+        `CREATE TABLE IF NOT EXISTS schema_migrations (
+          name TEXT PRIMARY KEY,
+          applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`,
+      );
+      const migrationsDir = path.resolve(process.cwd(), 'database/migrations');
+      const migrations = (await readdir(migrationsDir)).filter((name) => name.endsWith('.sql')).sort();
 
-    for (const name of migrations) {
-      const existing = await this.pool.query('SELECT 1 FROM schema_migrations WHERE name = $1', [name]);
-      if (existing.rowCount) continue;
+      for (const name of migrations) {
+        const existing = await client.query('SELECT 1 FROM schema_migrations WHERE name = $1', [name]);
+        if (existing.rowCount) continue;
 
-      const sql = await readFile(path.join(migrationsDir, name), 'utf8');
-      const client = await this.pool.connect();
-      try {
+        const sql = await readFile(path.join(migrationsDir, name), 'utf8');
         await client.query('BEGIN');
-        await client.query(sql);
-        await client.query('INSERT INTO schema_migrations (name) VALUES ($1)', [name]);
-        await client.query('COMMIT');
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      } finally {
-        client.release();
+        try {
+          await client.query(sql);
+          await client.query('INSERT INTO schema_migrations (name) VALUES ($1)', [name]);
+          await client.query('COMMIT');
+        } catch (error) {
+          await client.query('ROLLBACK').catch(() => undefined);
+          throw error;
+        }
       }
+    } finally {
+      client.release();
     }
   }
 
