@@ -1,12 +1,10 @@
 import type { FollowUpResponse } from '@airme/contracts';
 import { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { borders, radii, spacing, typography, usePalette } from '../design/tokens';
-import { AppButton } from './ui/app-button';
 import { AppText } from './ui/app-text';
 import { Card } from './ui/card';
-import { Chip } from './ui/chip';
 
 interface FollowUpPanelProps {
   onAsk: (question: string) => Promise<FollowUpResponse>;
@@ -62,36 +60,58 @@ export function FollowUpPanel({ onAsk }: FollowUpPanelProps) {
       </View>
       <View style={styles.starters}>
         {STARTERS.map((starter) => (
-          <Chip
+          <Pressable
             key={starter}
-            label={starter}
-            selected={question === starter}
+            accessibilityLabel={`快速提問：${starter}`}
+            accessibilityRole="button"
+            accessibilityState={{ selected: question === starter }}
             onPress={() => setQuestion(starter)}
-            accessibilityLabel={starter}
-          />
+            style={({ pressed }) => [
+              styles.quickPrompt,
+              {
+                backgroundColor: question === starter ? palette.accentSoft : palette.surface,
+                borderColor: question === starter ? palette.accent : palette.border,
+                opacity: pressed ? 0.74 : 1,
+              },
+            ]}>
+            <AppText variant="body-small" weight="700">
+              ＋ {starter}
+            </AppText>
+          </Pressable>
         ))}
       </View>
-      <TextInput
-        accessibilityLabel="針對這張行動卡追問"
-        editable={!loading}
-        maxLength={500}
-        onChangeText={setQuestion}
-        placeholder="例如：如果改成室內活動呢？"
-        placeholderTextColor={palette.textMuted}
-        style={[
-          styles.input,
-          { backgroundColor: palette.surface, borderColor: palette.ink, color: palette.text },
-        ]}
-        value={question}
-      />
-      <AppButton
-        label={loading ? '正在整理回覆' : '送出追問'}
-        accessibilityLabel={loading ? '正在整理回覆' : '送出追問'}
-        onPress={ask}
-        disabled={question.trim().length < 2}
-        loading={loading}
-        variant="secondary"
-      />
+      <View style={[styles.inputRow, { backgroundColor: palette.surface, borderColor: palette.ink }]}>
+        <TextInput
+          accessibilityLabel="針對這張行動卡追問"
+          editable={!loading}
+          maxLength={500}
+          onChangeText={setQuestion}
+          onSubmitEditing={() => void ask()}
+          placeholder="例如：如果改成室內活動呢？"
+          placeholderTextColor={palette.textMuted}
+          returnKeyType="send"
+          style={[styles.input, { color: palette.text }]}
+          value={question}
+        />
+        <Pressable
+          accessibilityLabel={loading ? '正在整理回覆' : '送出追問'}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: loading || question.trim().length < 2 }}
+          disabled={loading || question.trim().length < 2}
+          onPress={() => void ask()}
+          style={({ pressed }) => [
+            styles.sendButton,
+            {
+              backgroundColor: palette.primary,
+              opacity:
+                loading || question.trim().length < 2 ? 0.45 : pressed ? 0.74 : 1,
+            },
+          ]}>
+          <AppText weight="900" style={{ color: palette.onPrimary }}>
+            {loading ? '…' : '→'}
+          </AppText>
+        </Pressable>
+      </View>
       {response ? (
         <View
           accessibilityLiveRegion="polite"
@@ -130,14 +150,37 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   starters: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  input: {
+  quickPrompt: {
+    borderRadius: radii.pill,
+    borderWidth: borders.thin,
+    ...Platform.select({
+      web: { boxShadow: '0 3px 8px rgba(23,59,42,0.12)' },
+      default: { elevation: 2 },
+    }),
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  inputRow: {
+    alignItems: 'center',
     borderRadius: radii.md,
     borderWidth: borders.thick,
+    flexDirection: 'row',
+    minHeight: 56,
+    padding: spacing.xs,
+  },
+  input: {
+    flex: 1,
     fontFamily: typography.family,
     fontSize: typography.size.body,
-    minHeight: 48,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+  },
+  sendButton: {
+    alignItems: 'center',
+    borderRadius: radii.sm,
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
   },
   response: { borderRadius: radii.md, borderWidth: borders.thin, gap: spacing.sm, padding: spacing.lg },
 });

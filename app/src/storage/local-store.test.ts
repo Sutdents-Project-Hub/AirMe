@@ -52,7 +52,8 @@ describe('local store', () => {
 
     const state = await store.load();
 
-    expect(state.version).toBe(2);
+    expect(state.version).toBe(3);
+    expect(state.cloudAccountId).toBeNull();
     expect(state.history).toHaveLength(1);
     expect(state.deviceProfile).toBeNull();
   });
@@ -130,6 +131,36 @@ describe('local store', () => {
     expect(state.history).toHaveLength(20);
     expect(state.history[0].id).toBe('recommendation-21');
     expect(state.history.at(-1)?.id).toBe('recommendation-2');
+  });
+
+  it('replaces feedback for the same recommendation instead of keeping stale copies', async () => {
+    const store = createLocalStore(memoryStorage());
+    await store.addFeedback({
+      id: 'feedback-old',
+      recommendationId: 'recommendation-1',
+      completed: true,
+      discomfort: 'mild',
+      helpful: 'unsure',
+      createdAt: '2026-07-24T01:00:00.000Z',
+    });
+
+    const state = await store.addFeedback({
+      id: 'feedback-new',
+      recommendationId: 'recommendation-1',
+      completed: false,
+      discomfort: 'none',
+      helpful: 'yes',
+      note: '改在室內休息',
+      createdAt: '2026-07-24T02:00:00.000Z',
+    });
+
+    expect(state.feedback).toEqual([
+      expect.objectContaining({
+        id: 'feedback-new',
+        recommendationId: 'recommendation-1',
+        helpful: 'yes',
+      }),
+    ]);
   });
 
   it('clears all local personal state', async () => {

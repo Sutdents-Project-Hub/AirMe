@@ -1,0 +1,4 @@
+FROM maptiler/tileserver-gl:v5.6.0
+
+COPY docker/maps/tiles/config.json /config/config.json
+COPY docker/maps/tiles/styles/airme.json /config/styles/airme.json

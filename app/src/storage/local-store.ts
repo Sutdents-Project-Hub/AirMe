@@ -1,10 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
+  CloudDeviceProfileSchema,
+  CloudSyncStateSchema,
   FeedbackSchema,
   LocationSchema,
   ProfileSchema,
   RecommendationHistoryItemSchema,
   type Feedback,
+  type CloudSyncState,
   type Location,
   type Profile,
   type RecommendationHistoryItem,
@@ -13,11 +16,7 @@ import { z } from 'zod';
 
 const STORAGE_KEY = 'airme.local-state';
 
-const DeviceProfileSchema = z
-  .object({
-    displayName: z.string().trim().min(1).max(24),
-  })
-  .strict();
+const DeviceProfileSchema = CloudDeviceProfileSchema;
 
 export type DeviceProfile = z.infer<typeof DeviceProfileSchema>;
 
@@ -57,9 +56,23 @@ const LegacyLocalStateSchema = z
   })
   .strict();
 
-const LocalStateSchema = z
+const VersionTwoLocalStateSchema = z
   .object({
     version: z.literal(2),
+    deviceProfile: DeviceProfileSchema.nullable(),
+    profile: ProfileSchema.nullable(),
+    savedLocation: LocationSchema.nullable(),
+    onboardingCompleted: z.boolean(),
+    history: z.array(RecommendationHistoryItemSchema).max(20),
+    feedback: z.array(StoredFeedbackSchema).max(50),
+    demoMode: z.boolean(),
+  })
+  .strict();
+
+const LocalStateSchema = z
+  .object({
+    version: z.literal(3),
+    cloudAccountId: z.uuid().nullable(),
     deviceProfile: DeviceProfileSchema.nullable(),
     profile: ProfileSchema.nullable(),
     savedLocation: LocationSchema.nullable(),
@@ -73,7 +86,8 @@ const LocalStateSchema = z
 export type LocalState = z.infer<typeof LocalStateSchema>;
 
 export const DEFAULT_LOCAL_STATE: LocalState = {
-  version: 2,
+  version: 3,
+  cloudAccountId: null,
   deviceProfile: null,
   profile: null,
   savedLocation: null,
@@ -90,13 +104,35 @@ function freshDefault(): LocalState {
 function migrate(value: unknown): LocalState | null {
   const current = LocalStateSchema.safeParse(value);
   if (current.success) return current.data;
+  const versionTwo = VersionTwoLocalStateSchema.safeParse(value);
+  if (versionTwo.success) {
+    return LocalStateSchema.parse({ ...versionTwo.data, version: 3, cloudAccountId: null });
+  }
   const legacy = LegacyLocalStateSchema.safeParse(value);
   if (!legacy.success) return null;
   return LocalStateSchema.parse({
     ...legacy.data,
-    version: 2,
+    version: 3,
+    cloudAccountId: null,
     deviceProfile: null,
   });
+}
+
+export function toCloudSyncState(state: LocalState): CloudSyncState {
+  return CloudSyncStateSchema.parse({
+    version: 1,
+    deviceProfile: state.deviceProfile,
+    profile: state.profile,
+    savedLocation: state.savedLocation,
+    onboardingCompleted: state.onboardingCompleted,
+    history: state.history,
+    feedback: state.feedback,
+    demoMode: state.demoMode,
+  });
+}
+
+export function fromCloudSyncState(state: CloudSyncState, accountId: string): LocalState {
+  return LocalStateSchema.parse({ ...state, version: 3, cloudAccountId: accountId });
 }
 
 export function createLocalStore(storage: KeyValueStorage = AsyncStorage) {
@@ -118,6 +154,9 @@ export function createLocalStore(storage: KeyValueStorage = AsyncStorage) {
 
   return {
     load,
+    replace(state: LocalState): Promise<LocalState> {
+      return write(state);
+    },
     async saveProfile(profile: Profile, deviceProfile?: DeviceProfile): Promise<LocalState> {
       const current = await load();
       return write({
@@ -145,10 +184,13 @@ export function createLocalStore(storage: KeyValueStorage = AsyncStorage) {
     async addFeedback(item: Feedback): Promise<LocalState> {
       const current = await load();
       const parsed = FeedbackSchema.parse(item);
-      const feedback = [parsed, ...current.feedback.filter((entry) => entry.id !== parsed.id)].slice(
-        0,
-        50,
-      );
+      const feedback = [
+        parsed,
+        ...current.feedback.filter(
+          (entry) =>
+            entry.id !== parsed.id && entry.recommendationId !== parsed.recommendationId,
+        ),
+      ].slice(0, 50);
       return write({ ...current, feedback });
     },
     async clear(): Promise<LocalState> {

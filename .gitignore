@@ -39,3 +39,4 @@ screenshots/
 recordings/
 /output/
 /.playwright-cli/
+/test-results/

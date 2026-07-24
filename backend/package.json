@@ -6,6 +6,7 @@
   "scripts": {
     "build": "npm run clean && tsc",
     "evaluate": "npm run build && node dist/src/evaluation/run-evaluation.js evaluation/cases.json",
+    "verify:ai-live": "npm run build && node --env-file-if-exists=.env.live.local dist/src/verification/live-ai-smoke.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "watch": "tsc -w",

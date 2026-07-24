@@ -32,7 +32,9 @@ import {
 } from '../demo/demo-fixture';
 import { parseActivityIntentLocally } from '../features/assistant/activity-intent';
 import {
+  fromCloudSyncState,
   localStore,
+  toCloudSyncState,
   type LocalState,
   type DeviceProfile,
   type createLocalStore,
@@ -42,6 +44,52 @@ import { authTokenStore, type AuthTokenStore } from '../storage/auth-session';
 import { buildRecommendationRequest, toHistoryItem } from './app-model';
 
 type LocalStore = ReturnType<typeof createLocalStore>;
+
+async function reconcileCloudState(input: {
+  api: AirMeApi;
+  store: LocalStore;
+  accessToken: string;
+  account: Account;
+  localState: LocalState;
+}): Promise<LocalState | null> {
+  let remote;
+  try {
+    remote = await input.api.getCloudState(input.accessToken);
+  } catch {
+    // Cloud sync is additive, but a failed request must never expose another account's local cache.
+    const safeLocal =
+      input.localState.cloudAccountId && input.localState.cloudAccountId !== input.account.id
+        ? {
+            ...DEFAULT_LOCAL_STATE,
+            cloudAccountId: input.account.id,
+            history: [],
+            feedback: [],
+          }
+        : { ...input.localState, cloudAccountId: input.account.id };
+    await input.store.replace(safeLocal);
+    return safeLocal;
+  }
+
+  if (remote.state) {
+    const restored = fromCloudSyncState(remote.state, input.account.id);
+    await input.store.replace(restored);
+    return restored;
+  }
+
+  if (input.localState.cloudAccountId === input.account.id && input.localState.onboardingCompleted) {
+    await input.api.saveCloudState(input.accessToken, toCloudSyncState(input.localState)).catch(() => undefined);
+    return input.localState;
+  }
+
+  const empty = {
+    ...DEFAULT_LOCAL_STATE,
+    cloudAccountId: input.account.id,
+    history: [],
+    feedback: [],
+  };
+  await input.store.replace(empty);
+  return empty;
+}
 
 interface AppContextValue {
   local: LocalState;
@@ -99,8 +147,10 @@ export function AppProvider({
     let active = true;
 
     const hydrate = async () => {
+      let loadedState = DEFAULT_LOCAL_STATE;
       try {
         const state = await store.load();
+        loadedState = state;
         if (!active) return;
         setLocal(state);
         if (state.demoMode && state.savedLocation) {
@@ -120,6 +170,18 @@ export function AppProvider({
             const session = await api.getSession(token);
             if (!active) return;
             setAccount(session.account);
+            const restored = await reconcileCloudState({
+              api,
+              store,
+              accessToken: token,
+              account: session.account,
+              localState: loadedState,
+            });
+            if (!active || !restored) return;
+            setLocal(restored);
+            if (restored.demoMode && restored.savedLocation) {
+              setEnvironment({ ...DEMO_ENVIRONMENT, location: restored.savedLocation });
+            }
           } catch {
             await tokenStore.clear().catch(() => undefined);
           }
@@ -137,6 +199,17 @@ export function AppProvider({
     };
   }, [api, store, tokenStore]);
 
+  const syncCloudState = async (state: LocalState) => {
+    if (!account || state.cloudAccountId !== account.id) return;
+    const token = await tokenStore.load().catch(() => null);
+    if (!token) return;
+    try {
+      await api.saveCloudState(token, toCloudSyncState(state));
+    } catch {
+      setError('雲端同步暫時失敗，這台裝置上的資料仍已保存。');
+    }
+  };
+
   const saveOnboarding = async (profile: Profile, location: Location, deviceProfile: DeviceProfile) => {
     setBusy(true);
     setError(null);
@@ -145,6 +218,7 @@ export function AppProvider({
       const state = await store.setSavedLocation(location);
       setLocal(state);
       if (state.demoMode) setEnvironment({ ...DEMO_ENVIRONMENT, location });
+      await syncCloudState(state);
     } finally {
       setBusy(false);
     }
@@ -207,6 +281,7 @@ export function AppProvider({
         toHistoryItem(response, intent, local.savedLocation),
       );
       setLocal(state);
+      await syncCloudState(state);
       return response;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : '行動卡產生失敗。');
@@ -230,6 +305,7 @@ export function AppProvider({
       createdAt: new Date().toISOString(),
     });
     setLocal(state);
+    await syncCloudState(state);
   };
 
   const setDemoMode = async (value: boolean) => {
@@ -242,21 +318,44 @@ export function AppProvider({
           : null,
       );
       setError(null);
+      await syncCloudState(state);
     } catch {
       setError('無法儲存示範模式設定，請稍後再試。');
     }
   };
 
   const clearAll = async () => {
-    setLocal(await store.clear());
+    const state = {
+      ...DEFAULT_LOCAL_STATE,
+      cloudAccountId: account?.id ?? null,
+      history: [],
+      feedback: [],
+    };
+    await store.replace(state);
+    setLocal(state);
     setEnvironment(null);
     setCurrentRecommendation(null);
     setError(null);
+    await syncCloudState(state);
   };
 
   const persistSession = async (session: { accessToken: string; account: Account }) => {
     await tokenStore.save(session.accessToken);
     setAccount(session.account);
+    const restored = await reconcileCloudState({
+      api,
+      store,
+      accessToken: session.accessToken,
+      account: session.account,
+      localState: local,
+    });
+    if (!restored) return;
+    setLocal(restored);
+    if (restored.demoMode && restored.savedLocation) {
+      setEnvironment({ ...DEMO_ENVIRONMENT, location: restored.savedLocation });
+    } else {
+      setEnvironment(null);
+    }
   };
 
   const registerAccount = async (input: RegisterRequest) => {
@@ -310,6 +409,9 @@ export function AppProvider({
       await api.deleteAccount(token);
       await tokenStore.clear();
       setAccount(null);
+      setLocal(await store.clear());
+      setEnvironment(null);
+      setCurrentRecommendation(null);
       return true;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : '無法刪除帳號。');

@@ -6,6 +6,8 @@ services:
       MOENV_API_KEY: ""
       CWA_API_KEY: ""
       ALLOWED_ORIGINS: http://localhost:8080
+    ports:
+      - "3000:3000"
 
   web:
     ports:

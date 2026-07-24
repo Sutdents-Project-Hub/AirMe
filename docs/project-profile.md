@@ -10,7 +10,7 @@
 - Project slug：`airme`
 - Local Docker Compose project：`airme`
 - Coolify project：`airme`
-- Coolify services：`airme-web`、`airme-api`、`airme-postgres`
+- Coolify Resources：`airme-web`、`airme-api`、`airme-postgres`
 - Stage：`competition`
 - Product type：`hybrid`
 - Bootstrap mode：`executable`
@@ -35,7 +35,7 @@
 | `api` | `backend` | `backend` | Node.js／Fastify | npm workspace | `test`、`typecheck`、`build`、`evaluate`、`db:migrate` | `true` |
 | `contracts` | `packages/contracts` | `library` | Zod／TypeScript | npm workspace | `test`、`typecheck`、`build` | `false` |
 
-三個 workspace 共用根目錄 `package-lock.json`。必要帳號 session、登入後的輸入式個人檔案、活動理解確認、Air 日誌、MapLibre 路線介面、地點／路線 API、共用 schema、自動化測試、Web Demo、Coolify Compose 與 PostgreSQL migration 已完成；實際 VPS、真實外部 API 呼叫、Valhalla／Photon provider 與實體 Mobile 仍未完成驗證。
+三個 workspace 共用根目錄 `package-lock.json`。必要帳號 session、登入後的輸入式個人檔案、活動理解確認、Air 日誌、MapLibre 路線介面、地點／路線 API、可選自架地圖 Compose overlay、共用 schema、自動化測試、Web Demo、三個 Coolify Resource 的 Dockerfile 部署契約與 PostgreSQL migration 已完成；實際 VPS、真實外部 API 呼叫、已建立圖資的 Valhalla／Photon／TileServer GL 與實體 Mobile 仍未完成驗證。
 
 ## 功能領域
 
@@ -71,7 +71,7 @@
 
 - 採用 React Native、Expo Router 與 TypeScript，以單一前端專案輸出 iOS、Android 與 Web
 - 後端採 Fastify、Node.js 22 與 TypeScript，所有外部 API 與 AI 呼叫皆經後端
-- 決賽 P0 不包含班級統計、教師工作台、個人資料雲端同步、完整 turn-by-turn 導航、Line Bot、推播、Power BI 或健康中心串接
+- 決賽 P0 不包含班級統計、教師工作台、雲端完整對話／個人健康資料庫、完整 turn-by-turn 導航、Line Bot、推播、Power BI 或健康中心串接；已實作的是範圍受限的加密帳號同步
 - 已依使用者明確要求加入 MIT License；著作權標示為 `AirMe contributors`。政府資料、資料集、套件、字型與素材仍須依各自授權及競賽規則處理
 - Coolify、VPS、PostgreSQL 與量界智算為規劃部署目標；本機實作已完成，但尚未執行 production 部署
 

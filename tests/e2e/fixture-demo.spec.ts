@@ -72,7 +72,7 @@ test('fixture demo completes the personal air-safety journey without a backend',
   await page.getByRole('button', { name: '儲存活動回饋' }).click();
   await expect(page.getByText('回饋已保存在這台裝置')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Air 日誌' }).click();
+  await page.getByRole('tab', { name: 'Air 日誌' }).click();
   await expect(page).toHaveURL(/\/history$/);
   await expect(page.getByText('我的 Air 日誌')).toBeVisible();
   await expect(page.getByRole('heading', { name: '跑步 · 今天下午四點 · 30 分鐘' })).toBeVisible();

@@ -87,6 +87,18 @@ describe('client demo fixture', () => {
     }
   });
 
+  it('returns replayable answers for common in-scope follow-up intents', () => {
+    expect(createDemoFollowUp('多久後再確認 AQI？', 'req_time').answer).toContain(
+      '出發前再次確認',
+    );
+    expect(createDemoFollowUp('改成室內走路可以嗎？', 'req_indoor').answer).toContain(
+      '室內低強度走路',
+    );
+    expect(createDemoFollowUp('如果縮短並改成低強度活動呢？', 'req_low').answer).toContain(
+      '較短、較低強度',
+    );
+  });
+
   it('blocks injection, medical diagnosis, and unrelated requests before creating a demo card', () => {
     expect(() =>
       createDemoRecommendation({

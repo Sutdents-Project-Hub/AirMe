@@ -33,7 +33,8 @@ function setViewport(width: number) {
 function createAppState(overrides: Record<string, unknown> = {}) {
   return {
     local: {
-      version: 2 as const,
+      version: 3 as const,
+      cloudAccountId: null,
       deviceProfile: { displayName: '小空' },
       profile: {
         ageGroup: 'teen' as const,

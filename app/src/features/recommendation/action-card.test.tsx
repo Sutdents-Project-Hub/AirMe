@@ -67,4 +67,19 @@ describe('ActionCard', () => {
       expect(screen.getByLabelText(`建議方案：${label}`)).toBeTruthy();
     }
   });
+
+  it('stacks the headline and a smaller AQI orb on narrow screens', () => {
+    Object.defineProperty(document.documentElement, 'clientWidth', {
+      configurable: true,
+      value: 360,
+    });
+    window.dispatchEvent(new Event('resize'));
+
+    render(<ActionCard recommendation={recommendation} />);
+
+    expect(getComputedStyle(screen.getByTestId('action-card-summary')).flexDirection).toBe(
+      'column',
+    );
+    expect(screen.getByLabelText('AQI 118')).toBeTruthy();
+  });
 });

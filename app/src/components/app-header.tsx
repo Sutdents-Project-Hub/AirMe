@@ -1,8 +1,9 @@
-import { usePathname, useRouter, type Href } from 'expo-router';
-import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { usePathname, type Href } from 'expo-router';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { borders, radii, shadows, spacing, usePalette } from '../design/tokens';
 import { AppText } from './ui/app-text';
+import { SegmentedTabBar } from './ui/segmented-tab-bar';
 
 const NAV_ITEMS = [
   { href: '/' as Href, label: '今日' },
@@ -14,12 +15,11 @@ const NAV_ITEMS = [
 export function AppHeader({ demoMode }: { demoMode: boolean }) {
   const palette = usePalette();
   const pathname = usePathname();
-  const router = useRouter();
   const { width } = useWindowDimensions();
   const desktop = width >= 900;
 
   return (
-      <View style={[styles.header, { borderBottomColor: palette.ink }]}>
+    <View style={[styles.header, { borderBottomColor: palette.ink }]}>
       <View style={styles.brand}>
         <View
           style={[
@@ -45,29 +45,11 @@ export function AppHeader({ demoMode }: { demoMode: boolean }) {
           accessibilityLabel="主要導覽"
           role="navigation"
           style={styles.navigation}>
-          {NAV_ITEMS.map((item) => {
-            const selected = pathname === item.href;
-            return (
-              <Pressable
-                key={String(item.href)}
-                accessibilityLabel={item.label}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                onPress={() => router.replace(item.href)}
-                style={({ pressed }) => [
-                  styles.navItem,
-                  {
-                    backgroundColor: selected ? palette.accentSoft : 'transparent',
-                    borderColor: 'transparent',
-                    opacity: pressed ? 0.68 : 1,
-                  },
-                ]}>
-                <AppText variant="body-small" weight="800">
-                  {item.label}
-                </AppText>
-              </Pressable>
-            );
-          })}
+          <SegmentedTabBar
+            accessibilityLabel="主要分頁"
+            activeHref={pathname}
+            items={NAV_ITEMS}
+          />
         </View>
       ) : null}
       <View
@@ -120,17 +102,6 @@ const styles = StyleSheet.create({
   navigation: {
     alignItems: 'center',
     flex: 1,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    justifyContent: 'center',
-  },
-  navItem: {
-    borderRadius: radii.pill,
-    borderWidth: borders.thin,
-    flexShrink: 0,
-    minHeight: 44,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
     justifyContent: 'center',
   },
   mode: {

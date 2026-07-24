@@ -1,0 +1,24 @@
+{
+  "options": {
+    "paths": {
+      "root": "/",
+      "styles": "config/styles",
+      "mbtiles": "data"
+    },
+    "serveAllFonts": false,
+    "serveAllStyles": false,
+    "serveStaticMaps": false
+  },
+  "styles": {
+    "airme": {
+      "style": "airme.json",
+      "serve_data": true,
+      "serve_rendered": false
+    }
+  },
+  "data": {
+    "airme": {
+      "mbtiles": "taiwan.mbtiles"
+    }
+  }
+}

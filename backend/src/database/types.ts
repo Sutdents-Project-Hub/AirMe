@@ -19,6 +19,13 @@ export interface StoredSession {
   expiresAt: Date;
 }
 
+export interface EncryptedAccountCloudState {
+  ciphertext: Buffer;
+  iv: Buffer;
+  authTag: Buffer;
+  updatedAt: Date;
+}
+
 export interface OperationalStore {
   getEnvironmentCache(cacheKey: string): Promise<EnvironmentCacheEntry | null>;
   setEnvironmentCache(
@@ -48,6 +55,13 @@ export interface OperationalStore {
   findSessionByTokenDigest(tokenDigest: string): Promise<StoredSession | null>;
   revokeSessionByTokenDigest(tokenDigest: string): Promise<void>;
   deleteAccount(accountId: string): Promise<void>;
+  getAccountCloudState(accountId: string): Promise<EncryptedAccountCloudState | null>;
+  setAccountCloudState(input: {
+    accountId: string;
+    ciphertext: Buffer;
+    iv: Buffer;
+    authTag: Buffer;
+  }): Promise<Date>;
   isHealthy(): Promise<boolean>;
   migrate(): Promise<void>;
   close(): Promise<void>;

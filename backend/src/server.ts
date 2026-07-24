@@ -56,16 +56,21 @@ export function createServer(input: {
     return sendResponse(response, reply);
   });
   const register = (
-    method: 'GET' | 'POST' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     path: string,
     handler: (request: ApiRequest) => Promise<HttpResponse>,
   ) => {
     server.route({
-      method: [method, 'OPTIONS'],
+      method,
       url: path,
       handler: async (request, reply) => sendResponse(await handler(toApiRequest(request)), reply),
     });
   };
+
+  server.options('/api/*', async (request, reply) => {
+    const headers = corsHeaders(toApiRequest(request), input.allowedOrigins ?? []);
+    return reply.code(204).headers(headers).send();
+  });
 
   register('GET', '/api/health', input.handlers.health);
   register('POST', '/api/environment', input.handlers.environment);
@@ -77,6 +82,8 @@ export function createServer(input: {
   register('GET', '/api/auth/session', input.handlers.session);
   register('POST', '/api/auth/logout', input.handlers.logout);
   register('DELETE', '/api/auth/account', input.handlers.deleteAccount);
+  register('GET', '/api/account/state', input.handlers.getCloudState);
+  register('PUT', '/api/account/state', input.handlers.saveCloudState);
   register('POST', '/api/routes', input.handlers.routes);
   register('POST', '/api/geocoding/search', input.handlers.geocodingSearch);
 

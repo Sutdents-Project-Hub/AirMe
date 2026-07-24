@@ -45,14 +45,14 @@ export default function AccountScreen() {
               </AppText>
               <AppText>{app.account.email}</AppText>
               <AppText tone="muted">
-                登入只管理此帳號；裝置上的個人檔案、Air 日誌與回饋仍維持本機保存，不會自動上傳。
+                個人檔案、Air 日誌摘要與回饋會先保存在這台裝置；後端啟用同步後，會以 AES-256-GCM 加密與此帳號同步。完整活動文字、追問與路線不會上傳。
               </AppText>
               <AppButton label="回到我的 AirMe" onPress={() => router.replace('/settings' as Href)} />
               <AppButton label="登出這台裝置" onPress={() => void app.logout()} variant="secondary" loading={app.authBusy} />
               {confirmDelete ? (
                 <View style={styles.stack}>
                   <AppText tone="danger" weight="800">
-                    刪除後無法復原帳號與登入工作階段；這台裝置的本機資料不會自動清除。
+                    刪除後無法復原帳號、登入工作階段與加密雲端資料；這台裝置上的同步資料也會一併清除。
                   </AppText>
                   <AppButton
                     label="確認刪除 AirMe 帳號"
@@ -86,7 +86,7 @@ export default function AccountScreen() {
             先登入，{`\n`}再建立你的 AirMe。
           </AppText>
           <AppText tone="muted">
-            建立帳號後才能使用 AirMe。接著會建立只保存在這台裝置的個人情境；敏感設定、活動與回饋不會自動同步到雲端。
+            建立帳號後才能使用 AirMe。設定、粗略地點、日誌摘要與回饋會先留在裝置；後端啟用同步後才會加密儲存在雲端。完整活動文字、追問與路線不會同步。
           </AppText>
         </View>
         <AccountForm />

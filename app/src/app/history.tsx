@@ -1,4 +1,4 @@
-import { Redirect, type Href } from 'expo-router';
+import { Redirect, type Href, useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { AppHeader } from '../components/app-header';
@@ -12,6 +12,7 @@ import { useApp } from '../state/app-provider';
 export default function HistoryScreen() {
   const app = useApp();
   const palette = usePalette();
+  const router = useRouter();
   if (app.hydrated && !app.account) {
     return <Redirect href={'/account' as Href} />;
   }
@@ -32,10 +33,16 @@ export default function HistoryScreen() {
             活動、環境與感受，{`\n`}留成自己的脈絡。
           </AppText>
           <AppText tone="muted">
-            只保存去識別化摘要與主觀回饋，不宣稱環境與感受之間的醫療因果。
+            摘要與主觀回饋會先保存在這台裝置；後端啟用帳號同步時會加密同步。AirMe
+            不宣稱環境與感受之間的醫療因果。
           </AppText>
         </View>
-        <HistoryList items={app.local.history} feedback={app.local.feedback} />
+        <HistoryList
+          items={app.local.history}
+          feedback={app.local.feedback}
+          onCreateRecommendation={() => router.replace('/' as Href)}
+          onSubmitFeedback={app.submitFeedback}
+        />
       </Screen>
     </PageShell>
   );

@@ -87,7 +87,7 @@ export function AccountForm() {
                 {consented ? <AppText style={{ color: palette.onPrimary }}>✓</AppText> : null}
               </View>
               <AppText variant="body-small" style={styles.consentCopy}>
-                我同意 AirMe 保存 Email、顯示名稱、密碼雜湊與登入工作階段，用於帳號存取與安全維護。個人檔案、活動與回饋不會因登入自動同步。
+                我同意 AirMe 保存 Email、顯示名稱、密碼雜湊與登入工作階段，用於帳號存取與安全維護；啟用雲端同步的服務會加密保存受控個人設定、粗略地點、日誌摘要與回饋。完整活動文字、追問內容與路線不會同步。
               </AppText>
             </Pressable>
           ) : null}

@@ -11,6 +11,28 @@ import { Screen } from '../components/ui/screen';
 import { radii, spacing, usePalette } from '../design/tokens';
 import { useApp } from '../state/app-provider';
 
+const COMMUTE_LABEL = {
+  walk: '步行',
+  bike: '單車',
+  'public-transit': '大眾運輸',
+  car: '汽車',
+  scooter: '機車',
+} as const;
+
+function StatBadge({ label, value }: { label: string; value: string }) {
+  const palette = usePalette();
+  return (
+    <View
+      style={[
+        styles.statBadge,
+        { backgroundColor: palette.surface, borderColor: palette.border },
+      ]}>
+      <AppText variant="title-small" weight="900">{value}</AppText>
+      <AppText variant="caption" tone="muted">{label}</AppText>
+    </View>
+  );
+}
+
 export default function SettingsScreen() {
   const app = useApp();
   const palette = usePalette();
@@ -39,6 +61,21 @@ export default function SettingsScreen() {
           <AppText variant="display" weight="900">
             這是你的裝置檔案，{`\n`}資料去留由你決定。
           </AppText>
+          <View style={styles.stats}>
+            <StatBadge label="Air 日誌" value={`${app.local.history.length} 筆`} />
+            <StatBadge
+              label="敏感條件"
+              value={`${app.local.profile?.sensitiveConditions.length ?? 0} 項`}
+            />
+            <StatBadge
+              label="常用通勤"
+              value={
+                app.local.profile
+                  ? COMMUTE_LABEL[app.local.profile.commuteMode]
+                  : '尚未設定'
+              }
+            />
+          </View>
         </View>
         <View style={styles.grid}>
           <Card
@@ -52,6 +89,9 @@ export default function SettingsScreen() {
                 </AppText>
                 <AppText variant="body-small" tone="muted">
                   使用固定、可重播資料，不需要網路或 API 金鑰。畫面會一直清楚標示 DEMO。
+                </AppText>
+                <AppText variant="caption" weight="800" tone="accent">
+                  {app.local.demoMode ? '目前已開啟' : '目前已關閉'}
                 </AppText>
               </View>
               <Switch
@@ -98,7 +138,7 @@ export default function SettingsScreen() {
             <AppText>
               {`• 已登入：${app.account?.email ?? '帳號狀態載入中'}`}
             </AppText>
-            <AppText>• 個人檔案、日誌與回饋仍只在這台裝置，不會因登入自動同步。</AppText>
+            <AppText>• 個人檔案、日誌摘要與回饋先保存在這台裝置；啟用同步時會加密同步至目前帳號。</AppText>
             <AppText>• Live 模式只把當次推論必要內容送往 AirMe 後端。</AppText>
             <AppText>• AirMe 不做醫療診斷、不判定症狀原因，也不取代緊急協助。</AppText>
             <AppButton
@@ -143,6 +183,15 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   hero: { gap: spacing.md, maxWidth: 680 },
+  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  statBadge: {
+    borderRadius: radii.md,
+    borderWidth: 1,
+    gap: 2,
+    minWidth: 116,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
   eyebrow: {
     alignSelf: 'flex-start',
     borderRadius: radii.pill,

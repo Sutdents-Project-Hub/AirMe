@@ -16,11 +16,15 @@ RUN npm ci \
 
 COPY packages/contracts packages/contracts
 COPY app app
-ARG EXPO_PUBLIC_API_BASE_URL=/api
+ARG EXPO_PUBLIC_API_BASE_URL
 ARG EXPO_PUBLIC_API_TIMEOUT_MS=22000
+ARG EXPO_PUBLIC_MAP_STYLE_URL=
 ENV EXPO_PUBLIC_API_BASE_URL=$EXPO_PUBLIC_API_BASE_URL
 ENV EXPO_PUBLIC_API_TIMEOUT_MS=$EXPO_PUBLIC_API_TIMEOUT_MS
-RUN npm run build --workspace @airme/contracts && npm run build:web --workspace airme
+ENV EXPO_PUBLIC_MAP_STYLE_URL=$EXPO_PUBLIC_MAP_STYLE_URL
+RUN test -n "$EXPO_PUBLIC_API_BASE_URL" \
+  && npm run build --workspace @airme/contracts \
+  && npm run build:web --workspace airme
 
 FROM nginx:1.27-alpine
 

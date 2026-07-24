@@ -1,5 +1,7 @@
 import {
   ActivityIntentRequestSchema,
+  CloudStateResponseSchema,
+  CloudSyncStateSchema,
   LoginRequestSchema,
   RegisterRequestSchema,
   EnvironmentRequestSchema,
@@ -9,6 +11,8 @@ import {
   RouteRequestSchema,
   type ActivityIntentRequest,
   type ActivityIntentResponse,
+  type CloudStateResponse,
+  type CloudSyncState,
   type EnvironmentSnapshot,
   type FollowUpRequest,
   type FollowUpResponse,
@@ -46,6 +50,10 @@ interface ApiHandlerDependencies {
   getRoute?: (request: RouteRequest) => Promise<RouteResponse>;
   searchPlaces?: (request: GeocodingSearchRequest) => Promise<GeocodingSearchResponse>;
   auth?: Pick<AccountAuthService, 'register' | 'login' | 'getSession' | 'logout' | 'deleteAccount'>;
+  cloudState?: {
+    get(token: string | null): Promise<CloudStateResponse>;
+    save(token: string | null, state: CloudSyncState): Promise<CloudStateResponse>;
+  };
   isReady?: () => Promise<boolean>;
   requestId?: () => string;
 }
@@ -61,6 +69,8 @@ export interface ApiHandlers {
   session(request: ApiRequest): Promise<HttpResponse>;
   logout(request: ApiRequest): Promise<HttpResponse>;
   deleteAccount(request: ApiRequest): Promise<HttpResponse>;
+  getCloudState(request: ApiRequest): Promise<HttpResponse>;
+  saveCloudState(request: ApiRequest): Promise<HttpResponse>;
   routes(request: ApiRequest): Promise<HttpResponse>;
   geocodingSearch(request: ApiRequest): Promise<HttpResponse>;
 }
@@ -197,6 +207,16 @@ export function createApiHandlers(deps: ApiHandlerDependencies): ApiHandlers {
           headers,
         });
       }
+      if (message === 'CLOUD_SYNC_UNAVAILABLE') {
+        return errorResponse({
+          status: 503,
+          code: 'AUTH_UNAVAILABLE',
+          message: '雲端同步服務暫時無法使用，裝置上的資料不受影響。',
+          retryable: true,
+          requestId: id,
+          headers,
+        });
+      }
       return errorResponse({
         status: 500,
         code: 'INTERNAL_ERROR',
@@ -279,6 +299,24 @@ export function createApiHandlers(deps: ApiHandlerDependencies): ApiHandlers {
         if (!deps.auth) throw new AccountAuthError('unavailable');
         await deps.auth.deleteAccount(extractBearerToken(request.headers.get('authorization')));
         return jsonResponse(204, undefined, headers);
+      }),
+    getCloudState: (request) =>
+      execute(request, async (headers) => {
+        if (request.method.toUpperCase() !== 'GET') throw new ZodError([]);
+        if (!deps.cloudState) throw new Error('CLOUD_SYNC_UNAVAILABLE');
+        const response = await deps.cloudState.get(extractBearerToken(request.headers.get('authorization')));
+        return jsonResponse(200, CloudStateResponseSchema.parse(response), headers);
+      }),
+    saveCloudState: (request) =>
+      execute(request, async (headers) => {
+        if (request.method.toUpperCase() !== 'PUT') throw new ZodError([]);
+        if (!deps.cloudState) throw new Error('CLOUD_SYNC_UNAVAILABLE');
+        const state = CloudSyncStateSchema.parse(await readJson(request));
+        const response = await deps.cloudState.save(
+          extractBearerToken(request.headers.get('authorization')),
+          state,
+        );
+        return jsonResponse(200, CloudStateResponseSchema.parse(response), headers);
       }),
     routes: (request) =>
       execute(request, async (headers) => {

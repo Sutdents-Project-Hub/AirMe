@@ -17,10 +17,12 @@ export interface ApiConfig {
   routingMaxConcurrency: number;
   moenvApiKey: string | null;
   cwaApiKey: string | null;
+  openMeteoFallbackEnabled: boolean;
   liangjieAiBaseUrl: string;
   liangjieAiModel: string | null;
   liangjieAiApiKey: string | null;
   liangjieAiJsonMode: 'auto' | 'enabled' | 'disabled';
+  cloudSyncEncryptionKey: string | null;
   databaseUrl: string | null;
   databaseRequired: boolean;
   host: string;
@@ -87,6 +89,19 @@ function readAuthSessionHmacSecret(
   throw new Error('AUTH_SESSION_HMAC_SECRET_REQUIRED');
 }
 
+function readCloudSyncEncryptionKey(env: NodeJS.ProcessEnv): string | null {
+  const configured = env.CLOUD_SYNC_ENCRYPTION_KEY?.trim();
+  if (!configured) return null;
+  try {
+    if (Buffer.from(configured, 'base64url').length !== 32) {
+      throw new Error('invalid key length');
+    }
+    return configured;
+  } catch {
+    throw new Error('CLOUD_SYNC_ENCRYPTION_KEY_INVALID');
+  }
+}
+
 export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   const aiMode = env.AI_MODE === 'live' ? 'live' : 'fixture';
   const databaseUrl = buildDatabaseUrl(env);
@@ -114,10 +129,12 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     routingMaxConcurrency: positiveInteger(env.ROUTING_MAX_CONCURRENCY, 4),
     moenvApiKey: env.MOENV_API_KEY?.trim() || null,
     cwaApiKey: env.CWA_API_KEY?.trim() || null,
+    openMeteoFallbackEnabled: readBoolean(env.OPEN_METEO_FALLBACK_ENABLED, true),
     liangjieAiBaseUrl: (env.LIANGJIE_AI_BASE_URL?.trim() || 'https://liangjiewis.com').replace(/\/$/, ''),
     liangjieAiModel: env.LIANGJIE_AI_MODEL?.trim() || null,
     liangjieAiApiKey: env.LIANGJIE_AI_API_KEY?.trim() || null,
     liangjieAiJsonMode: readJsonMode(env.LIANGJIE_AI_JSON_MODE),
+    cloudSyncEncryptionKey: readCloudSyncEncryptionKey(env),
     databaseUrl,
     databaseRequired: readBoolean(env.DATABASE_REQUIRED, aiMode === 'live'),
     host: env.HOST?.trim() || '0.0.0.0',

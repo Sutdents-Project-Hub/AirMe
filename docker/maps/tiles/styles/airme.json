@@ -1,0 +1,77 @@
+{
+  "version": 8,
+  "name": "AirMe Taiwan",
+  "sources": {
+    "airme": {
+      "type": "vector",
+      "url": "mbtiles://airme",
+      "attribution": "© OpenStreetMap contributors"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#edf5ed" }
+    },
+    {
+      "id": "landcover",
+      "type": "fill",
+      "source": "airme",
+      "source-layer": "landcover",
+      "paint": { "fill-color": "#dcefdc", "fill-opacity": 0.8 }
+    },
+    {
+      "id": "park",
+      "type": "fill",
+      "source": "airme",
+      "source-layer": "park",
+      "paint": { "fill-color": "#cae7c8", "fill-opacity": 0.86 }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "airme",
+      "source-layer": "water",
+      "paint": { "fill-color": "#b7dff1" }
+    },
+    {
+      "id": "waterway",
+      "type": "line",
+      "source": "airme",
+      "source-layer": "waterway",
+      "paint": { "line-color": "#8ec4df", "line-width": 1.2 }
+    },
+    {
+      "id": "building",
+      "type": "fill",
+      "source": "airme",
+      "source-layer": "building",
+      "minzoom": 12,
+      "paint": { "fill-color": "#e7e1d8", "fill-outline-color": "#d6cfc5", "fill-opacity": 0.9 }
+    },
+    {
+      "id": "roads",
+      "type": "line",
+      "source": "airme",
+      "source-layer": "transportation",
+      "paint": {
+        "line-color": [
+          "match",
+          ["get", "class"],
+          ["motorway", "trunk"], "#e9ad78",
+          ["primary", "secondary"], "#f0cf91",
+          "#ffffff"
+        ],
+        "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.7, 12, 2.5, 16, 6]
+      }
+    },
+    {
+      "id": "boundaries",
+      "type": "line",
+      "source": "airme",
+      "source-layer": "boundary",
+      "paint": { "line-color": "#9cb2a0", "line-dasharray": [2, 2], "line-width": 1 }
+    }
+  ]
+}

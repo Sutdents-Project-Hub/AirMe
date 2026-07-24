@@ -9,7 +9,8 @@ import { useMemo, useState } from 'react';
 import { Linking, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { borders, radii, spacing, typography, usePalette } from '../design/tokens';
-import { RouteMap, formatDistance, formatDuration } from './route-map';
+import { formatDistance, formatDuration } from './route-format';
+import { RouteMap } from './route-map';
 import { AppButton } from './ui/app-button';
 import { AppText } from './ui/app-text';
 import { Card } from './ui/card';
@@ -49,10 +50,24 @@ export function RoutePlanner({
   const [mode, setMode] = useState<RouteMode>('walking');
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const origin = chosenOrigin ?? defaultOrigin;
+  const routeMatchesSelection = Boolean(
+    route &&
+      origin &&
+      destination &&
+      route.mode === mode &&
+      route.origin.latitude === origin.latitude &&
+      route.origin.longitude === origin.longitude &&
+      route.destination.latitude === destination.latitude &&
+      route.destination.longitude === destination.longitude,
+  );
+  const activeRoute = routeMatchesSelection ? route : null;
 
   const selectedRoute = useMemo(
-    () => route?.alternatives.find((alternative) => alternative.id === selectedRouteId) ?? route?.alternatives[0] ?? null,
-    [route, selectedRouteId],
+    () =>
+      activeRoute?.alternatives.find((alternative) => alternative.id === selectedRouteId) ??
+      activeRoute?.alternatives[0] ??
+      null,
+    [activeRoute, selectedRouteId],
   );
   const canPlan = Boolean(origin && destination && !routeLoading);
   const aqi = environment?.airQuality.aqi;
@@ -62,15 +77,23 @@ export function RoutePlanner({
     await onPlanRoute({ origin, destination, mode });
   };
 
-  const openExternalMap = async () => {
-    if (!origin || !destination) return;
+  const openExternalMap = async (
+    selection: Pick<RouteResponse, 'origin' | 'destination' | 'mode'> | null = null,
+  ) => {
+    const targetOrigin = selection?.origin ?? origin;
+    const targetDestination = selection?.destination ?? destination;
+    const targetMode = selection?.mode ?? mode;
+    if (!targetOrigin || !targetDestination) return;
     const query = new URLSearchParams({
-      api: '1',
-      origin: `${origin.latitude},${origin.longitude}`,
-      destination: `${destination.latitude},${destination.longitude}`,
-      travelmode: mode === 'cycling' ? 'bicycling' : mode === 'walking' ? 'walking' : 'driving',
+      engine:
+        targetMode === 'cycling'
+          ? 'fossgis_osrm_bike'
+          : targetMode === 'walking'
+            ? 'fossgis_osrm_foot'
+            : 'fossgis_osrm_car',
+      route: `${targetOrigin.latitude},${targetOrigin.longitude};${targetDestination.latitude},${targetDestination.longitude}`,
     });
-    await Linking.openURL(`https://www.google.com/maps/dir/?${query.toString()}`);
+    await Linking.openURL(`https://www.openstreetmap.org/directions?${query.toString()}`);
   };
 
   return (
@@ -161,16 +184,16 @@ export function RoutePlanner({
             <AppText weight="800">目前無法取得內嵌路線</AppText>
             <AppText>{routeError}</AppText>
             {origin && destination ? (
-              <AppButton label="改用外部地圖查看" onPress={() => void openExternalMap()} variant="secondary" />
+              <AppButton label="在 OpenStreetMap 查看路線" onPress={() => void openExternalMap()} variant="secondary" />
             ) : null}
           </View>
         </Card>
       ) : null}
 
-      {route ? (
+      {activeRoute ? (
         <View style={styles.results}>
           <RouteMap
-            route={route}
+            route={activeRoute}
             selectedRouteId={selectedRoute?.id ?? null}
             onSelectRoute={setSelectedRouteId}
           />
@@ -180,9 +203,26 @@ export function RoutePlanner({
                 <AppText variant="title-small" weight="800">
                   選擇的方案
                 </AppText>
-                <AppText weight="800">
+                <AppText variant="title" weight="900">
                   {formatDistance(selectedRoute.distanceMeters)} · 約 {formatDuration(selectedRoute.durationSeconds)}
                 </AppText>
+                <View style={styles.timeline}>
+                  <View style={styles.timelineRow}>
+                    <View style={[styles.timelineMarker, { backgroundColor: palette.success }]} />
+                    <View style={styles.timelineCopy}>
+                      <AppText variant="caption" tone="muted">起點</AppText>
+                      <AppText weight="800">{activeRoute.origin.name}</AppText>
+                    </View>
+                  </View>
+                  <View style={[styles.timelineLine, { backgroundColor: palette.border }]} />
+                  <View style={styles.timelineRow}>
+                    <View style={[styles.timelineMarker, { backgroundColor: palette.destructive }]} />
+                    <View style={styles.timelineCopy}>
+                      <AppText variant="caption" tone="muted">終點</AppText>
+                      <AppText weight="800">{activeRoute.destination.name}</AppText>
+                    </View>
+                  </View>
+                </View>
                 <AppText tone="muted">
                   以上是路線引擎估算，不包含即時路況、交通班次或背景導航。
                 </AppText>
@@ -193,7 +233,14 @@ export function RoutePlanner({
                     </AppText>
                   ))}
                 </View>
-                <AppButton label="改用外部地圖導航" onPress={() => void openExternalMap()} variant="secondary" />
+                <AppButton
+                  label="在 OpenStreetMap 查看路線"
+                  onPress={() => void openExternalMap(activeRoute)}
+                  variant="secondary"
+                />
+                <AppText variant="caption" tone="muted">
+                  只有你主動開啟時，精確起終點才會交給 OpenStreetMap；AirMe 不會在背景傳送路線。
+                </AppText>
               </View>
             </Card>
           ) : null}
@@ -313,5 +360,10 @@ const styles = StyleSheet.create({
   alert: { gap: spacing.sm },
   results: { gap: spacing.lg },
   summary: { gap: spacing.sm },
+  timeline: { gap: spacing.xs, paddingVertical: spacing.sm },
+  timelineRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
+  timelineMarker: { borderRadius: radii.pill, height: 16, marginHorizontal: 4, width: 16 },
+  timelineCopy: { gap: 2 },
+  timelineLine: { height: 28, marginLeft: 12, width: 2 },
   steps: { gap: spacing.xs },
 });

@@ -1,0 +1,99 @@
+# Optional, self-hosted open map stack. Start it together with the base stack:
+# docker compose -f docker-compose.yml -f docker-compose.maps.yml --profile maps up -d --build
+#
+# `map-bootstrap` services are deliberately one-off commands. They download or
+# build large open datasets only when explicitly invoked; normal app startup
+# never starts them.
+services:
+  router:
+    image: ghcr.io/gis-ops/docker-valhalla/valhalla:latest
+    profiles: ["maps"]
+    environment:
+      # The image builds and persists Taiwan graph tiles in /custom_files on first start.
+      tile_urls: ${VALHALLA_TILE_URL:-https://download.geofabrik.de/asia/taiwan-latest.osm.pbf}
+      build_admins: "True"
+      build_time_zones: "True"
+      build_elevation: "True"
+      build_tar: "True"
+      server_threads: ${VALHALLA_SERVER_THREADS:-2}
+    volumes:
+      - airme-valhalla:/custom_files
+    expose:
+      - "8002"
+    restart: unless-stopped
+
+  geocoder:
+    build:
+      context: .
+      dockerfile: docker/maps/Dockerfile.photon
+    profiles: ["maps"]
+    environment:
+      PHOTON_JAR_URL: ${PHOTON_JAR_URL:-https://github.com/komoot/photon/releases/download/1.2.1/photon-1.2.1.jar}
+      PHOTON_JAVA_OPTIONS: ${PHOTON_JAVA_OPTIONS:--Xms512m -Xmx2g}
+    volumes:
+      - airme-photon:/data
+    expose:
+      - "2322"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS 'http://127.0.0.1:2322/api/?q=Taipei&limit=1' >/dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  tiles:
+    build:
+      context: .
+      dockerfile: docker/maps/Dockerfile.tiles
+    profiles: ["maps"]
+    command:
+      - --config
+      - /config/config.json
+      - --public_url
+      - ${MAP_PUBLIC_BASE_URL:-http://localhost:8080/maps/}
+    environment:
+      # Production must also set MAP_PUBLIC_BASE_URL to its canonical HTTPS URL.
+      TILESERVER_GL_ALLOWED_HOSTS: ${MAP_ALLOWED_HOSTS:-localhost}
+    volumes:
+      - airme-map-tiles:/data:ro
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  map-tiles-build:
+    image: ghcr.io/onthegomap/planetiler:latest
+    profiles: ["map-bootstrap"]
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx${MAP_TILE_BUILD_MAX_HEAP:-4g}
+    volumes:
+      - airme-map-tiles:/data
+    command:
+      - --download
+      - --area=taiwan
+      - --output=/data/taiwan.mbtiles
+      - --force
+
+  photon-bootstrap:
+    build:
+      context: .
+      dockerfile: docker/maps/Dockerfile.photon
+    profiles: ["map-bootstrap"]
+    command: ["bootstrap"]
+    environment:
+      PHOTON_JAR_URL: ${PHOTON_JAR_URL:-https://github.com/komoot/photon/releases/download/1.2.1/photon-1.2.1.jar}
+      # Intentionally blank by default: do not accidentally download a planet-wide index.
+      PHOTON_DATABASE_URL: ${PHOTON_DATABASE_URL:-}
+    volumes:
+      - airme-photon:/data
+
+  web:
+    build:
+      args:
+        # Web can use the same host through Nginx; native builds need an absolute public URL instead.
+        EXPO_PUBLIC_MAP_STYLE_URL: ${EXPO_PUBLIC_MAP_STYLE_URL:-/maps/styles/airme/style.json}
+
+volumes:
+  airme-valhalla:
+  airme-photon:
+  airme-map-tiles:

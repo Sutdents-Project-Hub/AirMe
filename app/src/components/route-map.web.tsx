@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { borders, radii, spacing, usePalette } from '../design/tokens';
+import { formatDistance, formatDuration } from './route-format';
 import { AppText } from './ui/app-text';
 import { Card } from './ui/card';
 
@@ -50,7 +51,6 @@ export function RouteMap({ route, selectedRouteId, onSelectRoute }: RouteMapProp
         if (cancelled || !containerRef.current) return;
 
         map = new maplibre.Map({
-          attributionControl: false,
           container: containerRef.current,
           maxZoom: 18,
           minZoom: 5,
@@ -313,20 +313,6 @@ function getBounds(route: RouteResponse): [[number, number], [number, number]] {
     [west - longitudePadding, south - latitudePadding],
     [east + longitudePadding, north + latitudePadding],
   ];
-}
-
-function formatDistance(distanceMeters: number) {
-  if (distanceMeters < 1_000) return `${Math.round(distanceMeters)} 公尺`;
-  const precision = distanceMeters >= 10_000 ? 1 : 2;
-  return `${(distanceMeters / 1_000).toFixed(precision)} 公里`;
-}
-
-function formatDuration(durationSeconds: number) {
-  const minutes = Math.max(1, Math.round(durationSeconds / 60));
-  if (minutes < 60) return `${minutes} 分鐘`;
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return remainingMinutes === 0 ? `${hours} 小時` : `${hours} 小時 ${remainingMinutes} 分鐘`;
 }
 
 const mapContainerStyle = {

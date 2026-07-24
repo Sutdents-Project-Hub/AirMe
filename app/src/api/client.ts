@@ -2,6 +2,8 @@ import {
   ActivityIntentResponseSchema,
   ApiErrorSchema,
   AuthSessionSchema,
+  CloudStateResponseSchema,
+  CloudSyncStateSchema,
   EnvironmentSnapshotSchema,
   FollowUpResponseSchema,
   GeocodingSearchResponseSchema,
@@ -9,6 +11,8 @@ import {
   RouteResponseSchema,
   SessionStatusSchema,
   type AuthSession,
+  type CloudStateResponse,
+  type CloudSyncState,
   type ActivityIntentRequest,
   type ActivityIntentResponse,
   type DataMode,
@@ -55,6 +59,8 @@ export interface AirMeApi {
   getSession(accessToken: string): Promise<SessionStatus>;
   logout(accessToken: string): Promise<void>;
   deleteAccount(accessToken: string): Promise<void>;
+  getCloudState(accessToken: string): Promise<CloudStateResponse>;
+  saveCloudState(accessToken: string, state: CloudSyncState): Promise<CloudStateResponse>;
   understandActivity(request: ActivityIntentRequest): Promise<ActivityIntentResponse>;
   getEnvironment(location: Location, mode: DataMode): Promise<EnvironmentSnapshot>;
   createRecommendation(request: RecommendationRequest): Promise<RecommendationResponse>;
@@ -185,6 +191,20 @@ export function createAirMeApi(options: AirMeApiOptions): AirMeApi {
     },
     deleteAccount(accessToken) {
       return callEmpty('auth/account', { method: 'DELETE', headers: bearer(accessToken) });
+    },
+    getCloudState(accessToken) {
+      return call('account/state', { method: 'GET', headers: bearer(accessToken) }, CloudStateResponseSchema);
+    },
+    saveCloudState(accessToken, state) {
+      return call(
+        'account/state',
+        {
+          method: 'PUT',
+          headers: { ...bearer(accessToken), 'content-type': 'application/json' },
+          body: JSON.stringify(CloudSyncStateSchema.parse(state)),
+        },
+        CloudStateResponseSchema,
+      );
     },
     understandActivity(request) {
       return call(

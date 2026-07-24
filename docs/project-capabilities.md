@@ -24,7 +24,7 @@
 
 - 環境部 `AQX_P_432` 與中央氣象署 `F-C0032-001` 的真實欄位、額度與 attribution。
 - 量界 OpenAI 相容 API、JSON mode、指定模型、額度、429 與延遲。
-- PostgreSQL container restart 後快取、Coolify healthcheck、同源 proxy、production volume 與正式 TLS；本機 migration 與 schema 已驗證。
+- PostgreSQL container restart 後快取、Coolify 三 Resource healthcheck、跨網域 CORS、production volume 與正式 TLS；本機 migration 與 schema 已驗證。
 - VPS backup、restore、監控、disk capacity 與防火牆。
 - iOS／Android 實體裝置與最終安裝包形式。
 - Coolify preview、真實量界／政府 API 與完整 provenance 的端到端驗證。

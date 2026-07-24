@@ -26,6 +26,19 @@ interface CacheEntry {
 }
 
 const CANONICAL_CACHE_LOCATION_NAME = 'AirMe 粗略位置';
+type EnvironmentProvider = EnvironmentSnapshot['sources'][number]['provider'];
+const AIR_QUALITY_PROVIDERS: ReadonlySet<EnvironmentProvider> = new Set([
+  'moenv',
+  'open-meteo-air-quality',
+]);
+const WEATHER_PROVIDERS: ReadonlySet<EnvironmentProvider> = new Set([
+  'cwa',
+  'open-meteo-weather',
+]);
+
+function hasModelledSource(snapshot: Pick<EnvironmentSnapshot, 'sources'>): boolean {
+  return snapshot.sources.some((source) => source.provider.startsWith('open-meteo-'));
+}
 
 function canonicalizeCachedSnapshot(snapshot: EnvironmentSnapshot): EnvironmentSnapshot {
   return {
@@ -46,9 +59,9 @@ function applyRequestLocation(
 
 function staleSource(
   snapshot: EnvironmentSnapshot,
-  provider: EnvironmentSnapshot['sources'][number]['provider'],
+  providers: ReadonlySet<EnvironmentProvider>,
 ): EnvironmentSnapshot['sources'][number] | null {
-  const source = snapshot.sources.find((item) => item.provider === provider);
+  const source = snapshot.sources.find((item) => providers.has(item.provider));
   return source ? { ...source, stale: true } : null;
 }
 
@@ -101,7 +114,10 @@ export class EnvironmentService {
         airQuality: airResult.value.value,
         weather: weatherResult.value.value,
         sources: [airResult.value.source, weatherResult.value.source],
-        provenance: hasStaleSource ? 'partial' : 'live',
+        provenance:
+          hasStaleSource || hasModelledSource({ sources: [airResult.value.source, weatherResult.value.source] })
+            ? 'partial'
+            : 'live',
       };
       const cachedSnapshot = canonicalizeCachedSnapshot(snapshot);
       const entry = { storedAt: nowMs, snapshot: cachedSnapshot };
@@ -127,7 +143,7 @@ export class EnvironmentService {
     if (airResult.status === 'rejected') {
       if (weatherResult.status !== 'fulfilled') return fixture;
       const cachedAirSource = usableStaleCache
-        ? staleSource(usableStaleCache.snapshot, 'moenv')
+        ? staleSource(usableStaleCache.snapshot, AIR_QUALITY_PROVIDERS)
         : null;
       if (!usableStaleCache || !cachedAirSource) return fixture;
 
@@ -141,7 +157,7 @@ export class EnvironmentService {
     }
 
     const cachedWeatherSource = usableStaleCache
-      ? staleSource(usableStaleCache.snapshot, 'cwa')
+      ? staleSource(usableStaleCache.snapshot, WEATHER_PROVIDERS)
       : null;
     if (usableStaleCache && cachedWeatherSource) {
       return {

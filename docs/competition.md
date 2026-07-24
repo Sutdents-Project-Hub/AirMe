@@ -29,12 +29,12 @@ Coolify／量界是 AirMe 的競賽展示部署路徑。決賽第一優先風險
 4. 快速切換到相同 AQI 的「一般學生短時間步行」對照，用差異證明 AI 不是 AQI 儀表板。
 5. 追問「如果改室內呢？」，再用一個離題／注入問題展示邊界，最後只用一張圖說明真實雲端 AI 路徑。
 
-3–5 分鐘版再加入五秒回饋、Air 日誌、必要帳號入口與路線安全降級。帳號、PostgreSQL 細節、完整隱私與安全測試留給問答或備用頁，不搶主流程時間。
+3–5 分鐘版再加入五秒回饋、可篩選／開啟詳情／更新回饋的 Air 日誌、必要帳號入口與路線安全降級。帳號、PostgreSQL 細節、完整隱私與安全測試留給問答或備用頁，不搶主流程時間。
 
 ## 目前 Demo 證據
 
-- 207 項自動化測試（12 契約 + 138 API + 57 App）、lint、三個 workspace typecheck、production static export、安全評估 30/30 與 Playwright fixture E2E 已於本輪通過。
-- 本機 `airme` Compose 的既有三服務與五個核心 API endpoint 已驗證；帳號 migration 與 live Valhalla／Photon 尚未在 VPS／Compose 實際部署。
+- 231 項自動化測試（12 契約 + 146 API + 73 App）、lint、三個 workspace typecheck、production static export、安全評估 30/30 與 Playwright fixture E2E 已於本輪通過。
+- Node 22 隔離 Compose 的三服務、帳號 migration、加密同步寫入／讀回／刪帳 cascade 已驗證；自架地圖 overlay 的 Compose 組態、Photon／TileServer GL image build 與空 MBTiles style endpoint 已驗證，但真實量界、政府 API、已建立圖資的 Valhalla／Photon／TileServer GL 與 VPS 尚未驗證。
 - 手機首屏已改為活動輸入優先，Live 錯誤可一鍵切換清楚標示的 Demo；實體手機仍待驗收。
 - 30 個固定 AI／安全案例 30/30。
 - 上述都是本機 fixture／mock 證據，不能替代真實量界 AI 概念驗證。

@@ -141,7 +141,13 @@ export const RecommendationRequestSchema = z
 
 export const EnvironmentSourceSchema = z
   .object({
-    provider: z.enum(['moenv', 'cwa', 'airme-fixture']),
+    provider: z.enum([
+      'moenv',
+      'cwa',
+      'open-meteo-air-quality',
+      'open-meteo-weather',
+      'airme-fixture',
+    ]),
     label: z.string().trim().min(1).max(100),
     url: z.url(),
     observedAt: z.iso.datetime(),
@@ -300,6 +306,37 @@ export const RecommendationHistoryItemSchema = z
   })
   .strict();
 
+/**
+ * The private account state that can be encrypted and synchronized across a
+ * signed-in user's devices. It deliberately excludes raw route coordinates,
+ * context tokens, provider errors, and full AI prompts/responses.
+ */
+export const CloudDeviceProfileSchema = z
+  .object({
+    displayName: z.string().trim().min(1).max(24),
+  })
+  .strict();
+
+export const CloudSyncStateSchema = z
+  .object({
+    version: z.literal(1),
+    deviceProfile: CloudDeviceProfileSchema.nullable(),
+    profile: ProfileSchema.nullable(),
+    savedLocation: LocationSchema.nullable(),
+    onboardingCompleted: z.boolean(),
+    history: z.array(RecommendationHistoryItemSchema).max(20),
+    feedback: z.array(FeedbackSchema).max(50),
+    demoMode: z.boolean(),
+  })
+  .strict();
+
+export const CloudStateResponseSchema = z
+  .object({
+    state: CloudSyncStateSchema.nullable(),
+    updatedAt: z.iso.datetime().nullable(),
+  })
+  .strict();
+
 export const AccountSchema = z
   .object({
     id: z.uuid(),
@@ -441,6 +478,9 @@ export type FollowUpResponse = z.infer<typeof FollowUpResponseSchema>;
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 export type ApiError = z.infer<typeof ApiErrorSchema>;
 export type Feedback = z.infer<typeof FeedbackSchema>;
+export type CloudDeviceProfile = z.infer<typeof CloudDeviceProfileSchema>;
+export type CloudSyncState = z.infer<typeof CloudSyncStateSchema>;
+export type CloudStateResponse = z.infer<typeof CloudStateResponseSchema>;
 export type RecommendationHistoryItem = z.infer<typeof RecommendationHistoryItemSchema>;
 export type Account = z.infer<typeof AccountSchema>;
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;

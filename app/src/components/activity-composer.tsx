@@ -21,6 +21,9 @@ const INTENSITY_LABEL: Record<ActivityIntent['intensity'], string> = {
   unspecified: '未明確提及',
 };
 
+const MAX_ACTIVITY_TEXT_LENGTH = 800;
+const MAX_SUPPLEMENT_LENGTH = 160;
+
 export function ActivityComposer({
   loading,
   onUnderstand,
@@ -31,11 +34,34 @@ export function ActivityComposer({
   const [value, setValue] = useState(initialValue);
   const [understanding, setUnderstanding] = useState<ActivityIntentResponse | null>(null);
   const [clarification, setClarification] = useState('');
+  const [supplements, setSupplements] = useState<string[]>([]);
+  const [addingSupplement, setAddingSupplement] = useState(false);
   const trimmed = value.trim();
 
-  const understand = async (nextValue = trimmed) => {
+  const buildActivityText = (extra: string[] = supplements) =>
+    [trimmed, ...extra.map((item) => `補充：${item.trim()}`)]
+      .filter(Boolean)
+      .join('\n');
+  const activityText = buildActivityText();
+  const nextSupplements = clarification.trim()
+    ? [...supplements, clarification.trim()]
+    : supplements;
+  const activityTextWithDraft = buildActivityText(nextSupplements);
+  const remainingWithDraft = MAX_ACTIVITY_TEXT_LENGTH - activityTextWithDraft.length;
+  const initialRemaining = MAX_ACTIVITY_TEXT_LENGTH - trimmed.length;
+  const clarificationPlaceholder = getClarificationPlaceholder(
+    understanding?.clarificationQuestion ?? undefined,
+    addingSupplement,
+  );
+
+  const understand = async (nextValue = activityText) => {
+    if (nextValue.length > MAX_ACTIVITY_TEXT_LENGTH) return null;
     const result = await onUnderstand(nextValue);
-    if (result) setUnderstanding(result);
+    if (result) {
+      setUnderstanding(result);
+      setAddingSupplement(false);
+    }
+    return result;
   };
 
   if (understanding) {
@@ -70,16 +96,21 @@ export function ActivityComposer({
           <IntentRow label="當下狀況" value={intent.currentCondition ?? '未提及'} />
         </View>
 
-        {understanding.clarificationQuestion ? (
+        {understanding.clarificationQuestion || addingSupplement ? (
           <View style={[styles.clarification, { backgroundColor: palette.warningSoft }]}>
-            <AppText weight="800">只需要再確認一件事</AppText>
-            <AppText>{understanding.clarificationQuestion}</AppText>
+            <AppText weight="800">
+              {understanding.clarificationQuestion ? '只需要再確認一件事' : '補充更多活動資訊'}
+            </AppText>
+            <AppText>
+              {understanding.clarificationQuestion ??
+                '例如活動時長、強度、地點或當下狀況。'}
+            </AppText>
             <TextInput
               accessibilityLabel="補充活動資訊"
               editable={!loading}
-              maxLength={160}
+              maxLength={MAX_SUPPLEMENT_LENGTH}
               onChangeText={setClarification}
-              placeholder="例如：大約 30 分鐘"
+              placeholder={clarificationPlaceholder}
               placeholderTextColor={palette.textMuted}
               style={[
                 styles.input,
@@ -87,24 +118,67 @@ export function ActivityComposer({
               ]}
               value={clarification}
             />
+            <AppText
+              accessibilityLiveRegion="polite"
+              variant="caption"
+              tone={remainingWithDraft < 0 ? 'danger' : 'muted'}>
+              {remainingWithDraft < 0
+                ? `補充後超過 800 字上限 ${Math.abs(remainingWithDraft)} 字，請縮短內容。`
+                : `補充後還可輸入 ${remainingWithDraft} 字。`}
+            </AppText>
             <AppButton
               label={loading ? '正在重新整理' : '加入補充並重新整理'}
               onPress={async () => {
-                const combined = `${trimmed}；補充：${clarification.trim()}`;
-                setValue(combined);
-                setUnderstanding(null);
-                await understand(combined);
+                if (
+                  clarification.trim().length < 1 ||
+                  activityTextWithDraft.length > MAX_ACTIVITY_TEXT_LENGTH
+                ) {
+                  return;
+                }
+                const result = await understand(activityTextWithDraft);
+                if (!result) return;
+                setSupplements(nextSupplements);
+                setClarification('');
               }}
-              disabled={clarification.trim().length < 1}
+              disabled={
+                clarification.trim().length < 1 ||
+                activityTextWithDraft.length > MAX_ACTIVITY_TEXT_LENGTH
+              }
               loading={loading}
             />
           </View>
         ) : (
           <View style={styles.actions}>
-            <AppButton label="返回修改" onPress={() => setUnderstanding(null)} variant="ghost" />
+            <AppText variant="caption" tone="muted">
+              目前活動內容共 {activityText.length} / {MAX_ACTIVITY_TEXT_LENGTH} 字
+            </AppText>
+            <AppButton
+              label="補充更多資訊"
+              onPress={() => {
+                setClarification('');
+                setAddingSupplement(true);
+              }}
+              variant="secondary"
+            />
+            <AppButton
+              label="修改活動描述"
+              onPress={() => {
+                setValue(activityText);
+                setClarification('');
+                setSupplements([]);
+                setAddingSupplement(false);
+                setUnderstanding(null);
+              }}
+              variant="ghost"
+            />
             <AppButton
               label={loading ? '正在分析環境與活動' : '確認，產生我的行動卡'}
-              onPress={() => onSubmit(trimmed, intent)}
+              onPress={() => {
+                if (activityText.length <= MAX_ACTIVITY_TEXT_LENGTH) {
+                  onSubmit(activityText, intent);
+                }
+              }}
+              disabled={activityText.length > MAX_ACTIVITY_TEXT_LENGTH}
               loading={loading}
             />
           </View>
@@ -131,7 +205,7 @@ export function ActivityComposer({
       <TextInput
         accessibilityLabel="描述你的活動"
         editable={!loading}
-        maxLength={800}
+        maxLength={MAX_ACTIVITY_TEXT_LENGTH}
         multiline
         onChangeText={setValue}
         placeholder="例如：今天下午四點想在操場全力跑 1600 公尺，大約 30 分鐘，鼻子有點塞"
@@ -147,18 +221,47 @@ export function ActivityComposer({
         <AppText variant="caption" tone="muted">
           不需要姓名或醫療診斷
         </AppText>
-        <AppText variant="caption" tone="muted">
-          {value.length} / 800
+        <AppText
+          accessibilityLiveRegion="polite"
+          variant="caption"
+          tone={initialRemaining < 0 ? 'danger' : 'muted'}>
+          {initialRemaining < 0
+            ? `超過 800 字上限 ${Math.abs(initialRemaining)} 字，請縮短內容。`
+            : `還可輸入 ${initialRemaining} 字`}
         </AppText>
       </View>
       <AppButton
         label={loading ? '正在整理活動內容' : '先看看 AirMe 理解了什麼'}
         onPress={() => void understand()}
-        disabled={trimmed.length < 2}
+        disabled={trimmed.length < 2 || trimmed.length > MAX_ACTIVITY_TEXT_LENGTH}
         loading={loading}
       />
     </Card>
   );
+}
+
+function getClarificationPlaceholder(question: string | undefined, addingSupplement: boolean) {
+  if (addingSupplement && !question) {
+    return '例如：我想改在學校體育館，活動約 20 分鐘';
+  }
+  const prompt = question ?? '';
+  if (/哪一種活動|什麼活動|活動種類|活動類型|要做什麼/iu.test(prompt)) {
+    return '例如：慢跑、快走、騎單車或籃球';
+  }
+  if (/多久|持續|時長|幾分|分鐘|幾小時/iu.test(prompt)) return '例如：大約 30 分鐘';
+  if (/地點|哪裡|在哪|何處|哪個|場所/iu.test(prompt)) {
+    return '例如：在學校操場或室內體育館';
+  }
+  if (/強度|速度|激烈|多大|多快|全力/iu.test(prompt)) {
+    return '例如：低強度快走，不會全力跑';
+  }
+  if (/時間|何時|幾點|時候|日期|早上|下午|晚上/iu.test(prompt)) {
+    return '例如：今天下午四點';
+  }
+  if (/狀況|不舒服|感受/iu.test(prompt)) {
+    return '例如：目前只有輕微鼻塞，沒有其他不舒服';
+  }
+  return '例如：大約 30 分鐘，在室內進行';
 }
 
 function IntentRow({ label, value }: { label: string; value: string }) {

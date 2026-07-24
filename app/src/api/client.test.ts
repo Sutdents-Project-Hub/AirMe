@@ -127,6 +127,38 @@ describe('AirMe API client', () => {
     expect(capturedUrl).toBe('http://localhost:7071/api/activity-intents');
     expect(result.intent.activity).toBe('跑步');
   });
+  it('sends cloud-sync state only in an authenticated PUT request', async () => {
+    let capturedUrl = '';
+    let capturedInit: RequestInit | undefined;
+    const api = createAirMeApi({
+      baseUrl: 'http://localhost:7071/api',
+      timeoutMs: 1_000,
+      fetcher: vi.fn(async (url, init) => {
+        capturedUrl = String(url);
+        capturedInit = init;
+        return new Response(JSON.stringify({ state: null, updatedAt: '2026-07-22T03:00:00.000Z' }), {
+          status: 200,
+        });
+      }),
+    });
+    const state = {
+      version: 1 as const,
+      deviceProfile: null,
+      profile: null,
+      savedLocation: null,
+      onboardingCompleted: false,
+      history: [],
+      feedback: [],
+      demoMode: false,
+    };
+
+    await api.saveCloudState('x'.repeat(43), state);
+
+    expect(capturedUrl).toBe('http://localhost:7071/api/account/state');
+    expect(capturedInit?.method).toBe('PUT');
+    expect(new Headers(capturedInit?.headers).get('authorization')).toBe(`Bearer ${'x'.repeat(43)}`);
+    expect(JSON.parse(String(capturedInit?.body))).toEqual(state);
+  });
   it('normalizes the base URL and validates a recommendation response', async () => {
     let capturedUrl = '';
     const api = createAirMeApi({

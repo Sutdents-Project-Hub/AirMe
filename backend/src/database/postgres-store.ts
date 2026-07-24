@@ -4,7 +4,13 @@ import path from 'node:path';
 import { AccountSchema, EnvironmentSnapshotSchema } from '@airme/contracts';
 import { Pool } from 'pg';
 
-import type { AccountRecord, EnvironmentCacheEntry, OperationalStore, StoredSession } from './types';
+import type {
+  AccountRecord,
+  EncryptedAccountCloudState,
+  EnvironmentCacheEntry,
+  OperationalStore,
+  StoredSession,
+} from './types';
 
 export class PostgresStore implements OperationalStore {
   private readonly pool: Pool;
@@ -177,6 +183,49 @@ export class PostgresStore implements OperationalStore {
 
   async deleteAccount(accountId: string): Promise<void> {
     await this.pool.query('DELETE FROM accounts WHERE id = $1', [accountId]);
+  }
+
+  async getAccountCloudState(accountId: string): Promise<EncryptedAccountCloudState | null> {
+    const result = await this.pool.query<{
+      ciphertext: Buffer;
+      iv: Buffer;
+      auth_tag: Buffer;
+      updated_at: Date;
+    }>(
+      `SELECT ciphertext, iv, auth_tag, updated_at
+       FROM account_cloud_states
+       WHERE account_id = $1`,
+      [accountId],
+    );
+    const row = result.rows[0];
+    if (!row || !Buffer.isBuffer(row.ciphertext) || !Buffer.isBuffer(row.iv) || !Buffer.isBuffer(row.auth_tag)) {
+      return null;
+    }
+    const updatedAt = new Date(row.updated_at);
+    if (Number.isNaN(updatedAt.getTime())) throw new Error('INVALID_CLOUD_STATE_ROW');
+    return { ciphertext: row.ciphertext, iv: row.iv, authTag: row.auth_tag, updatedAt };
+  }
+
+  async setAccountCloudState(input: {
+    accountId: string;
+    ciphertext: Buffer;
+    iv: Buffer;
+    authTag: Buffer;
+  }): Promise<Date> {
+    const result = await this.pool.query<{ updated_at: Date }>(
+      `INSERT INTO account_cloud_states (account_id, ciphertext, iv, auth_tag, updated_at)
+       VALUES ($1, $2, $3, $4, NOW())
+       ON CONFLICT (account_id) DO UPDATE
+       SET ciphertext = EXCLUDED.ciphertext,
+           iv = EXCLUDED.iv,
+           auth_tag = EXCLUDED.auth_tag,
+           updated_at = NOW()
+       RETURNING updated_at`,
+      [input.accountId, input.ciphertext, input.iv, input.authTag],
+    );
+    const updatedAt = new Date(result.rows[0]?.updated_at);
+    if (Number.isNaN(updatedAt.getTime())) throw new Error('INVALID_CLOUD_STATE_ROW');
+    return updatedAt;
   }
 
   async isHealthy(): Promise<boolean> {

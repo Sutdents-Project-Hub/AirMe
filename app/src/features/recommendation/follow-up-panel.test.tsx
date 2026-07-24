@@ -27,7 +27,11 @@ describe('FollowUpPanel', () => {
   it('offers in-scope starter questions', () => {
     render(<FollowUpPanel onAsk={vi.fn()} />);
 
-    expect(screen.getByRole('button', { name: '改成室內走路可以嗎？' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: '多久後再確認 AQI？' })).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: '快速提問：改成室內走路可以嗎？' }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: '快速提問：多久後再確認 AQI？' }),
+    ).toBeTruthy();
   });
 });

@@ -16,6 +16,8 @@ function handlers(): ApiHandlers {
     session: unused,
     logout: unused,
     deleteAccount: unused,
+    getCloudState: unused,
+    saveCloudState: unused,
     routes: unused,
     geocodingSearch: unused,
   };

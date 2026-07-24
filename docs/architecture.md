@@ -5,9 +5,9 @@
 - `app`：React Native + Expo Router + TypeScript，單一專案輸出 iOS、Android 與 Web。
 - `backend`：Node.js 22 + Fastify + TypeScript，作為唯一可信任後端。
 - `packages/contracts`：Zod runtime schema 與前後端共用型別。
-- 部署：自有 VPS 上的 Coolify，使用 repository 根目錄 Compose 建立 Web、API、PostgreSQL。
+- 部署：自有 VPS 上的 Coolify，使用獨立 Web Application、API Application 與 PostgreSQL Database Resource；repository 根目錄 Compose 只用於本機驗證。
 - AI：量界智算的 OpenAI 相容 Chat Completions API。
-- 資料庫：PostgreSQL 保存共享環境快取、匿名技術事件，以及選擇建立帳號者的帳號／session 驗證資料；不保存個人健康內容或同步資料。
+- 資料庫：PostgreSQL 保存共享環境快取、匿名技術事件、帳號／session 驗證資料，以及可選的 AES-256-GCM 加密帳號同步 snapshot；不保存完整活動文字、模型全文或路線軌跡。
 
 Expo 仍適合決賽的單一跨平台產品；Fastify 讓 API 在 VPS 容器中以固定 port 常駐。這不會把 AI 或政府 API key 移進前端。
 
@@ -18,16 +18,16 @@ Expo 仍適合決賽的單一跨平台產品；Fastify 讓 API 在 VPS 容器中
 ### `app`
 
 - 唯一產品前端，負責淺綠白 UI、必要的 Email 帳號入口、登入後輸入式裝置端個人檔案、Air 日誌、MapLibre 路線預覽、回饋與離線 fixture。
-- Web image 以 Nginx 提供靜態輸出，並把 `/api/*` 反向代理到 API container。
+- Web image 以 Nginx 提供靜態輸出；Web build 時注入公開 API HTTPS URL，且不依賴 API container DNS 或同源反向代理。
 - 不持有 API key、資料庫帳密或任何伺服器端秘密。
-- 裝置暱稱、受控個人設定、回饋與日誌只保留在裝置端，不因登入而同步；個人描述原稿及路線起終點不持久化。session token 只放在 Expo SecureStore。
+- 裝置暱稱、受控個人設定、回饋與日誌先保留在裝置端；啟用後端同步 key 時，受 schema 限制的 snapshot 會以帳號隔離加密同步。個人描述原稿、追問 token 及路線起終點不持久化。session token 只放在 Expo SecureStore。
 
 ### `backend`
 
 - 驗證輸入、以不持久化 endpoint 擷取活動意圖、取得環境資料、套用官方規則、呼叫量界智算、驗證模型輸出、簽發短效追問 token，以及處理帳號、地點搜尋與路線請求。
 - Fastify 以 `/api` 路由提供 API；不回傳 provider body、stack trace 或秘密。
 - migration 由 `npm run db:migrate --workspace airme-api` 執行；容器啟動時會先執行 migration。
-- 對 PostgreSQL 的存取限於環境快取、`service_events` 技術事件、帳號／session 驗證資料與 readiness check；路線座標與地點搜尋字串不寫入資料庫或 log。
+- 對 PostgreSQL 的存取限於環境快取、`service_events` 技術事件、帳號／session 驗證資料、加密同步 ciphertext 與 readiness check；路線座標與地點搜尋字串不寫入資料庫或 log。
 
 ### `packages/contracts`
 
@@ -39,7 +39,7 @@ Expo 仍適合決賽的單一跨平台產品；Fastify 讓 API 在 VPS 容器中
 ```mermaid
 flowchart LR
   User["App／Web 使用者"] -->|HTTPS| Web["Coolify web：Nginx／Expo static"]
-  Web -->|"/api reverse proxy"| Api["Coolify api：Node 22／Fastify"]
+  User -->|"HTTPS /api"| Api["Coolify api：Node 22／Fastify"]
   Api --> Guard["輸入驗證／領域守門"]
   Guard --> Env["環境資料正規化"]
   Env --> Moenv["環境部 AQI"]
@@ -48,28 +48,28 @@ flowchart LR
   Env --> Ai["量界智算 Chat Completions"]
   Rules --> Ai
   Guard --> Auth["帳號／session：scrypt + HMAC token digest"]
-  Guard --> Route["Valhalla 路線（部署後才可 live）"]
-  Guard --> Geocode["Photon 地點搜尋（部署後才可 live）"]
-  Route --> Map["MapLibre 地圖預覽"]
+  Guard --> Route["Valhalla 路線（自架圖資）"]
+  Guard --> Geocode["Photon 地點搜尋（自架索引）"]
+  Route --> Map["MapLibre + TileServer GL 預覽"]
   Geocode --> Map
   Ai --> Validate["JSON／Schema／安全後處理"]
-  Api <--> Pg["PostgreSQL：快取／匿名事件／帳號與 session"]
+  Api <-->|"Coolify private network"| Pg["PostgreSQL：快取／匿名事件／帳號、session、加密同步"]
   Validate --> Web
 ```
 
-Web 的正式 build 以 `EXPO_PUBLIC_API_BASE_URL=/api` 產生。瀏覽器請求因此使用同源，不須暴露 API container port 或設定 Web 的 CORS。原生 App 不具同源情境，最後打包時必須把 `EXPO_PUBLIC_API_BASE_URL` 設為 HTTPS 公開網域的 `/api`；這個值不是秘密。
+Web 與原生 App 的正式 build 都以完整公開 HTTPS `EXPO_PUBLIC_API_BASE_URL` 產生，例如 `https://api.example.com/api`；這個值不是秘密。API 是獨立 Coolify Resource，因此 `ALLOWED_ORIGINS` 必須精確包含 Web origin，不能使用萬用 `*`。
 
 ## 4. 資料流與安全界線
 
 1. Client 先以 `POST /api/activity-intents` 取得結構化理解；Demo 使用同契約的可重播解析。使用者確認後才建立含 `confirmedIntent` 的 `RecommendationRequest`。
 2. API 驗證欄位、長度、列舉、請求 body、臺灣座標範圍與座標精度，進行領域／醫療／緊急守門；意圖請求及推薦請求都不持久化。AI 與環境路由分別受每 process 固定窗口頻率與同時數限制。
-3. API 取得 AQI、天氣；Location 契約以受控縣市欄位對應 CWA，避免把校園顯示名稱當成縣市。PostgreSQL 先提供可用快取，外部成功回應才覆寫快取。
+3. API 優先取得環境部 AQI、中央氣象署天氣；若 key 未設定或官方來源失敗，才使用明確標示的 Open-Meteo 模型資料。Location 契約以受控縣市欄位對應 CWA，避免把校園顯示名稱當成縣市。PostgreSQL 先提供可用快取，外部成功回應才覆寫快取。
 4. 程式規則依環境、已確認活動強度與敏感標籤建立不可降低的 risk floor。
 5. 量界 adapter 以 `POST /v1/chat/completions`、Bearer key、可設定模型與 JSON object 請求產生草稿。
 6. API 以 Zod 驗證草稿，拒絕醫療因果、安全保證、未經支持的歷史／百分比事實與規則衝突；行動強度以決定性規則底線覆寫，理由則後端使用實際請求與環境事實重建。未來活動不把當前 AQI 假當預報。
-7. 帳號密碼以 scrypt 雜湊；資料庫只保存 token 的 HMAC digest、到期與撤銷資訊。App 使用 SecureStore 保存原始 session token；登入不會上傳本機 profile、日誌或回饋。
-8. 路線／地點搜尋僅在 request 記憶體中轉送給自架 Valhalla／Photon；結果可在 MapLibre 顯示，但不宣稱街道級空品、最低污染或 turn-by-turn 導航。
-9. API 不保存一般 request body、個人 profile、活動文字、回饋、路線、context token 或模型完整回應；`service_events` request ID 一律由伺服器產生 UUID，只寫入快取與匿名技術事件。
+7. 帳號密碼以 scrypt 雜湊；資料庫保存 token 的 HMAC digest、到期與撤銷資訊。設定 `CLOUD_SYNC_ENCRYPTION_KEY` 後，App 將受控 snapshot 以已驗證帳號同步，後端以 AES-256-GCM 加密後才寫入資料庫。
+8. 路線／地點搜尋僅在 request 記憶體中轉送給自架 Valhalla／Photon；可選 `docker-compose.maps.yml` 只供本機／維運建立開源圖資服務。若上線，圖資服務應獨立於 P0 三個 Coolify Resource 部署，並以完整 HTTPS style URL 交給 Web／native；結果可在 MapLibre 顯示，但不宣稱街道級空品、最低污染或 turn-by-turn 導航。
+9. API 不保存一般 request body、完整活動文字、路線、context token 或模型完整回應；同步 table 只保存無法直接讀取的 schema-validated profile／粗略地點／日誌摘要／回饋 ciphertext。`service_events` request ID 一律由伺服器產生 UUID，只寫入快取與匿名技術事件。
 10. Air 日誌由 client 將確認後的 activity／time／duration／intensity 與環境／建議摘要持久化；明確排除 currentCondition 與自由文字原稿。
 
 ## 5. PostgreSQL schema
@@ -89,6 +89,7 @@ Web 的正式 build 以 `EXPO_PUBLIC_API_BASE_URL=/api` 產生。瀏覽器請求
 |---|---|---|
 | `accounts` | 小寫 Email、顯示名稱、scrypt password hash、隱私同意時間、建立時間 | 個人設定、活動、回饋、健康內容、精確位置 |
 | `account_sessions` | 帳號關聯、HMAC token digest、到期與撤銷時間 | 原始 token、IP、裝置指紋、登入 body |
+| `account_cloud_states` | 帳號關聯、AES-256-GCM ciphertext、IV、auth tag、更新時間 | 明文 profile、完整活動文字、prompt、路線、context token、模型輸出 |
 
 ## 6. API 契約
 
@@ -103,6 +104,7 @@ Web 的正式 build 以 `EXPO_PUBLIC_API_BASE_URL=/api` 產生。瀏覽器請求
 | `GET` | `/api/auth/session` | 驗證目前 session，不回傳 password hash |
 | `POST` | `/api/auth/logout` | 撤銷當前 session |
 | `DELETE` | `/api/auth/account` | 刪除帳號與所有 server session；不觸及裝置端資料 |
+| `GET` / `PUT` | `/api/account/state` | 已驗證帳號的加密 state snapshot 讀取／寫入 |
 | `POST` | `/api/geocoding/search` | 以自架 Photon 搜尋台灣地點；不持久化查詢 |
 | `POST` | `/api/routes` | 以自架 Valhalla 回傳路線選項；不持久化座標 |
 
@@ -114,15 +116,15 @@ Web 的正式 build 以 `EXPO_PUBLIC_API_BASE_URL=/api` 產生。瀏覽器請求
 - API build：`npm run build --workspace airme-api`；啟動：`npm run start --workspace airme-api`。
 - migration：`npm run db:migrate --workspace airme-api`。
 - Web build：`npm run build:web --workspace airme`，輸出 `app/dist/`。
-- Coolify：匯入根目錄 `docker-compose.yml`，公開網域設定到 `web:80`。
-- `api` 只以 Compose internal network 暴露 `3000`，避免資料庫與 API port 直接公開。
+- Coolify：建立 `airme-web`、`airme-api`、`airme-postgres` 三個 Resource。兩個 Application 的 Base Directory 都是 `/`，Dockerfile Location 分別為 `/app/Dockerfile`、`/backend/Dockerfile`。
+- `airme-web` 使用 port `80`、health check `/`；`airme-api` 使用 port `3000`、health check `/api/health`，並以完整 HTTPS API URL 與精確 CORS origin 服務 Web／native。只有 PostgreSQL 保持在 Coolify private network。
 
 ## 8. 尚未驗證的外部條件
 
 - VPS 的作業系統、Coolify 版本、反向代理、TLS、網域與防火牆。
 - 量界智算指定模型對 JSON mode 的實際支援、額度、429 與延遲。
 - 真實環境部／中央氣象署欄位、額度與 attribution。
-- Valhalla 所需的台灣 OpenStreetMap 圖資、服務資源與 route quality，以及 Photon 索引與服務資源；目前 repository 尚未部署這兩個服務。
-- 可用於正式 MapLibre 地圖的自有 style／tile provider、attribution 與用量限制。
+- Valhalla 台灣 OpenStreetMap 圖資的首次建置與更新後 route quality；Photon 索引 archive 的台灣覆蓋、授權、資源與更新策略；目前已驗證 Compose 組態、Photon／TileServer GL image build 與空 MBTiles style endpoint，尚未完成實際圖資服務驗收。
+- 自架 TileServer GL 的正式 canonical URL、attribution、資源用量與行動裝置 style 載入。
 - PostgreSQL 容器首次啟動、備份、restore 與磁碟容量。
 - iOS／Android 最終安裝形式與原生 App 的 HTTPS API 網域。

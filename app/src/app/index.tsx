@@ -37,7 +37,9 @@ export default function HomeScreen() {
   };
 
   const environmentPanel = (
-    <View key="environment" style={styles.environmentColumn}>
+    <View
+      key="environment"
+      style={[styles.dashboardColumn, wideDashboard && styles.environmentColumnWide]}>
       <EnvironmentHero
         environment={app.environment}
         loading={app.environmentLoading}
@@ -47,7 +49,9 @@ export default function HomeScreen() {
     </View>
   );
   const composerPanel = (
-    <View key="composer" style={styles.composerColumn}>
+    <View
+      key="composer"
+      style={[styles.dashboardColumn, wideDashboard && styles.composerColumnWide]}>
       <ActivityComposer
         loading={app.busy}
         onUnderstand={app.understandActivity}
@@ -124,6 +128,7 @@ const styles = StyleSheet.create({
   signalBarSoft: { borderRadius: radii.pill, height: 6, width: 28 },
   dashboard: { gap: spacing.xl },
   dashboardWide: { alignItems: 'stretch', flexDirection: 'row' },
-  environmentColumn: { flex: 0.82, width: '100%' },
-  composerColumn: { flex: 1.18, width: '100%' },
+  dashboardColumn: { width: '100%' },
+  environmentColumnWide: { flex: 0.82 },
+  composerColumnWide: { flex: 1.18 },
 });

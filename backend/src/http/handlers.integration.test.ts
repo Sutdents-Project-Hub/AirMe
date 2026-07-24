@@ -314,6 +314,46 @@ describe('AirMe HTTP handlers', () => {
     );
   });
 
+  it('requires a bearer session and validates encrypted cloud-sync state at the API boundary', async () => {
+    const cloudState = {
+      get: vi.fn().mockResolvedValue({ state: null, updatedAt: null }),
+      save: vi.fn().mockResolvedValue({ state: null, updatedAt: '2026-07-22T03:00:00.000Z' }),
+    };
+    const handlers = createHandlers({ cloudState });
+    const payload = {
+      version: 1,
+      deviceProfile: { displayName: '我的 AirMe' },
+      profile: null,
+      savedLocation: null,
+      onboardingCompleted: false,
+      history: [],
+      feedback: [],
+      demoMode: false,
+    };
+
+    const saved = await handlers.saveCloudState(
+      request({
+        method: 'PUT',
+        headers: { authorization: `Bearer ${'x'.repeat(43)}`, 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      }),
+    );
+
+    expect(saved.status).toBe(200);
+    expect(cloudState.save).toHaveBeenCalledWith('x'.repeat(43), payload);
+
+    const invalid = await handlers.saveCloudState(
+      request({
+        method: 'PUT',
+        headers: { authorization: `Bearer ${'x'.repeat(43)}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ ...payload, routeCoordinates: [121.5, 25] }),
+      }),
+    );
+
+    expect(invalid.status).toBe(400);
+    expect(cloudState.save).toHaveBeenCalledTimes(1);
+  });
+
   it('returns a validated activity understanding without persisting it', async () => {
     const response = await createHandlers().activityIntents(
       request({

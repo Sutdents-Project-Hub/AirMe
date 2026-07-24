@@ -1,5 +1,5 @@
 import type { RecommendationResponse, RiskLevel } from '@airme/contracts';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { borders, radii, spacing, usePalette, type Palette } from '../design/tokens';
 import { SourceDisclosure } from './source-disclosure';
@@ -22,8 +22,10 @@ function riskColors(level: RiskLevel, palette: Palette) {
 
 export function ActionCard({ recommendation }: { recommendation: RecommendationResponse }) {
   const palette = usePalette();
+  const { width } = useWindowDimensions();
   const card = recommendation.actionCard;
   const risk = riskColors(card.riskLevel, palette);
+  const compact = width < 480;
   const modeLabel = card.provenance.overall === 'live' ? '即時資料' : card.provenance.overall === 'partial' ? '部分降級' : '決賽示範';
 
   return (
@@ -57,12 +59,36 @@ export function ActionCard({ recommendation }: { recommendation: RecommendationR
             </AppText>
           </View>
         </View>
-        <AppText variant="display" weight="800">
-          {card.headline}
-        </AppText>
-        <AppText>
-          {card.environment.location.name} · AQI {card.environment.airQuality.aqi} ·{' '}
-          {card.environment.weather.summary}
+        <View
+          style={[styles.heroSummary, compact && styles.heroSummaryCompact]}
+          testID="action-card-summary">
+          <AppText
+            variant="display"
+            weight="900"
+            style={[styles.heroHeadline, compact && styles.heroHeadlineCompact]}>
+            {card.headline}
+          </AppText>
+          <View
+            accessible
+            accessibilityLabel={`AQI ${card.environment.airQuality.aqi}`}
+            style={[
+              styles.aqiOrb,
+              compact && styles.aqiOrbCompact,
+              { backgroundColor: risk.foreground },
+            ]}>
+            <AppText variant="caption" weight="900" style={{ color: palette.surface }}>
+              AQI
+            </AppText>
+            <AppText
+              variant={compact ? 'title-small' : 'title'}
+              weight="900"
+              style={{ color: palette.surface }}>
+              {card.environment.airQuality.aqi}
+            </AppText>
+          </View>
+        </View>
+        <AppText variant="body-small" weight="700">
+          {card.environment.location.name} · {card.environment.weather.summary}
           {card.environment.airQuality.primaryPollutant
             ? ` · 主要污染物 ${card.environment.airQuality.primaryPollutant}`
             : ''}
@@ -161,6 +187,19 @@ const styles = StyleSheet.create({
   badgeRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   badge: { borderRadius: radii.pill, borderWidth: borders.thin, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
   mode: { borderRadius: radii.pill, borderWidth: borders.thin, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  heroSummary: { alignItems: 'center', flexDirection: 'row', gap: spacing.lg },
+  heroSummaryCompact: { alignItems: 'flex-start', flexDirection: 'column' },
+  heroHeadline: { flex: 1 },
+  heroHeadlineCompact: { flex: 0, width: '100%' },
+  aqiOrb: {
+    alignItems: 'center',
+    borderRadius: radii.pill,
+    flexShrink: 0,
+    height: 92,
+    justifyContent: 'center',
+    width: 92,
+  },
+  aqiOrbCompact: { height: 72, width: 72 },
   planGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   planTile: {
     borderRadius: radii.md,
