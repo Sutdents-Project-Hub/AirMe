@@ -155,6 +155,12 @@ export function createDemoFollowUp(question: string, requestId: string): FollowU
   } else if (!/AQI|空氣|空品|戶外|室內|活動|運動|跑|走|時間|地點|強度|口罩/iu.test(question)) {
     disposition = 'out-of-scope';
     answer = '我只能協助目前活動的空氣品質、活動安全與一般自我保護問題。';
+  } else if (/多久|何時|再確認|更新/iu.test(question)) {
+    answer = '建議在出發前再次確認 AQI；若活動時間較晚，也可在接近出發時重新查看，並依現場狀況調整。';
+  } else if (/室內/iu.test(question)) {
+    answer = '依目前示範 AQI 118 與規則底線，改成室內低強度走路較保守；仍請確認通風與現場空氣狀況。';
+  } else if (/低強度|縮短|減少/iu.test(question)) {
+    answer = '改成較短、較低強度的活動能減少戶外曝露；仍請以當下感受為準，不舒服時應停止並告知成人。';
   }
 
   return FollowUpResponseSchema.parse({

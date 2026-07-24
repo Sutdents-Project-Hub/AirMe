@@ -57,12 +57,19 @@ export function ActionCard({ recommendation }: { recommendation: RecommendationR
             </AppText>
           </View>
         </View>
-        <AppText variant="display" weight="800">
-          {card.headline}
-        </AppText>
-        <AppText>
-          {card.environment.location.name} · AQI {card.environment.airQuality.aqi} ·{' '}
-          {card.environment.weather.summary}
+        <View style={styles.heroSummary}>
+          <AppText variant="display" weight="900" style={styles.heroHeadline}>
+            {card.headline}
+          </AppText>
+          <View style={[styles.aqiOrb, { backgroundColor: risk.foreground }]}>
+            <AppText variant="caption" weight="900" style={{ color: palette.surface }}>AQI</AppText>
+            <AppText variant="title" weight="900" style={{ color: palette.surface }}>
+              {card.environment.airQuality.aqi}
+            </AppText>
+          </View>
+        </View>
+        <AppText variant="body-small" weight="700">
+          {card.environment.location.name} · {card.environment.weather.summary}
           {card.environment.airQuality.primaryPollutant
             ? ` · 主要污染物 ${card.environment.airQuality.primaryPollutant}`
             : ''}
@@ -161,6 +168,9 @@ const styles = StyleSheet.create({
   badgeRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   badge: { borderRadius: radii.pill, borderWidth: borders.thin, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
   mode: { borderRadius: radii.pill, borderWidth: borders.thin, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  heroSummary: { alignItems: 'center', flexDirection: 'row', gap: spacing.lg },
+  heroHeadline: { flex: 1 },
+  aqiOrb: { alignItems: 'center', borderRadius: 999, height: 92, justifyContent: 'center', width: 92 },
   planGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   planTile: {
     borderRadius: radii.md,
