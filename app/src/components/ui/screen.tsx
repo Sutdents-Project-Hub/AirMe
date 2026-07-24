@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -18,7 +18,7 @@ interface ScreenProps {
 }
 
 function useBreathe(duration: number) {
-  const value = useRef(new Animated.Value(0)).current;
+  const [value] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     const loop = Animated.loop(
