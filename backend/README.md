@@ -86,4 +86,4 @@ DATABASE_URL=postgresql://... npm run db:migrate --workspace airme-api
 
 ## 容器
 
-`Dockerfile` 會建置 shared contracts 與 API，runtime 只安裝 contracts／backend production dependencies，以 `node` 非 root 使用者執行；container command 先跑 migration 再啟動 Fastify。Coolify 使用獨立 `airme-api` Dockerfile Application，Base Directory 是 `/`、Dockerfile Location 是 `/backend/Dockerfile`、port 是 `3000`，runtime 的 `DATABASE_URL` 使用 `airme-postgres` Resource 提供的 private URL。根目錄 [docker-compose.yml](../docker-compose.yml) 只供本機三服務驗證；部署程序見 [部署計畫](../docs/deployment.md)。
+`Dockerfile` 會建置 shared contracts 與 API，runtime 只安裝 contracts／backend production dependencies，以 `node` 非 root 使用者執行；container command 先跑 migration 再啟動 Fastify。Coolify 使用獨立 `airme-api` Dockerfile Application，Base Directory 是 `/`、Dockerfile Location 是 `/backend/Dockerfile`、port 是 `3000`，runtime 的 `DATABASE_URL` 使用 `airme-postgres` Resource 提供的 private URL。Coolify 的 HTTP healthcheck 使用 `GET http://localhost:3000/api/health`，Start Period 必須設為 90 秒，避免 migration 尚未完成就被回滾。根目錄 [docker-compose.yml](../docker-compose.yml) 只供本機三服務驗證；部署程序見 [部署計畫](../docs/deployment.md)。

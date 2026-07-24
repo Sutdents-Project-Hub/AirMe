@@ -162,7 +162,7 @@ Request／response 型別由 `packages/contracts` 共用；HTTP 錯誤使用穩�
 
 ## Coolify 部署
 
-Coolify 以三個獨立 Resource 部署：`airme-web`（`app/Dockerfile`）、`airme-api`（`backend/Dockerfile`）與 `airme-postgres`（Coolify PostgreSQL 17）。兩個 Application 的 Base Directory 都是 `/`，Dockerfile Location 分別為 `/app/Dockerfile`、`/backend/Dockerfile`。Web 在 build 時以 `EXPO_PUBLIC_API_BASE_URL=https://api.<your-domain>/api` 注入 API URL，API 的 `ALLOWED_ORIGINS` 必須包含 Web 的完整 HTTPS origin。根目錄 [docker-compose.yml](docker-compose.yml) 僅供本機三容器驗證。
+Coolify 以三個獨立 Resource 部署：`airme-web`（`app/Dockerfile`）、`airme-api`（`backend/Dockerfile`）與 `airme-postgres`（Coolify PostgreSQL 17）。兩個 Application 的 Base Directory 都是 `/`，Dockerfile Location 分別為 `/app/Dockerfile`、`/backend/Dockerfile`。Web 在 build 時以 `EXPO_PUBLIC_API_BASE_URL=https://api.<your-domain>/api` 注入 API URL，API 的 `ALLOWED_ORIGINS` 必須包含 Web 的完整 HTTPS origin。因 API 啟動前會跑 migration，Coolify 的 `/api/health` Start Period 固定為 90 秒。根目錄 [docker-compose.yml](docker-compose.yml) 僅供本機三容器驗證。
 
 Coolify + 量界智算是競賽展示的部署路徑。部署前需在 API Resource 填入 Coolify PostgreSQL 的 internal `DATABASE_URL`、context／session signing secret、量界與政府 API key；前端只填公開 build variables。可選地圖不屬於這三個 P0 Resource，必須另建受資源限制的服務與完整 HTTPS style URL 後才可啟用。GitHub Actions 已設定 Node 22 的品質與 fixture E2E 檢查；目前仍無 production URL、release、路由圖資或實際 VPS 部署驗證。
 

@@ -17,7 +17,7 @@
 | Resource | 類型與 Dockerfile | 對外 port／健康檢查 | 網路與資料 |
 |---|---|---|
 | `airme-web` | Application；`app/Dockerfile` | `80`；`/` | Expo Web static export + Nginx；以 build variable 編譯 API HTTPS URL |
-| `airme-api` | Application；`backend/Dockerfile` | `3000`；`/api/health` | Fastify；透過 Coolify private network 連 PostgreSQL，啟動前執行 migration |
+| `airme-api` | Application；`backend/Dockerfile` | `3000`；`GET /api/health`，啟動寬限 90 秒 | Fastify；透過 Coolify private network 連 PostgreSQL，啟動前執行 migration |
 | `airme-postgres` | Coolify PostgreSQL 17 Database | 不公開；由 Coolify 管理 | 環境快取、匿名技術事件、最小帳號／session 與可選加密同步資料 |
 
 兩個 Application 都必須使用 repository 根目錄作為 **Base Directory**，因為 Dockerfile 需要讀取根目錄的 `package-lock.json` 與 `packages/contracts/`。在 Coolify 的 Dockerfile Location 分別設定 `/app/Dockerfile` 與 `/backend/Dockerfile`。Web 與 API 各有自己的 HTTPS 網域，例如 `https://airme.example.com`、`https://api.airme.example.com`；Web 不再反向代理 `/api`，因此 API URL 必須在 Web build 時明確注入，且 API 必須設定精確 CORS origin。
@@ -40,7 +40,7 @@
 
 1. 準備已安裝 Coolify 的 VPS，確認主機防火牆與 Coolify reverse proxy 能處理 80/443；這些主機操作不由此 repository 自動執行。
 2. 在同一個 Coolify project／environment 建立 **PostgreSQL 17 Database** `airme-postgres`。保持不公開，記下 Coolify 提供的 internal connection URL。
-3. 建立 **Dockerfile Application** `airme-api`，來源選此 repository，Base Directory 設 `/`、Dockerfile Location 設 `/backend/Dockerfile`、port 設 `3000`、health check 設 `/api/health`。填入 API Resource 的 runtime variables，`DATABASE_URL` 使用步驟 2 的 internal URL。
+3. 建立 **Dockerfile Application** `airme-api`，來源選此 repository，Base Directory 設 `/`、Dockerfile Location 設 `/backend/Dockerfile`、port 設 `3000`、health check 設 `GET /api/health`（`localhost:3000`、interval 5 秒、timeout 5 秒、retries 10、**Start Period 90 秒**）。API container 會先執行資料庫 migration，不能用較短的啟動寬限期。填入 API Resource 的 runtime variables，`DATABASE_URL` 使用步驟 2 的 internal URL。
 4. 為 API 設 HTTPS 網域，例如 `api.<your-domain>`；資料庫一律不公開。API 是獨立 Resource，因此此公開 URL 是 Web 與原生 App 的合法呼叫端點，不是秘密。
 5. 建立 **Dockerfile Application** `airme-web`，同樣使用 Base Directory `/`、Dockerfile Location `/app/Dockerfile`、port `80`、health check `/`。設定 Web Resource 的 build variables，尤其是 `EXPO_PUBLIC_API_BASE_URL=https://api.<your-domain>/api`。
 6. 為 Web 設 HTTPS 網域，例如 `app.<your-domain>`，並將 API 的 `ALLOWED_ORIGINS` 設為該完整 origin（不含 path）。先部署 API，確認 health；再部署 Web。
