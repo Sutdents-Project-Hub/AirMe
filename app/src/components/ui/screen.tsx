@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -84,26 +84,6 @@ export function Screen({ children, scroll = true, maxWidth = 1120 }: PropsWithCh
   const reduceMotion = useReduceMotion();
   const topProgress = useBreathe(6000, reduceMotion);
   const bottomProgress = useBreathe(6500, reduceMotion);
-  const [contentProgress] = useState(() => new Animated.Value(1));
-  const contentHasAnimated = useRef(false);
-
-  useEffect(() => {
-    if (reduceMotion) {
-      contentProgress.stopAnimation();
-      contentProgress.setValue(1);
-      return;
-    }
-    if (contentHasAnimated.current) return;
-    contentHasAnimated.current = true;
-    contentProgress.setValue(0);
-    Animated.timing(contentProgress, {
-      toValue: 1,
-      duration: 360,
-      easing: Easing.out(Easing.cubic),
-      isInteraction: false,
-      useNativeDriver: true,
-    }).start();
-  }, [contentProgress, reduceMotion]);
 
   const topScale = topProgress.interpolate({ inputRange: [0, 1], outputRange: [1, 1.15] });
   const topTranslateY = topProgress.interpolate({ inputRange: [0, 1], outputRange: [0, -20] });
@@ -111,29 +91,19 @@ export function Screen({ children, scroll = true, maxWidth = 1120 }: PropsWithCh
   const bottomScale = bottomProgress.interpolate({ inputRange: [0, 1], outputRange: [1, 1.2] });
   const bottomTranslateY = bottomProgress.interpolate({ inputRange: [0, 1], outputRange: [0, 20] });
   const bottomOpacity = bottomProgress.interpolate({ inputRange: [0, 1], outputRange: [0.22, 0.34] });
-  const contentOpacity = contentProgress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.92, 1],
-  });
-  const contentTranslateY = contentProgress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [8, 0],
-  });
 
   const content = (
-    <Animated.View
+    <View
       role="main"
       style={[
         styles.content,
         {
           maxWidth,
-          opacity: contentOpacity,
           paddingHorizontal: horizontal,
-          transform: [{ translateY: contentTranslateY }],
         },
       ]}>
       {children}
-    </Animated.View>
+    </View>
   );
 
   return (
