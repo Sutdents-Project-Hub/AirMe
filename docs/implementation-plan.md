@@ -16,7 +16,7 @@
 - M3 完成：淺綠白設計系統、輸入式裝置個人檔案、活動理解確認／800 字內補充／單一澄清、行動卡、限定追問、五秒回饋、可篩選與更新回饋的整合 Air 日誌、reduced-motion 友善動效與 responsive Web 已完成。
 - M4 完成：30 個固定案例、安全錯誤路徑與離線示範 fixture 已完成；緊急狀況在離線 Demo 也會停止一般建議。
 - M4.1 完成：必要帳號 session（scrypt + token digest）與登入入口、AES-256-GCM 受控 state 同步、MapLibre 路線預覽、Valhalla／Photon adapter 與安全降級已完成；`docker-compose.maps.yml` 已提供 Valhalla、Photon、Planetiler、TileServer GL 的可選自架路徑。起終點不持久化；圖資 bootstrap 與 live provider 尚待驗證。
-- M5 待執行：尚未取得 VPS／Coolify／量界／政府 API production 設定，沒有實體 mobile 或線上部署證據。
+- M5 進行中：Coolify 的 `airme-api`／`airme-postgres` 已部署並以公開 health 驗證；真實量界／政府 API、`airme-web`、跨網域 CORS、備份、實體 mobile 與完整線上流程仍待驗證。
 
 ## 剩餘里程碑
 

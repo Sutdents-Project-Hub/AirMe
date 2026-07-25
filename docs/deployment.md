@@ -2,7 +2,7 @@
 
 ## 現況
 
-部署目標為自有 VPS 的 Coolify。正式環境採三個獨立 Resource：Web Application、API Application、PostgreSQL Database。repository 的 `docker-compose.yml` 與可選 `docker-compose.maps.yml` 僅供本機容器驗證；它們不是 Coolify 的部署設定。應用程式 Dockerfile 與 PostgreSQL migration 已就緒，但尚未建立 Coolify Resource、網域、production secret、備份或 production URL。
+部署目標為自有 VPS 的 Coolify。正式環境採三個獨立 Resource：Web Application、API Application、PostgreSQL Database。repository 的 `docker-compose.yml` 與可選 `docker-compose.maps.yml` 僅供本機容器驗證；它們不是 Coolify 的部署設定。2026-07-24 已在 Coolify production environment 驗證 `airme-api` 與 `airme-postgres`：公開 API health 回應 HTTP 200，且 migration 與 container healthcheck 成功。`airme-web`、真實量界／政府資料、跨網域 CORS、備份、監控與完整使用流程仍尚未驗證。
 
 ## 命名契約
 
@@ -40,7 +40,7 @@
 
 1. 準備已安裝 Coolify 的 VPS，確認主機防火牆與 Coolify reverse proxy 能處理 80/443；這些主機操作不由此 repository 自動執行。
 2. 在同一個 Coolify project／environment 建立 **PostgreSQL 17 Database** `airme-postgres`。保持不公開，記下 Coolify 提供的 internal connection URL。
-3. 建立 **Dockerfile Application** `airme-api`，來源選此 repository，Base Directory 設 `/`、Dockerfile Location 設 `/backend/Dockerfile`、port 設 `3000`、health check 設 `GET /api/health`（`localhost:3000`、interval 5 秒、timeout 5 秒、retries 10、**Start Period 90 秒**）。API container 會先執行資料庫 migration，不能用較短的啟動寬限期。填入 API Resource 的 runtime variables，`DATABASE_URL` 使用步驟 2 的 internal URL。
+3. 建立 **Dockerfile Application** `airme-api`，來源選此 repository，Base Directory 設 `/`、Dockerfile Location 設 `/backend/Dockerfile`、port 設 `3000`、health check 設 `GET /api/health`（host 使用 **`127.0.0.1:3000`**、interval 5 秒、timeout 5 秒、retries 10、**Start Period 90 秒**）。不可使用 `localhost`，避免容器內優先解析到未監聽的 IPv6 位址而造成 false negative。API container 會先執行資料庫 migration，不能用較短的啟動寬限期。填入 API Resource 的 runtime variables，`DATABASE_URL` 使用步驟 2 的 internal URL。
 4. 為 API 設 HTTPS 網域，例如 `api.<your-domain>`；資料庫一律不公開。API 是獨立 Resource，因此此公開 URL 是 Web 與原生 App 的合法呼叫端點，不是秘密。
 5. 建立 **Dockerfile Application** `airme-web`，同樣使用 Base Directory `/`、Dockerfile Location `/app/Dockerfile`、port `80`、health check `/`。設定 Web Resource 的 build variables，尤其是 `EXPO_PUBLIC_API_BASE_URL=https://api.<your-domain>/api`。
 6. 為 Web 設 HTTPS 網域，例如 `app.<your-domain>`，並將 API 的 `ALLOWED_ORIGINS` 設為該完整 origin（不含 path）。先部署 API，確認 health；再部署 Web。
@@ -158,7 +158,7 @@ EXPO_PUBLIC_API_BASE_URL=https://<your-domain>/api npm run build:web --workspace
 
 ## 上線驗收與觀測
 
-- `https://api.<your-domain>/api/health`：確認 API 及必要 PostgreSQL 連線；API 有自己的公開 HTTPS 網域，PostgreSQL 不可公開。
+- `https://api.<your-domain>/`：確認 API 狀態入口；`https://api.<your-domain>/api/health`：確認 API 及必要 PostgreSQL 連線。API 有自己的公開 HTTPS 網域，PostgreSQL 不可公開。
 - Web：檢查未登入一律導向註冊／登入、帳號建立後才可建立個人檔案、登出／刪除帳號、加密 state 同步與刪帳 cascade、首頁理解確認、路線降級、Air 日誌、fixture／live／partial 標籤、推薦、追問、回饋與資料清除。
 - API：除既有 health／environment／recommendations／follow-ups 外，驗證 `POST /api/activity-intents` 不寫入 request body，帳號 token 不進 log，live／fixture provenance 正確。
 - Maps：驗證 Valhalla／Photon／TileServer GL 的實際 health、台灣搜尋、三種移動方式、獨立 style 網域的 canonical HTTPS URL、timeout／限流／503 降級、MapLibre attribution，以及不顯示街道級 AQI、最低污染或 turn-by-turn 導航。

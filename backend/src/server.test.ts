@@ -24,6 +24,20 @@ function handlers(): ApiHandlers {
 }
 
 describe('Fastify transport errors', () => {
+  it('returns an API status response at the root URL', async () => {
+    const server = createServer({ handlers: handlers(), store: null });
+
+    const response = await server.inject({ method: 'GET', url: '/' });
+    await server.close();
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      status: 'ok',
+      service: 'airme-api',
+      health: '/api/health',
+    });
+  });
+
   it('normalizes malformed JSON and keeps allowed CORS headers', async () => {
     const server = createServer({
       handlers: handlers(),

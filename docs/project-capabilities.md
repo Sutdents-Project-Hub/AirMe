@@ -32,7 +32,7 @@
 
 ## 尚未建立且不是本次已完成範圍
 
-- VPS／Coolify application、production secret 與 production URL；GitHub Actions 已覆蓋 Node 22 的品質與 fixture E2E 檢查，但尚未連結部署。
+- `airme-web`、真實量界／政府資料、跨網域 CORS、備份與完整 production 交接；`airme-api`／`airme-postgres` 已部署並通過公開 health，GitHub Actions 已覆蓋 Node 22 的品質與 fixture E2E 檢查。
 - Email 驗證、密碼重設、MFA、帳號匯出與跨裝置個人資料同步，以及教師／班級功能。
 - Push notification、街道級污染路線、健康預測或醫療串接。
 

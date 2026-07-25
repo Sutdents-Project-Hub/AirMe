@@ -73,7 +73,7 @@
 - 後端採 Fastify、Node.js 22 與 TypeScript，所有外部 API 與 AI 呼叫皆經後端
 - 決賽 P0 不包含班級統計、教師工作台、雲端完整對話／個人健康資料庫、完整 turn-by-turn 導航、Line Bot、推播、Power BI 或健康中心串接；已實作的是範圍受限的加密帳號同步
 - 已依使用者明確要求加入 MIT License；著作權標示為 `AirMe contributors`。政府資料、資料集、套件、字型與素材仍須依各自授權及競賽規則處理
-- Coolify、VPS、PostgreSQL 與量界智算為規劃部署目標；本機實作已完成，但尚未執行 production 部署
+- Coolify、VPS、PostgreSQL 與量界智算是競賽展示部署目標；`airme-api`／`airme-postgres` 已在 Coolify production environment 部署並通過公開 health，Web、真實 AI／政府資料、備份與完整端到端流程仍待驗證
 
 ## 未決定事項
 

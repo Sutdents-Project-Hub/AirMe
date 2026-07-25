@@ -16,12 +16,12 @@
 | API orchestration、規則與安全處理 | 通過 | fixture／mock 自動化測試；本機 Docker 五 endpoint、緊急 422 與 malformed JSON 400 已實際驗證 |
 | 30 個安全評估案例 | 通過 | `npm run evaluate` 30/30 |
 | Web production static export | 通過 | `npm run build:web --workspace airme` |
-| 自動化品質基線 | 通過（本輪） | lint、三個 workspace typecheck、231 項測試（12 + 146 + 73）、production Web export、安全評估 30/30 與 Playwright fixture E2E 已通過 |
+| 自動化品質基線 | 通過（本輪） | lint、三個 workspace typecheck、232 項測試（12 + 147 + 73）、production Web export、安全評估 30/30 與 Playwright fixture E2E 已通過 |
 | 真實 MOENV／CWA 呼叫 | 未驗證 | 官方 adapter 已完成；尚未使用真實 key。Open-Meteo 模型 fallback 的 parser／來源標示已測試，但公開商業授權與實網呼叫仍待驗證 |
 | 真實量界智算呼叫 | 未驗證 | adapter 與不含個資的 `verify:ai-live` smoke script 已完成；尚未以安全環境中的真實 token 與 model ID 執行 |
-| Coolify／PostgreSQL 部署 | 未驗證 | 三個 Resource Dockerfile／環境變數契約與 migration 已完成，沒有 production URL |
+| Coolify／PostgreSQL 部署 | 部分通過 | `airme-api`／`airme-postgres` 已在 Coolify production environment 部署；公開 `/api/health` 回 HTTP 200，migration 與 container healthcheck 已通過。Web、AI／政府資料、CORS、備份與完整流程仍待驗證 |
 | 本機 Compose／PostgreSQL | 通過（隔離 fixture） | Node 22 三容器 healthy，API 以 non-root `node` 執行；已驗證 migration、health、帳號與加密同步 API；不代表 production／live AI 已驗證 |
-| Coolify／量界競賽展示核心 | 未驗證 | 部署方向已確認；尚未取得 VPS、真實量界／政府 API 與 production URL 的端到端證據 |
+| Coolify／量界競賽展示核心 | 部分通過 | Coolify API／PostgreSQL 已上線並通過公開 health；真實量界／政府 API、Web→API CORS 與完整 Demo 仍無端到端證據 |
 | 實體 iOS／Android | 未驗證 | 尚未在決賽設備執行 |
 
 ## 核心流程驗收

@@ -33,7 +33,7 @@ Coolify／量界是 AirMe 的競賽展示部署路徑。決賽第一優先風險
 
 ## 目前 Demo 證據
 
-- 231 項自動化測試（12 契約 + 146 API + 73 App）、lint、三個 workspace typecheck、production static export、安全評估 30/30 與 Playwright fixture E2E 已於本輪通過。
+- 232 項自動化測試（12 契約 + 147 API + 73 App）、lint、三個 workspace typecheck、production static export、安全評估 30/30 與 Playwright fixture E2E 已於本輪通過。
 - Node 22 隔離 Compose 的三服務、帳號 migration、加密同步寫入／讀回／刪帳 cascade 已驗證；自架地圖 overlay 的 Compose 組態、Photon／TileServer GL image build 與空 MBTiles style endpoint 已驗證，但真實量界、政府 API、已建立圖資的 Valhalla／Photon／TileServer GL 與 VPS 尚未驗證。
 - 手機首屏已改為活動輸入優先，Live 錯誤可一鍵切換清楚標示的 Demo；實體手機仍待驗收。
 - 30 個固定 AI／安全案例 30/30。

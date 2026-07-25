@@ -72,6 +72,14 @@ export function createServer(input: {
     return reply.code(204).headers(headers).send();
   });
 
+  server.get('/', async (_request, reply) =>
+    reply.code(200).send({
+      status: 'ok',
+      service: 'airme-api',
+      health: '/api/health',
+    }),
+  );
+
   register('GET', '/api/health', input.handlers.health);
   register('POST', '/api/environment', input.handlers.environment);
   register('POST', '/api/activity-intents', input.handlers.activityIntents);

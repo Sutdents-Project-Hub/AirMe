@@ -107,12 +107,12 @@ npm run evaluate
 
 本次架構遷移實際驗證：
 
-- 共用契約、API 與 App 共 231 項自動化測試通過（12 + 146 + 73），涵蓋帳號 session、強制登入入口、加密雲端同步與跨帳號隔離、公開環境資料 fallback、路線／地點 adapter、OpenStreetMap 交接與 Web session 回歸。
+- 共用契約、API 與 App 共 232 項自動化測試通過（12 + 147 + 73），涵蓋帳號 session、強制登入入口、加密雲端同步與跨帳號隔離、公開環境資料 fallback、路線／地點 adapter、OpenStreetMap 交接與 Web session 回歸。
 - 固定安全評估 30/30 通過。
 - `npm run lint`、三個 workspace typecheck、production Web build、安全評估 30/30 與 Playwright fixture E2E 已於本輪通過。
 - Node 22.22.3 下的 Playwright fixture E2E 已通過：首次設定、活動理解、行動卡、醫療與緊急邊界、回饋與 Air 日誌皆可在無後端時完成。
 - Node 22 隔離 Compose 已完成 image build、PostgreSQL migration、API health、虛構帳號的加密同步寫入／讀回、密文檢查與刪帳 cascade 驗證；本輪另驗證可選地圖 overlay 的 Compose 組態、Photon／TileServer GL image build，以及以空 MBTiles 提供 AirMe style endpoint 與 OSM attribution。尚未下載台灣正式圖資、驗證 Valhalla／Photon／TileServer GL 實際資料流程或 VPS。
-- 尚未對 VPS／Coolify production、真實量界／政府 key、已建立台灣圖資的 Valhalla／Photon／TileServer GL 或實體 iOS／Android 執行驗收。
+- 已驗證 Coolify production 的 `airme-api`／`airme-postgres` migration、container healthcheck 與公開 API health；真實量界／政府 key、已建立台灣圖資的 Valhalla／Photon／TileServer GL、Web→API CORS 與實體 iOS／Android 仍待驗收。
 
 ## 環境變數
 
@@ -146,6 +146,7 @@ API 的核心設定：
 
 | Method | Route | 用途 |
 |---|---|---|
+| `GET` | `/` | API 狀態入口，回傳健康檢查路徑 |
 | `GET` | `/api/health` | 不洩漏設定值的服務／資料庫 readiness |
 | `POST` | `/api/environment` | 以 request body 傳送粗略地點，回傳標準化 AQI／天氣與來源狀態 |
 | `POST` | `/api/activity-intents` | 不持久化的活動結構化理解與單一澄清問題 |
@@ -164,7 +165,7 @@ Request／response 型別由 `packages/contracts` 共用；HTTP 錯誤使用穩�
 
 Coolify 以三個獨立 Resource 部署：`airme-web`（`app/Dockerfile`）、`airme-api`（`backend/Dockerfile`）與 `airme-postgres`（Coolify PostgreSQL 17）。兩個 Application 的 Base Directory 都是 `/`，Dockerfile Location 分別為 `/app/Dockerfile`、`/backend/Dockerfile`。Web 在 build 時以 `EXPO_PUBLIC_API_BASE_URL=https://api.<your-domain>/api` 注入 API URL，API 的 `ALLOWED_ORIGINS` 必須包含 Web 的完整 HTTPS origin。因 API 啟動前會跑 migration，Coolify 的 `/api/health` Start Period 固定為 90 秒。根目錄 [docker-compose.yml](docker-compose.yml) 僅供本機三容器驗證。
 
-Coolify + 量界智算是競賽展示的部署路徑。部署前需在 API Resource 填入 Coolify PostgreSQL 的 internal `DATABASE_URL`、context／session signing secret、量界與政府 API key；前端只填公開 build variables。可選地圖不屬於這三個 P0 Resource，必須另建受資源限制的服務與完整 HTTPS style URL 後才可啟用。GitHub Actions 已設定 Node 22 的品質與 fixture E2E 檢查；目前仍無 production URL、release、路由圖資或實際 VPS 部署驗證。
+Coolify + 量界智算是競賽展示的部署路徑。`airme-api` 與 `airme-postgres` 已在 Coolify 的 production environment 部署，且 API health 已由公開 HTTPS URL 驗證；Web、真實 AI／政府資料、跨網域 CORS、備份與完整決賽設備流程仍待端到端驗證。API Resource 的 runtime variables 使用 Coolify PostgreSQL 的 internal `DATABASE_URL`、context／session signing secret、量界與政府 API key；前端只填公開 build variables。可選地圖不屬於這三個 P0 Resource，必須另建受資源限制的服務與完整 HTTPS style URL 後才可啟用。GitHub Actions 已設定 Node 22 的品質與 fixture E2E 檢查。
 
 本機 Docker fixture 測試使用同一個 Compose 專案的三個服務，不會碰觸其他專案：
 
