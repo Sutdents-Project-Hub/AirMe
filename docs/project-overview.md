@@ -24,8 +24,8 @@
 
 | 元件 | 路徑 | 現況 | 下一個外部驗收結果 |
 |---|---|---|---|
-| AirMe App／Web | `app` | 輸入式個人檔案、帳號頁、理解確認、Air 日誌、MapLibre 路線預覽、LIVE API client、responsive UI、Nginx image | Coolify preview URL／實體 iOS、Android development build |
-| Fastify API | `backend` | 帳號 session、七項既有流程加地點搜尋／路線 adapter、政府資料、規則、量界、安全與評估 | 真實量界／MOENV／CWA／自架 Valhalla／Photon／PostgreSQL 端到端呼叫 |
+| AirMe App／Web | `app` | 可略過的 AI 個人檔案、帳號頁、理解確認、Air 日誌、MapLibre 路線預覽、LIVE API client、responsive UI、Nginx image | Coolify preview URL／實體 iOS、Android development build |
+| Fastify API | `backend` | 帳號 session、AI 個人設定整理、既有流程加地點搜尋／路線 adapter、政府資料、規則、量界、安全與評估 | 真實量界／MOENV／CWA／自架 Valhalla／Photon／PostgreSQL 端到端呼叫 |
 | PostgreSQL | `backend/database` | 環境快取、匿名事件、帳號／session digest 與 AES-256-GCM 同步 ciphertext 的 versioned migration | Coolify volume、backup、restore 驗證 |
 | 共用契約 | `packages/contracts` | Zod runtime schema 與 TypeScript 型別 | 部署前契約相容性複驗 |
 

@@ -48,7 +48,7 @@ describe('responsive AirMe navigation', () => {
     setViewport(1440);
     render(
       <>
-        <AppHeader demoMode />
+        <AppHeader />
         <BottomNav />
       </>,
     );
@@ -64,6 +64,8 @@ describe('responsive AirMe navigation', () => {
     expect(screen.getByRole('tab', { name: '路線規劃' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Air 日誌' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: '我的 AirMe' })).toBeTruthy();
+    expect(screen.queryByText('DEMO')).toBeNull();
+    expect(screen.queryByText('LIVE')).toBeNull();
     expect(reducedMotion).toHaveBeenCalledOnce();
   });
 
@@ -71,7 +73,7 @@ describe('responsive AirMe navigation', () => {
     setViewport(375);
     render(
       <>
-        <AppHeader demoMode />
+        <AppHeader />
         <BottomNav />
       </>,
     );
@@ -86,7 +88,7 @@ describe('responsive AirMe navigation', () => {
       .spyOn(AccessibilityInfo, 'isReduceMotionEnabled')
       .mockResolvedValue(false);
     setViewport(1440);
-    render(<AppHeader demoMode={false} />);
+    render(<AppHeader />);
     await act(async () => {
       await Promise.resolve();
     });

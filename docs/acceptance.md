@@ -4,7 +4,7 @@
 
 | 驗收項目 | 狀態 | 證據／限制 |
 |---|---|---|
-| 輸入式本機個人檔案與 Demo 首頁 | 通過 | 1280×720 本機瀏覽器操作、profile parser／元件測試；手機實機待驗證 |
+| 可略過的 AI 個人設定整理與首頁 | 部分通過 | 受控 schema、fixture／AI fallback、略過後補設與元件測試已通過；真實量界個人描述處理與供應商保留條款尚未驗證，手機實機待驗證 |
 | 活動結構化理解、單一澄清與確認 | 通過 | fixture 瀏覽器流程、API／parser／元件測試 |
 | 結構化行動卡與資料來源 | 通過 | fixture 流程、schema 與元件測試 |
 | 醫療拒答、追問、回饋與 Air 日誌 | 通過 | 自動化測試與 390px 完整瀏覽器回饋／日誌流程 |
@@ -16,7 +16,7 @@
 | API orchestration、規則與安全處理 | 通過 | fixture／mock 自動化測試；本機 Docker 五 endpoint、緊急 422 與 malformed JSON 400 已實際驗證 |
 | 30 個安全評估案例 | 通過 | `npm run evaluate` 30/30 |
 | Web production static export | 通過 | `npm run build:web --workspace airme` |
-| 自動化品質基線 | 通過（本輪） | lint、三個 workspace typecheck、232 項測試（12 + 147 + 73）、production Web export、安全評估 30/30 與 Playwright fixture E2E 已通過 |
+| 自動化品質基線 | 通過（本輪） | lint、三個 workspace typecheck、243 項測試（13 + 153 + 77）、production Web export、安全評估 30/30 與 Playwright fixture E2E（2/2）均已通過 |
 | 真實 MOENV／CWA 呼叫 | 未驗證 | 官方 adapter 已完成；尚未使用真實 key。Open-Meteo 模型 fallback 的 parser／來源標示已測試，但公開商業授權與實網呼叫仍待驗證 |
 | 真實量界智算呼叫 | 未驗證 | adapter 與不含個資的 `verify:ai-live` smoke script 已完成；尚未以安全環境中的真實 token 與 model ID 執行 |
 | Coolify／PostgreSQL 部署 | 部分通過 | `airme-api`／`airme-postgres` 已在 Coolify production environment 部署；公開 `/api/health` 回 HTTP 200，migration 與 container healthcheck 已通過。Web、AI／政府資料、CORS、備份與完整流程仍待驗證 |
@@ -26,7 +26,7 @@
 
 ## 核心流程驗收
 
-1. 新裝置先顯示註冊／登入；完成 Email 帳號驗證後才可建立個人檔案。個人檔案只要求裝置暱稱與日常描述，不要求真名、學號或病歷，確認後不保存原始描述。啟用同步時只加密同步受控設定、粗略地點、日誌摘要與回饋。
+1. 新裝置先顯示註冊／登入；完成 Email 帳號驗證後可建立個人檔案或先略過。AI 只從一次性日常描述擷取受控欄位與粗略區域提示，未知值不猜測且可稍後補上；AirMe 不保存原始描述。啟用同步時只加密同步受控設定、粗略地點、日誌摘要與回饋。
 2. 完成設定後可看到環境資料的來源、時間與資料模式。
 3. 輸入「下午四點想在操場全力跑 30 分鐘」先看到 activity、time、location、intensity、duration 與 currentCondition；可在總長 800 字內補充更多資訊，確認後才得到固定格式行動卡。
 4. 相同 AQI 下，敏感條件或劇烈活動不得得到比一般短時間活動更寬鬆的風險。

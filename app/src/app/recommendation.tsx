@@ -25,7 +25,7 @@ export default function RecommendationScreen() {
     return (
       <PageShell>
         <Screen maxWidth={760}>
-          <AppHeader demoMode={app.local.demoMode} />
+          <AppHeader />
           <Card>
             <AppText variant="title" weight="800">
               這張行動卡已不在目前工作階段
@@ -45,7 +45,7 @@ export default function RecommendationScreen() {
   return (
     <PageShell>
       <Screen maxWidth={860}>
-        <AppHeader demoMode={app.local.demoMode} />
+        <AppHeader />
         <View style={styles.backAction}>
           <AppButton label="← 返回今日" onPress={() => router.replace('/' as Href)} variant="ghost" />
         </View>

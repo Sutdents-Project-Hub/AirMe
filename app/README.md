@@ -4,7 +4,7 @@
 
 ## 已實作
 
-- 必要 Email 帳號 session 作為產品入口；登入後建立輸入優先的裝置個人檔案、version 1／2 → 3 本機資料 migration 與資料清除。後端設定雲端同步金鑰後，會同步受控設定、粗略地點、日誌摘要與回饋。
+- 必要 Email 帳號 session 作為產品入口；登入後可讓 AI 從一次性日常描述整理受控個人設定，也可略過後在設定頁補上。原稿不寫入裝置、雲端同步或 AirMe log；後端設定雲端同步金鑰後，才同步受控設定、粗略地點、日誌摘要與回饋。
 - 今日環境摘要、活動自然語言輸入、可見的結構化理解、800 字內的多次補充、單一澄清、確認與行動卡。
 - 資料來源、觀測／發布時間、fixture／live／partial／stale 狀態。
 - 受限追問、醫療／離題／緊急情境處理。
@@ -21,7 +21,7 @@
 - 共用頁面以低幅度呼吸背景與淡入位移提示層級，系統開啟 reduced motion 時停用循環及進場動畫。
 - 個人檔案、今日、行動卡、追問、回饋、Air 日誌、路線與設定使用相同資訊層級與狀態語言。
 
-裝置暱稱、個人設定、歷史與回饋先使用 AsyncStorage；已登入且後端啟用同步時會以帳號 API 同步經 schema 限制的 snapshot。登入 token 在 iOS／Android 使用 Expo SecureStore，在 Web 只留於目前瀏覽器 tab 的 sessionStorage。個人描述原稿、追問 token 與路線起終點只留在當次 UI／API request 記憶體。前端不直接呼叫量界智算、環境部、中央氣象署、Valhalla、Photon 或 PostgreSQL。
+裝置暱稱、個人設定、歷史與回饋先使用 AsyncStorage；已登入且後端啟用同步時會以帳號 API 同步經 schema 限制的 snapshot。登入 token 在 iOS／Android 使用 Expo SecureStore，在 Web 只留於目前瀏覽器 tab 的 sessionStorage。個人描述原稿、追問 token 與路線起終點只留在當次 UI／API request 記憶體；在線個人描述會經後端送往量界，供應商處理依其服務政策。前端不直接呼叫量界智算、環境部、中央氣象署、Valhalla、Photon 或 PostgreSQL。
 
 ## 執行
 
@@ -70,7 +70,7 @@ npx eas-cli@latest build --platform ios --profile production
 - `EXPO_PUBLIC_API_TIMEOUT_MS`：前端逾時毫秒數。
 - `EXPO_PUBLIC_MAP_STYLE_URL`：production MapLibre style URL；多 Resource 部署時必須是完整 HTTPS URL。自架建置見根目錄 `docker-compose.maps.yml` 與部署文件。Demo 可使用內建示範 style，不可視為 production 服務。
 
-所有 `EXPO_PUBLIC_*` 都會進入 App／Web bundle，不得放 secret。預設 Demo fixture 不需要任何環境變數；LIVE 只有在使用者明確切換後才呼叫 API。MapLibre 原生地圖需要 Expo development build 或正式 build，不能在 Expo Go 中驗收。
+所有 `EXPO_PUBLIC_*` 都會進入 App／Web bundle，不得放 secret。新裝置預設使用 Live；使用者可在設定開啟明確標示的示範模式，該模式不需要任何 AI API key。MapLibre 原生地圖需要 Expo development build 或正式 build，不能在 Expo Go 中驗收。
 
 ## 主要路徑
 

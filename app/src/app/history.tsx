@@ -22,7 +22,7 @@ export default function HistoryScreen() {
   return (
     <PageShell>
       <Screen maxWidth={860}>
-        <AppHeader demoMode={app.local.demoMode} />
+        <AppHeader />
         <View style={styles.hero}>
           <View style={[styles.eyebrow, { backgroundColor: palette.accentSoft }]}>
             <AppText variant="body-small" weight="900" tone="accent">

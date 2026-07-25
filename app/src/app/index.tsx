@@ -36,6 +36,8 @@ export default function HomeScreen() {
     }
   };
 
+  const needsProfileSetup = !app.local.profile || !app.local.savedLocation;
+
   const environmentPanel = (
     <View
       key="environment"
@@ -63,7 +65,7 @@ export default function HomeScreen() {
   return (
     <PageShell>
       <Screen>
-        <AppHeader demoMode={app.local.demoMode} />
+        <AppHeader />
         <View style={styles.intro}>
           <View style={[styles.eyebrow, { backgroundColor: palette.accentSoft }]}>
             <AppText variant="body-small" weight="900" tone="accent">
@@ -102,13 +104,28 @@ export default function HomeScreen() {
             <AppButton label="關閉提醒" onPress={app.clearError} variant="ghost" />
           </Card>
         ) : null}
-        <View
-          key="dashboard"
-          style={[styles.dashboard, wideDashboard && styles.dashboardWide]}>
-          {wideDashboard
-            ? [environmentPanel, composerPanel]
-            : [composerPanel, environmentPanel]}
-        </View>
+        {needsProfileSetup ? (
+          <Card style={{ backgroundColor: palette.accentSoft }}>
+            <AppText variant="title-small" weight="800">
+              還差一點個人設定
+            </AppText>
+            <AppText tone="muted">
+              先補上年齡層、常用通勤方式與粗略常用區域，AirMe 才能安全地結合環境資料給你活動建議。
+            </AppText>
+            <AppButton
+              label="設定我的 AirMe"
+              onPress={() => router.push('/onboarding' as Href)}
+            />
+          </Card>
+        ) : (
+          <View
+            key="dashboard"
+            style={[styles.dashboard, wideDashboard && styles.dashboardWide]}>
+            {wideDashboard
+              ? [environmentPanel, composerPanel]
+              : [composerPanel, environmentPanel]}
+          </View>
+        )}
       </Screen>
     </PageShell>
   );

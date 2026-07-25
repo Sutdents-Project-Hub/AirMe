@@ -22,6 +22,7 @@ AirMe 的安全目標不是保證模型永遠正確，而是讓錯誤可被限�
 - 執行任意工具、瀏覽任意網站、存取檔案或取得 secret。
 - 產生沒有資料依據的百分比、個人敏感閾值或醫療因果。
 - 在沒有可信 route provider 時臆造距離或預估時間；即使已有 route provider，也不得因沒有路段級環境資料而宣稱最低污染、最安全、健康路線分數或街道級 AQI。
+- 在個人設定整理中猜測年齡、通勤、地址、座標、病史或敏感條件；只能回傳使用者明示的受控標籤與不含座標的粗略區域提示。
 
 ## 4. 多層防護
 
@@ -33,6 +34,8 @@ AirMe 的安全目標不是保證模型永遠正確，而是讓錯誤可被限�
 6. OpenAI 相容 Chat Completions 的 JSON object 回應，仍必須由後端 Zod schema 強制驗證。
 7. 後處理驗證理由是否只引用存在的事實、門檻是否符合規則、是否包含禁止語句。
 8. 失敗時不顯示原始模型答案，只回傳安全錯誤或保守結果。
+
+個人設定 AI 不使用活動領域分類來拒絕「過敏」等明示標籤，但會先拒絕提示注入；回應只接受 Zod 驗證的 nullable 草稿。量界失敗或無效 JSON 時改由固定規則解析並標示 fixture，不以預設年齡或通勤方式補值。
 
 實作上，後端會拒絕「保證安全」、與風險底線衝突的「照常全力」，以及模型臆造的歷史、百分比或身體反應事實；行動強度與理由由決定性規則／實際請求重建。未來活動將被標為 partial 並要求活動前重新查詢；當前 AQI 不當作未來預報。
 
@@ -105,6 +108,7 @@ AirMe 的安全目標不是保證模型永遠正確，而是讓錯誤可被限�
 - `backend/src/domain/rules.ts`：AQI、敏感條件、活動強度、缺失與 stale 的決定性風險底線。
 - `backend/src/domain/safety.ts`：緊急、提示注入、醫療、允許領域與離題分類；順序以緊急為最高優先。
 - `backend/src/domain/activity-intent.ts`：活動欄位擷取、單一澄清與 live／fixture provenance；不持久化 request。
+- `backend/src/domain/profile-understanding.ts`：一次性個人設定草稿、提示注入守門、nullable unknown 欄位與 fixture fallback；不持久化 request。
 - `backend/src/adapters/ai/liangjie.ts`：OpenAI 相容 Chat Completions、JSON object、Zod 後驗證與 provider 錯誤遮蔽。
 - `backend/src/recommendation`：模型結果驗證、醫療因果偵測與不可降低風險。
 - `backend/src/follow-up`：短效 context token、固定拒答與安全降級。

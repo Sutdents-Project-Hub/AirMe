@@ -7,6 +7,7 @@
 | 淺綠白跨平台產品 UI | `app/src/app`、`src/components`、`src/design` | Web export、桌面瀏覽器操作、responsive 元件測試 |
 | 輸入式本機個人檔案 | `app/src/features/profile`、`src/storage/local-store.ts` | parser、migration、清除流程測試 |
 | 必要帳號與 session | `backend/src/domain/account-auth.ts`、`app/src/storage/auth-session.ts` | 未登入導向帳號入口；scrypt／session、API 與表單測試；無個人資料同步 |
+| AI 個人設定整理 | `backend/src/domain/profile-understanding.ts`、`app/src/components/profile-form.tsx` | AI／fixture 將一次性描述轉成 nullable 受控草稿；使用者可略過後補設；原稿不持久化，真實量界與供應商保留條款待驗證 |
 | 活動理解確認 | `backend/src/domain/activity-intent.ts`、`app/src/components/activity-composer.tsx` | fixture／live 契約、單一澄清與元件測試 |
 | 整合 Air 日誌 | `app/src/components/history-list.tsx`、`src/state/app-model.ts` | 環境／建議／feedback join 與去識別測試 |
 | 路線規劃與安全地圖 | `app/src/app/routes.tsx`、`src/components/route-planner.tsx`、`backend/src/adapters/routing` | fixture／元件測試、provider 失敗降級；live provider 未部署 |

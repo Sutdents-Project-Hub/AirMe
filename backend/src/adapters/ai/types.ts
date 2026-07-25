@@ -3,6 +3,7 @@ import type {
   ActivityIntent,
   EnvironmentSnapshot,
   FollowUpDraft,
+  ProfileDraft,
   RecommendationRequest,
 } from '@airme/contracts';
 
@@ -19,6 +20,10 @@ export interface AiAdapter {
   readonly mode: 'live' | 'fixture';
   createActionCard(input: ActionCardAiInput): Promise<ActionCardDraft>;
   parseActivityIntent?(activityText: string): Promise<ActivityIntent>;
+  understandProfile?(description: string): Promise<{
+    profile: ProfileDraft;
+    commonAreaHint: string | null;
+  }>;
   answerFollowUp?(input: {
     question: string;
     context: RecommendationContext;

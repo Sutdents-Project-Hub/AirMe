@@ -2,6 +2,7 @@ import type { ActionCardDraft, FollowUpDraft } from '@airme/contracts';
 
 import type { RecommendationContext } from '../../domain/context-token';
 import { parseActivityIntent } from '../../domain/activity-intent';
+import { parseProfileDescription } from '../../domain/profile-understanding';
 
 import type { ActionCardAiInput, AiAdapter } from './types';
 
@@ -42,6 +43,10 @@ export class FixtureAiAdapter implements AiAdapter {
 
   async parseActivityIntent(activityText: string) {
     return parseActivityIntent(activityText);
+  }
+
+  async understandProfile(description: string) {
+    return parseProfileDescription(description);
   }
 
   async answerFollowUp(input: {

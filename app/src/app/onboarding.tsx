@@ -14,7 +14,6 @@ export default function OnboardingScreen() {
 
   if (!app.hydrated) return null;
   if (!app.account) return <Redirect href={'/account' as Href} />;
-  if (app.local.onboardingCompleted) return <Redirect href={'/' as Href} />;
 
   return (
     <Screen maxWidth={920}>
@@ -28,14 +27,20 @@ export default function OnboardingScreen() {
           一句話，讓 AirMe{`\n`}先理解你的日常。
         </AppText>
         <AppText tone="muted">
-          你的帳號已驗證；確認結構化結果後，原始自我描述不會被保存。
+          你的帳號已驗證；設定可先略過，之後可從「我的 AirMe」補上。確認結構化結果後，原始自我描述不會被保存。
         </AppText>
       </View>
       <ProfileForm
         submitting={app.busy}
+        analyzing={app.busy}
         initialName={app.local.deviceProfile?.displayName}
-        onSubmit={async ({ profile, location, deviceProfile }) => {
-          await app.saveOnboarding(profile, location, deviceProfile);
+        onAnalyze={app.understandProfile}
+        onSkip={async () => {
+          await app.skipOnboarding();
+          router.replace('/' as Href);
+        }}
+        onSubmit={async (value) => {
+          await app.saveOnboarding(value);
           router.replace('/' as Href);
         }}
       />

@@ -35,7 +35,7 @@
 | `api` | `backend` | `backend` | Node.js／Fastify | npm workspace | `test`、`typecheck`、`build`、`evaluate`、`db:migrate` | `true` |
 | `contracts` | `packages/contracts` | `library` | Zod／TypeScript | npm workspace | `test`、`typecheck`、`build` | `false` |
 
-三個 workspace 共用根目錄 `package-lock.json`。必要帳號 session、登入後的輸入式個人檔案、活動理解確認、Air 日誌、MapLibre 路線介面、地點／路線 API、可選自架地圖 Compose overlay、共用 schema、自動化測試、Web Demo、三個 Coolify Resource 的 Dockerfile 部署契約與 PostgreSQL migration 已完成；實際 VPS、真實外部 API 呼叫、已建立圖資的 Valhalla／Photon／TileServer GL 與實體 Mobile 仍未完成驗證。
+三個 workspace 共用根目錄 `package-lock.json`。必要帳號 session、登入後可略過的 AI 個人設定整理、活動理解確認、Air 日誌、MapLibre 路線介面、地點／路線 API、可選自架地圖 Compose overlay、共用 schema、自動化測試、Web Demo、三個 Coolify Resource 的 Dockerfile 部署契約與 PostgreSQL migration 已完成；實際 VPS、真實外部 API 呼叫、量界個人描述保留條款、已建立圖資的 Valhalla／Photon／TileServer GL 與實體 Mobile 仍未完成驗證。
 
 ## 功能領域
 

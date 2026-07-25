@@ -37,7 +37,7 @@ describe('AppProvider hydration', () => {
 
     expect(await screen.findByText('ready')).toBeTruthy();
     expect(screen.getByText('blank')).toBeTruthy();
-    expect(screen.getByText('demo')).toBeTruthy();
+    expect(screen.getByText('live')).toBeTruthy();
     expect(
       screen.getByText('無法讀取這台裝置上的 AirMe 設定，已改用安全的初始狀態。'),
     ).toBeTruthy();

@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { href: '/settings' as Href, label: '我的 AirMe' },
 ];
 
-export function AppHeader({ demoMode }: { demoMode: boolean }) {
+export function AppHeader() {
   const palette = usePalette();
   const pathname = usePathname();
   const { width } = useWindowDimensions();
@@ -52,18 +52,6 @@ export function AppHeader({ demoMode }: { demoMode: boolean }) {
           />
         </View>
       ) : null}
-      <View
-        style={[
-          styles.mode,
-          {
-            backgroundColor: demoMode ? palette.warningSoft : palette.accentSoft,
-            borderColor: demoMode ? palette.warningSoft : palette.accentSoft,
-          },
-        ]}>
-        <AppText variant="caption" weight="800">
-          {demoMode ? 'DEMO' : 'LIVE'}
-        </AppText>
-      </View>
     </View>
   );
 }
@@ -103,11 +91,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-  },
-  mode: {
-    borderRadius: radii.pill,
-    borderWidth: borders.thin,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
   },
 });

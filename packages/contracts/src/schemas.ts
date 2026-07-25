@@ -86,6 +86,51 @@ export const ProfileSchema = z
   })
   .strict();
 
+/**
+ * A non-persistent draft produced while interpreting the optional onboarding
+ * description. Required profile fields remain nullable until the user has
+ * explicitly supplied them; consumers must not infer a default value.
+ */
+export const ProfileDraftSchema = z
+  .object({
+    ageGroup: z.enum(['child', 'teen', 'adult']).nullable(),
+    sensitiveConditions: z
+      .array(
+        z.enum([
+          'respiratory-sensitive',
+          'cardiovascular-sensitive',
+          'allergy-sensitive',
+        ]),
+      )
+      .max(3),
+    commuteMode: z.enum(['walk', 'bike', 'public-transit', 'car', 'scooter']).nullable(),
+    commonActivities: z
+      .array(z.enum(['walk', 'run', 'cycle', 'ball-sports', 'outdoor-class', 'commute']))
+      .max(6),
+  })
+  .strict();
+
+export const ProfileUnderstandingRequestSchema = z
+  .object({
+    description: z.string().trim().min(2).max(600),
+    locale: z.literal('zh-TW'),
+    dataMode: DataModeSchema.default('live'),
+  })
+  .strict();
+
+export const ProfileUnderstandingResponseSchema = z
+  .object({
+    profile: ProfileDraftSchema,
+    commonAreaHint: z.string().trim().min(1).max(80).nullable(),
+    missing: z.array(z.enum(['ageGroup', 'commuteMode', 'location'])).max(3),
+    provenance: z
+      .object({
+        aiMode: z.enum(['live', 'fixture']),
+      })
+      .strict(),
+  })
+  .strict();
+
 export const ActivityIntentSchema = z
   .object({
     activity: z.string().trim().min(1).max(80),
@@ -463,6 +508,9 @@ export type RiskLevel = z.infer<typeof RiskLevelSchema>;
 export type TaiwanAdministrativeArea = z.infer<typeof TaiwanAdministrativeAreaSchema>;
 export type Location = z.infer<typeof LocationSchema>;
 export type Profile = z.infer<typeof ProfileSchema>;
+export type ProfileDraft = z.infer<typeof ProfileDraftSchema>;
+export type ProfileUnderstandingRequest = z.infer<typeof ProfileUnderstandingRequestSchema>;
+export type ProfileUnderstandingResponse = z.infer<typeof ProfileUnderstandingResponseSchema>;
 export type ActivityIntent = z.infer<typeof ActivityIntentSchema>;
 export type ActivityIntentRequest = z.infer<typeof ActivityIntentRequestSchema>;
 export type ActivityIntentResponse = z.infer<typeof ActivityIntentResponseSchema>;

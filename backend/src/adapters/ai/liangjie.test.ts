@@ -107,6 +107,48 @@ describe('LiangjieAiAdapter', () => {
     await expect(adapter.createActionCard(input)).rejects.toThrow('AI_UNAVAILABLE');
   });
 
+  it('sends only a transient description and accepts a controlled profile draft', async () => {
+    let providerInput: Record<string, unknown> | undefined;
+    const adapter = new LiangjieAiAdapter({
+      baseUrl: 'https://liangjiewis.com',
+      model: 'gemini-2.5-flash',
+      apiKey: 'test-key',
+      timeoutMs: 1_000,
+      fetcher: vi.fn(async (_url, init) => {
+        const body = JSON.parse(String(init?.body)) as { messages: { content: string }[] };
+        providerInput = JSON.parse(body.messages[1]!.content) as Record<string, unknown>;
+        return new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    profile: {
+                      ageGroup: 'teen',
+                      sensitiveConditions: ['allergy-sensitive'],
+                      commuteMode: 'bike',
+                      commonActivities: ['run'],
+                    },
+                    commonAreaHint: '高科大第一校區',
+                  }),
+                },
+              },
+            ],
+          }),
+        );
+      }),
+    });
+
+    const result = await adapter.understandProfile('我 15 歲，鼻子容易過敏，放學會跑步。');
+
+    expect(providerInput).toMatchObject({
+      description: '我 15 歲，鼻子容易過敏，放學會跑步。',
+      outputShape: { commonAreaHint: 'string | null' },
+    });
+    expect(JSON.stringify(providerInput)).not.toContain('120.301');
+    expect(result).toMatchObject({ profile: { ageGroup: 'teen', commuteMode: 'bike' } });
+  });
+
   it('retries without response_format when an OpenAI-compatible model rejects it in auto mode', async () => {
     const fetcher = vi
       .fn()

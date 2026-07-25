@@ -127,6 +127,46 @@ describe('AirMe API client', () => {
     expect(capturedUrl).toBe('http://localhost:7071/api/activity-intents');
     expect(result.intent.activity).toBe('跑步');
   });
+
+  it('sends only the transient profile description to the AI understanding endpoint', async () => {
+    let capturedUrl = '';
+    let capturedInit: RequestInit | undefined;
+    const api = createAirMeApi({
+      baseUrl: 'http://localhost:7071/api',
+      timeoutMs: 1_000,
+      fetcher: vi.fn(async (url, init) => {
+        capturedUrl = String(url);
+        capturedInit = init;
+        return new Response(
+          JSON.stringify({
+            profile: {
+              ageGroup: 'teen',
+              sensitiveConditions: ['allergy-sensitive'],
+              commuteMode: 'bike',
+              commonActivities: ['run'],
+            },
+            commonAreaHint: '高科大第一校區',
+            missing: [],
+            provenance: { aiMode: 'live' },
+          }),
+        );
+      }),
+    });
+
+    const result = await api.understandProfile({
+      description: '我 15 歲，平常騎單車，鼻子容易過敏。',
+      locale: 'zh-TW',
+      dataMode: 'live',
+    });
+
+    expect(capturedUrl).toBe('http://localhost:7071/api/profile-understandings');
+    expect(JSON.parse(String(capturedInit?.body))).toEqual({
+      description: '我 15 歲，平常騎單車，鼻子容易過敏。',
+      locale: 'zh-TW',
+      dataMode: 'live',
+    });
+    expect(result.profile.commuteMode).toBe('bike');
+  });
   it('sends cloud-sync state only in an authenticated PUT request', async () => {
     let capturedUrl = '';
     let capturedInit: RequestInit | undefined;

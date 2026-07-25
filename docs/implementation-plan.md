@@ -11,7 +11,7 @@
 ## 目前進度（2026-07-22）
 
 - M0 完成：產品規格、架構、安全與 Coolify 部署文件已完成；Coolify／量界是競賽展示部署方向。
-- M1 本機完成、live 待驗證：Fastify API、量界 OpenAI 相容 adapter、JSON／Zod 驗證、規則、行動卡與追問已完成。
+- M1 本機完成、live 待驗證：Fastify API、量界 OpenAI 相容 adapter、JSON／Zod 驗證、可略過的個人描述 AI 整理、規則、行動卡與追問已完成；未知欄位不猜測，原始描述不保存。
 - M2 本機完成、live 待驗證：MOENV／CWA adapter、來源時間、timeout、cache、partial／stale／fixture 降級已完成；PostgreSQL cache migration 已加入。
 - M3 完成：淺綠白設計系統、輸入式裝置個人檔案、活動理解確認／800 字內補充／單一澄清、行動卡、限定追問、五秒回饋、可篩選與更新回饋的整合 Air 日誌、reduced-motion 友善動效與 responsive Web 已完成。
 - M4 完成：30 個固定案例、安全錯誤路徑與離線示範 fixture 已完成；緊急狀況在離線 Demo 也會停止一般建議。

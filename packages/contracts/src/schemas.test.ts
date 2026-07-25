@@ -7,6 +7,8 @@ import {
   EnvironmentSnapshotSchema,
   FeedbackSchema,
   FollowUpRequestSchema,
+  ProfileUnderstandingRequestSchema,
+  ProfileUnderstandingResponseSchema,
   RecommendationRequestSchema,
   RecommendationResponseSchema,
 } from './schemas.js';
@@ -29,6 +31,38 @@ describe('activity intent contract', () => {
         provenance: { aiMode: 'fixture' },
       }).success,
     ).toBe(true);
+  });
+});
+
+describe('profile understanding contract', () => {
+  it('allows explicitly unknown onboarding fields without accepting raw extra data', () => {
+    expect(
+      ProfileUnderstandingRequestSchema.safeParse({
+        description: '我會在放學後運動。',
+        locale: 'zh-TW',
+        dataMode: 'live',
+      }).success,
+    ).toBe(true);
+    expect(
+      ProfileUnderstandingResponseSchema.safeParse({
+        profile: {
+          ageGroup: null,
+          sensitiveConditions: [],
+          commuteMode: null,
+          commonActivities: ['run'],
+        },
+        commonAreaHint: null,
+        missing: ['ageGroup', 'commuteMode', 'location'],
+        provenance: { aiMode: 'live' },
+      }).success,
+    ).toBe(true);
+    expect(
+      ProfileUnderstandingRequestSchema.safeParse({
+        description: '我會在放學後運動。',
+        locale: 'zh-TW',
+        rawAddress: '不應接受',
+      }).success,
+    ).toBe(false);
   });
 });
 

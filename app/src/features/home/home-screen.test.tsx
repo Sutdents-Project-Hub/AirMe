@@ -70,6 +70,8 @@ function createAppState(overrides: Record<string, unknown> = {}) {
     searchPlaces: vi.fn(),
     planRoute: vi.fn(),
     saveOnboarding: vi.fn(),
+    skipOnboarding: vi.fn(),
+    understandProfile: vi.fn(),
     refreshEnvironment: vi.fn(),
     understandActivity: vi.fn(),
     createRecommendation: vi.fn(),
@@ -115,6 +117,23 @@ describe('HomeScreen recovery and responsive priority', () => {
     expect(
       appearsBefore(screen.getByText('今日環境'), screen.getByText('你現在想做什麼？')),
     ).toBe(true);
+  });
+
+  it('keeps activity planning unavailable until skipped setup is completed later', () => {
+    mockedUseApp.mockReturnValue(
+      createAppState({
+        local: {
+          ...createAppState().local,
+          profile: null,
+          savedLocation: null,
+        },
+      }) as ReturnType<typeof useApp>,
+    );
+
+    render(<HomeScreen />);
+
+    expect(screen.getByText('還差一點個人設定')).toBeTruthy();
+    expect(screen.queryByText('你現在想做什麼？')).toBeNull();
   });
 
   it('offers one-click demo recovery without clearing the activity draft', () => {

@@ -17,6 +17,7 @@ import { PostgresStore } from './database/postgres-store';
 import type { OperationalStore } from './database/types';
 import { ContextTokenService } from './domain/context-token';
 import { ActivityIntentService } from './domain/activity-intent';
+import { ProfileUnderstandingService } from './domain/profile-understanding';
 import { AccountAuthService } from './domain/account-auth';
 import { AccountCloudSyncService } from './domain/account-cloud-sync';
 import { createGeocodingService } from './domain/geocoding/service';
@@ -95,6 +96,7 @@ export function createApplication(): AirMeApplication {
   });
   const followUpService = new FollowUpService({ contextTokens, ai });
   const activityIntentService = new ActivityIntentService(ai);
+  const profileUnderstandingService = new ProfileUnderstandingService(ai);
   const accountAuthService = new AccountAuthService({
     store,
     sessionHmacSecret: config.authSessionHmacSecret,
@@ -144,6 +146,7 @@ export function createApplication(): AirMeApplication {
       getEnvironment: (location, mode) =>
         environmentGate.run(() => environmentService.getSnapshot(location, mode)),
       understandActivity: (request) => aiGate.run(() => activityIntentService.understand(request)),
+      understandProfile: (request) => aiGate.run(() => profileUnderstandingService.understand(request)),
       createRecommendation: (request) => aiGate.run(() => recommendationService.create(request)),
       answerFollowUp: (request) => aiGate.run(() => followUpService.answer(request)),
       auth: accountAuthService,

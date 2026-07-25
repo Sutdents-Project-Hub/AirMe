@@ -1,5 +1,6 @@
 import {
   ActivityIntentRequestSchema,
+  ProfileUnderstandingRequestSchema,
   CloudStateResponseSchema,
   CloudSyncStateSchema,
   LoginRequestSchema,
@@ -11,6 +12,8 @@ import {
   RouteRequestSchema,
   type ActivityIntentRequest,
   type ActivityIntentResponse,
+  type ProfileUnderstandingRequest,
+  type ProfileUnderstandingResponse,
   type CloudStateResponse,
   type CloudSyncState,
   type EnvironmentSnapshot,
@@ -41,6 +44,7 @@ export interface ApiRequest {
 interface ApiHandlerDependencies {
   allowedOrigins: string[];
   understandActivity: (request: ActivityIntentRequest) => Promise<ActivityIntentResponse>;
+  understandProfile: (request: ProfileUnderstandingRequest) => Promise<ProfileUnderstandingResponse>;
   getEnvironment: (
     location: RecommendationRequest['location'],
     mode: RecommendationRequest['dataMode'],
@@ -62,6 +66,7 @@ export interface ApiHandlers {
   health(request: ApiRequest): Promise<HttpResponse>;
   environment(request: ApiRequest): Promise<HttpResponse>;
   activityIntents(request: ApiRequest): Promise<HttpResponse>;
+  profileUnderstandings(request: ApiRequest): Promise<HttpResponse>;
   recommendations(request: ApiRequest): Promise<HttpResponse>;
   followUps(request: ApiRequest): Promise<HttpResponse>;
   register(request: ApiRequest): Promise<HttpResponse>;
@@ -249,6 +254,12 @@ export function createApiHandlers(deps: ApiHandlerDependencies): ApiHandlers {
         if (request.method.toUpperCase() !== 'POST') throw new ZodError([]);
         const parsed = ActivityIntentRequestSchema.parse(await readJson(request));
         return jsonResponse(200, await deps.understandActivity(parsed), headers);
+      }),
+    profileUnderstandings: (request) =>
+      execute(request, async (headers) => {
+        if (request.method.toUpperCase() !== 'POST') throw new ZodError([]);
+        const parsed = ProfileUnderstandingRequestSchema.parse(await readJson(request));
+        return jsonResponse(200, await deps.understandProfile(parsed), headers);
       }),
     recommendations: (request) =>
       execute(request, async (headers) => {

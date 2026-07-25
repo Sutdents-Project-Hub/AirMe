@@ -94,7 +94,7 @@ export const DEFAULT_LOCAL_STATE: LocalState = {
   onboardingCompleted: false,
   history: [],
   feedback: [],
-  demoMode: true,
+  demoMode: false,
 };
 
 function freshDefault(): LocalState {
@@ -165,6 +165,25 @@ export function createLocalStore(storage: KeyValueStorage = AsyncStorage) {
         profile: ProfileSchema.parse(profile),
         onboardingCompleted: true,
       });
+    },
+    async saveOnboarding(input: {
+      profile: Profile;
+      location?: Location;
+      deviceProfile?: DeviceProfile;
+    }): Promise<LocalState> {
+      const current = await load();
+      return write({
+        ...current,
+        deviceProfile: input.deviceProfile
+          ? DeviceProfileSchema.parse(input.deviceProfile)
+          : current.deviceProfile,
+        profile: ProfileSchema.parse(input.profile),
+        savedLocation: input.location ? LocationSchema.parse(input.location) : current.savedLocation,
+        onboardingCompleted: true,
+      });
+    },
+    async completeOnboarding(): Promise<LocalState> {
+      return write({ ...(await load()), onboardingCompleted: true });
     },
     async setDemoMode(demoMode: boolean): Promise<LocalState> {
       return write({ ...(await load()), demoMode });

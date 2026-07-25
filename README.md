@@ -23,7 +23,7 @@ AirMe 讓使用者用自然語言描述想做的活動，再把 AQI、天氣、�
 ## 目前可操作的產品
 
 - 同一套 Expo App 支援 iOS、Android 與 Web。
-- AirMe 帳號是產品入口：完成 Email 註冊／登入後才建立個人檔案。設定、粗略地點、結構化日誌與回饋可在設定 `CLOUD_SYNC_ENCRYPTION_KEY` 的後端以 AES-256-GCM 加密同步；不保存完整活動文字、追問 token、模型原文或導航軌跡。
+- AirMe 帳號是產品入口：完成 Email 註冊／登入後可讓量界 AI 從一次性日常描述整理受控個人設定，也可略過後在設定頁補上。設定、粗略地點、結構化日誌與回饋可在設定 `CLOUD_SYNC_ENCRYPTION_KEY` 的後端以 AES-256-GCM 加密同步；不保存原始自我描述、完整活動文字、追問 token、模型原文或導航軌跡。
 - 自然語言活動輸入會先整理成活動、時間、地點、強度、時長與當下狀況；使用者可在 800 字契約內補充更多資訊，缺資料時一次只問一個問題，確認後才產生建議。
 - 環境部 AQI 與中央氣象署資料 adapter 優先使用；未設定 key 或官方來源失敗時，才明確標示為 Open-Meteo 模型資料的降級來源，保留來源、時間與新鮮度。
 - 量界智算 OpenAI 相容 `chat/completions` adapter，以 JSON object 產生固定格式行動卡。
@@ -91,7 +91,7 @@ AI_MODE=fixture DATABASE_REQUIRED=false npm run start --workspace airme-api
 npm run start --workspace airme
 ```
 
-前端預設 API 是 `http://localhost:3000/api`；若 API 使用其他 port，請在 `app/.env` 設定 `EXPO_PUBLIC_API_BASE_URL`。預設 Demo 模式不需要 API key，也不會把 fixture 說成即時資料。
+前端預設 API 是 `http://localhost:3000/api`；若 API 使用其他 port，請在 `app/.env` 設定 `EXPO_PUBLIC_API_BASE_URL`。新裝置預設使用 Live；使用者可在設定開啟示範模式，示範模式不需要 API key，也不會把 fixture 說成即時資料。
 
 ## 品質與評估
 
@@ -107,7 +107,7 @@ npm run evaluate
 
 本次架構遷移實際驗證：
 
-- 共用契約、API 與 App 共 232 項自動化測試通過（12 + 147 + 73），涵蓋帳號 session、強制登入入口、加密雲端同步與跨帳號隔離、公開環境資料 fallback、路線／地點 adapter、OpenStreetMap 交接與 Web session 回歸。
+- 共用契約、API 與 App 共 243 項自動化測試通過（13 + 153 + 77），涵蓋 AI 個人設定整理、略過後補設、帳號 session、強制登入入口、加密雲端同步與跨帳號隔離、公開環境資料 fallback、路線／地點 adapter、OpenStreetMap 交接與 Web session 回歸。
 - 固定安全評估 30/30 通過。
 - `npm run lint`、三個 workspace typecheck、production Web build、安全評估 30/30 與 Playwright fixture E2E 已於本輪通過。
 - Node 22.22.3 下的 Playwright fixture E2E 已通過：首次設定、活動理解、行動卡、醫療與緊急邊界、回饋與 Air 日誌皆可在無後端時完成。
@@ -149,6 +149,7 @@ API 的核心設定：
 | `GET` | `/` | API 狀態入口，回傳健康檢查路徑 |
 | `GET` | `/api/health` | 不洩漏設定值的服務／資料庫 readiness |
 | `POST` | `/api/environment` | 以 request body 傳送粗略地點，回傳標準化 AQI／天氣與來源狀態 |
+| `POST` | `/api/profile-understandings` | 不持久化的 AI 個人設定整理；只回受控欄位與不含座標的粗略區域提示 |
 | `POST` | `/api/activity-intents` | 不持久化的活動結構化理解與單一澄清問題 |
 | `POST` | `/api/recommendations` | 規則約束的結構化行動卡 |
 | `POST` | `/api/follow-ups` | 原情境內的限定追問與固定拒答 |
@@ -190,6 +191,7 @@ docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.loc
 
 - 帳號只蒐集 Email、顯示名稱、經 scrypt 處理的密碼 verifier、同意時間與 session digest；不保存密碼明文。啟用同步時，結構化設定、粗略地點、日誌摘要與回饋會先加密再存入帳號專屬資料列。
 - 不蒐集姓名、學號、學校、聯絡方式、病歷或長期 GPS 軌跡；完整活動文字、追問內容、context token、模型全文與路線座標不會進入同步 snapshot。
+- 在線個人設定整理會將本次自我描述暫時傳至 AirMe API 與量界；AirMe 不保存它於裝置、雲端同步、log 或 PostgreSQL，量界供應商處理依其服務政策，production 前仍須確認其保留條款。
 - 新增地點持久化前四捨五入到小數二位（約公里級），API 為舊資料相容最多接受三位，且只接受臺灣服務範圍；後端只接收當次推論必要內容。
 - 完整活動文字、路線輸入與模型全文不寫入 PostgreSQL；雲端同步只保存經 schema 限制的設定、粗略地點、日誌摘要與回饋，且資料庫中為加密 ciphertext。
 - 路線與地點搜尋的精確座標只存在請求記憶體；不寫入 PostgreSQL cache、service event 或 App 日誌。

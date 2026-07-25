@@ -11,6 +11,7 @@ import type {
   Profile,
   RegisterRequest,
   RecommendationResponse,
+  ProfileUnderstandingResponse,
   RouteMode,
   RoutePoint,
   RouteResponse,
@@ -31,6 +32,7 @@ import {
   DEMO_ENVIRONMENT,
 } from '../demo/demo-fixture';
 import { parseActivityIntentLocally } from '../features/assistant/activity-intent';
+import { parseProfileDescription } from '../features/profile/profile-parser';
 import {
   fromCloudSyncState,
   localStore,
@@ -110,7 +112,13 @@ interface AppContextValue {
   deleteAccount(): Promise<boolean>;
   searchPlaces(query: string): Promise<GeocodingSearchResponse | null>;
   planRoute(input: { origin: RoutePoint; destination: RoutePoint; mode: RouteMode }): Promise<RouteResponse | null>;
-  saveOnboarding(profile: Profile, location: Location, deviceProfile: DeviceProfile): Promise<void>;
+  saveOnboarding(input: {
+    profile: Profile;
+    location?: Location;
+    deviceProfile?: DeviceProfile;
+  }): Promise<void>;
+  skipOnboarding(): Promise<void>;
+  understandProfile(description: string): Promise<ProfileUnderstandingResponse | null>;
   refreshEnvironment(): Promise<void>;
   understandActivity(activityText: string): Promise<ActivityIntentResponse | null>;
   createRecommendation(activityText: string, intent: ActivityIntent): Promise<RecommendationResponse | null>;
@@ -210,15 +218,47 @@ export function AppProvider({
     }
   };
 
-  const saveOnboarding = async (profile: Profile, location: Location, deviceProfile: DeviceProfile) => {
+  const saveOnboarding = async (input: {
+    profile: Profile;
+    location?: Location;
+    deviceProfile?: DeviceProfile;
+  }) => {
     setBusy(true);
     setError(null);
     try {
-      await store.saveProfile(profile, deviceProfile);
-      const state = await store.setSavedLocation(location);
+      const state = await store.saveOnboarding(input);
       setLocal(state);
-      if (state.demoMode) setEnvironment({ ...DEMO_ENVIRONMENT, location });
+      if (state.demoMode && state.savedLocation) {
+        setEnvironment({ ...DEMO_ENVIRONMENT, location: state.savedLocation });
+      }
       await syncCloudState(state);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const skipOnboarding = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const state = await store.completeOnboarding();
+      setLocal(state);
+      await syncCloudState(state);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const understandProfile = async (description: string) => {
+    setBusy(true);
+    setError(null);
+    try {
+      return local.demoMode
+        ? parseProfileDescription(description)
+        : await api.understandProfile({ description, locale: 'zh-TW', dataMode: 'live' });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : '無法分析這段個人描述。');
+      return null;
     } finally {
       setBusy(false);
     }
@@ -484,6 +524,8 @@ export function AppProvider({
         searchPlaces,
         planRoute,
         saveOnboarding,
+        skipOnboarding,
+        understandProfile,
         refreshEnvironment,
         understandActivity,
         createRecommendation,

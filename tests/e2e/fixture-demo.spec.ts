@@ -32,17 +32,23 @@ test('fixture demo completes the personal air-safety journey without a backend',
   await page.goto('/');
 
   await expect(page.getByText('建立我的 AirMe')).toBeVisible();
+  await page.getByRole('button', { name: '先略過，之後再設定' }).click();
+  await expect(page.getByText('還差一點個人設定')).toBeVisible();
+  await page.getByRole('tab', { name: '我的 AirMe' }).click();
+  await page.getByRole('switch', { name: '決賽示範模式' }).click();
+  await page.getByRole('button', { name: '編輯個人檔案' }).click();
+
   await page.getByLabel('希望 AirMe 怎麼稱呼你？').fill('測試同學');
   await page
     .getByLabel('個人日常描述')
     .fill('我 15 歲，平常騎單車到高科大第一校區，鼻子容易受空品影響，放學會跑步。');
-  await page.getByRole('button', { name: '讓 AirMe 整理我的設定' }).click();
+  await page.getByRole('button', { name: '讓 AI 整理我的設定' }).click();
   await expect(page.getByText('這是我理解的你')).toBeVisible();
-  await page.getByRole('button', { name: '確認並建立我的 AirMe' }).click();
+  await page.getByRole('button', { name: '確認並儲存已整理的設定' }).click();
 
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText('118', { exact: true })).toBeVisible();
-  await expect(page.getByText('決賽示範').first()).toBeVisible();
+  await expect(page.getByText(/決賽示範：多雲/)).toBeVisible();
 
   await page
     .getByLabel('描述你的活動')

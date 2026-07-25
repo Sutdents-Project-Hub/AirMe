@@ -8,6 +8,7 @@ import {
   FollowUpResponseSchema,
   GeocodingSearchResponseSchema,
   RecommendationResponseSchema,
+  ProfileUnderstandingResponseSchema,
   RouteResponseSchema,
   SessionStatusSchema,
   type AuthSession,
@@ -15,6 +16,8 @@ import {
   type CloudSyncState,
   type ActivityIntentRequest,
   type ActivityIntentResponse,
+  type ProfileUnderstandingRequest,
+  type ProfileUnderstandingResponse,
   type DataMode,
   type EnvironmentSnapshot,
   type ErrorCode,
@@ -62,6 +65,7 @@ export interface AirMeApi {
   getCloudState(accessToken: string): Promise<CloudStateResponse>;
   saveCloudState(accessToken: string, state: CloudSyncState): Promise<CloudStateResponse>;
   understandActivity(request: ActivityIntentRequest): Promise<ActivityIntentResponse>;
+  understandProfile(request: ProfileUnderstandingRequest): Promise<ProfileUnderstandingResponse>;
   getEnvironment(location: Location, mode: DataMode): Promise<EnvironmentSnapshot>;
   createRecommendation(request: RecommendationRequest): Promise<RecommendationResponse>;
   followUp(request: FollowUpRequest): Promise<FollowUpResponse>;
@@ -215,6 +219,17 @@ export function createAirMeApi(options: AirMeApiOptions): AirMeApi {
           body: JSON.stringify(request),
         },
         ActivityIntentResponseSchema,
+      );
+    },
+    understandProfile(request) {
+      return call(
+        'profile-understandings',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(request),
+        },
+        ProfileUnderstandingResponseSchema,
       );
     },
     getEnvironment(location, mode) {

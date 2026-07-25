@@ -8,6 +8,7 @@
 - 實作：`backend/src/adapters/ai/liangjie.ts`；模型 ID 一律由環境變數指定，不寫死在程式。
 - 結構化輸出：請求 JSON object，並在 system prompt 要求單一 JSON；無論 provider 是否接受 JSON mode，後端都以 Zod 重新驗證。輸出無效、逾時或失敗時不回傳 provider 原文，改採安全 fixture 降級。
 - `POST /api/activity-intents` 先要求量界只擷取使用者明示的活動欄位；未知值必須為 `null`／`unspecified`。Demo 或量界失敗時使用清楚標示的本機保守解析。
+- `POST /api/profile-understandings` 在使用者確認在線分析後，將一次性的自我描述送給量界，只接受受控年齡／敏感標籤／通勤／活動與不含座標的粗略區域提示；未知欄位為 `null`／空陣列，使用者可略過後再設定。AirMe 不記錄原稿、prompt 或回應全文；量界供應商的保留政策仍須在 production 前確認。
 - 產生行動卡前，後端不把自訂地點名或座標交給量界；只傳已確認的活動欄位、粗略活動地點類型、受控個人標籤、受控縣市、環境事實與規則底線。環境 location 與來源 URL 不重複送入模型。
 - 限定追問只把短效 token 中的結構化活動摘要、受控縣市、環境事實與規則底線交給量界，不帶原始活動文字、自訂地點名或座標。
 - 限制：不給模型任何 secret、資料庫權限、任意 web search、工具使用權或醫療判斷權。

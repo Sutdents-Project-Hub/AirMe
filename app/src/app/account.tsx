@@ -27,7 +27,7 @@ export default function AccountScreen() {
     return (
       <PageShell>
         <Screen maxWidth={760}>
-          <AppHeader demoMode={app.local.demoMode} />
+          <AppHeader />
           <View style={styles.hero}>
             <View style={[styles.eyebrow, { backgroundColor: palette.accentSoft }]}>
               <AppText variant="body-small" weight="900" tone="accent">
@@ -75,7 +75,7 @@ export default function AccountScreen() {
   return (
     <PageShell>
       <Screen maxWidth={760}>
-        <AppHeader demoMode={app.local.demoMode} />
+        <AppHeader />
         <View style={styles.hero}>
           <View style={[styles.eyebrow, { backgroundColor: palette.accentSoft }]}>
             <AppText variant="body-small" weight="900" tone="accent">

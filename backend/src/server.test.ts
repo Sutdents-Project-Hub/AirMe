@@ -9,6 +9,7 @@ function handlers(): ApiHandlers {
     health: unused,
     environment: unused,
     activityIntents: unused,
+    profileUnderstandings: unused,
     recommendations: unused,
     followUps: unused,
     register: unused,

@@ -20,7 +20,7 @@ Expo 仍適合決賽的單一跨平台產品；Fastify 讓 API 在 VPS 容器中
 - 唯一產品前端，負責淺綠白 UI、必要的 Email 帳號入口、登入後輸入式裝置端個人檔案、Air 日誌、MapLibre 路線預覽、回饋與離線 fixture。
 - Web image 以 Nginx 提供靜態輸出；Web build 時注入公開 API HTTPS URL，且不依賴 API container DNS 或同源反向代理。
 - 不持有 API key、資料庫帳密或任何伺服器端秘密。
-- 裝置暱稱、受控個人設定、回饋與日誌先保留在裝置端；啟用後端同步 key 時，受 schema 限制的 snapshot 會以帳號隔離加密同步。個人描述原稿、追問 token 及路線起終點不持久化。session token 只放在 Expo SecureStore。
+- 裝置暱稱、受控個人設定、回饋與日誌先保留在裝置端；啟用後端同步 key 時，受 schema 限制的 snapshot 會以帳號隔離加密同步。個人描述原稿只在一次性的表單、API 與量界 request 記憶體中處理，不持久化；量界供應商處理依其服務政策。追問 token 及路線起終點也不持久化。session token 只放在 Expo SecureStore。
 
 ### `backend`
 
@@ -61,8 +61,8 @@ Web 與原生 App 的正式 build 都以完整公開 HTTPS `EXPO_PUBLIC_API_BASE
 
 ## 4. 資料流與安全界線
 
-1. Client 先以 `POST /api/activity-intents` 取得結構化理解；Demo 使用同契約的可重播解析。使用者確認後才建立含 `confirmedIntent` 的 `RecommendationRequest`。
-2. API 驗證欄位、長度、列舉、請求 body、臺灣座標範圍與座標精度，進行領域／醫療／緊急守門；意圖請求及推薦請求都不持久化。AI 與環境路由分別受每 process 固定窗口頻率與同時數限制。
+1. Client 可選擇以 `POST /api/profile-understandings` 取得 AI 個人設定草稿；它只回傳受控列舉與不含座標的區域提示，未知值必須維持未設定，使用者可略過並稍後設定。Client 再以 `POST /api/activity-intents` 取得活動結構化理解；Demo 使用同契約的可重播解析。使用者確認後才建立含 `confirmedIntent` 的 `RecommendationRequest`。
+2. API 驗證欄位、長度、列舉、請求 body、臺灣座標範圍與座標精度，進行領域／醫療／緊急守門；個人設定、意圖及推薦請求都不持久化。AI 與環境路由分別受每 process 固定窗口頻率與同時數限制。
 3. API 優先取得環境部 AQI、中央氣象署天氣；若 key 未設定或官方來源失敗，才使用明確標示的 Open-Meteo 模型資料。Location 契約以受控縣市欄位對應 CWA，避免把校園顯示名稱當成縣市。PostgreSQL 先提供可用快取，外部成功回應才覆寫快取。
 4. 程式規則依環境、已確認活動強度與敏感標籤建立不可降低的 risk floor。
 5. 量界 adapter 以 `POST /v1/chat/completions`、Bearer key、可設定模型與 JSON object 請求產生草稿。
@@ -97,6 +97,7 @@ Web 與原生 App 的正式 build 都以完整公開 HTTPS `EXPO_PUBLIC_API_BASE
 |---|---|---|
 | `GET` | `/api/health` | 不回傳配置的 API／資料庫 readiness |
 | `POST` | `/api/environment` | 以 body 傳送粗略地點，回傳 AQI、天氣、來源、時間與降級狀態 |
+| `POST` | `/api/profile-understandings` | 一次性自我描述的 AI 結構化，只回受控設定草稿、粗略區域提示與 AI／fixture provenance，不持久化 |
 | `POST` | `/api/activity-intents` | 活動結構化理解、最多一個澄清問題與 AI／fixture provenance |
 | `POST` | `/api/recommendations` | 規則底線 + AI／fixture 行動卡 |
 | `POST` | `/api/follow-ups` | 原情境內追問；離題、醫療與緊急固定處理 |

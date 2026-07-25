@@ -5,7 +5,7 @@
 | 資料 | 位置 | 保留與限制 |
 |---|---|---|
 | 裝置暱稱、個人敏感標籤、常用活動與地區 | 裝置端 + 可選加密雲端 snapshot | 本機優先；只有設定雲端同步 key 時才以 AES-256-GCM 加密後與帳號同步。暱稱不需真名 |
-| 個人自我描述原稿 | 表單記憶體 | 結構化確認後丟棄，不寫 AsyncStorage、API、log 或 PostgreSQL |
+| 個人自我描述原稿 | 表單、AirMe API 與量界 request 的暫時記憶體 | 僅用於本次 AI 結構化，確認或離開後丟棄；不寫 AsyncStorage、雲端同步、AirMe log 或 PostgreSQL。量界供應商處理依其服務政策，production 前須確認其資料保留條款 |
 | Air 日誌 | 裝置端 + 可選加密雲端 snapshot | 最多 20 筆結構化活動、環境與建議摘要；不保存 currentCondition、完整活動文字或模型對話 |
 | 活動後回饋 | 裝置端 + 可選加密雲端 snapshot | 最多 50 筆，只保留是否進行、不舒服程度、建議是否有幫助、短註記與時間 |
 | 必要帳號 | PostgreSQL `accounts` | 小寫 Email、顯示名稱、scrypt password hash、隱私同意與建立時間；不包含裝置個人檔案或健康內容 |
@@ -13,6 +13,7 @@
 | 已啟用同步的帳號 state | PostgreSQL `account_cloud_states` | 帳號專屬、AES-256-GCM ciphertext、12-byte IV、16-byte auth tag 與更新時間；不保存原始 JSON、路線或 prompt |
 | 當次 recommendation request | API 記憶體 | 回應後不寫入資料庫或 log；送入量界前移除自訂地點名與座標 |
 | 當次 activity intent request | API 記憶體 | 回應後不寫入資料庫或 log；最多回一個澄清問題 |
+| 當次 profile understanding request | API 記憶體 | 只送原始描述、語系與模式到量界；回傳只含受控列舉與粗略區域提示，回應後不寫入資料庫或 log |
 | 路線起點、終點、時間與方式 | 路線頁與 API request 記憶體 | 僅為當次地點搜尋／自架 Photon、Valhalla 路線請求轉送；AirMe 不持久化、不建立軌跡；使用者主動開啟 OpenStreetMap 路線時才另受該網站政策約束 |
 | AQI／天氣 cache | PostgreSQL `environment_cache` | 受控縣市＋粗略座標 key、固定 `AirMe 粗略位置`名稱、正規化公開資料與取得時間；短期使用 |
 | 技術事件 | PostgreSQL `service_events` | request ID、route、status、耗時與時間；不含 IP 或 body |
@@ -36,6 +37,7 @@
 - 所有時間使用 ISO 8601，回應包含來源觀測與取得時間。
 - 每筆環境資料包含 source、observedAt、fetchedAt、stale。
 - 使用者條件以受控列舉傳送，不傳自由文字病歷。
+- 個人設定 AI 只接收一次性自我描述；只接受受控列舉與不含座標的粗略區域提示，使用者確認後才可寫入 profile／地點。未知欄位維持 `null` 或空陣列，不以預設值補齊。
 - `confirmedIntent` 可傳活動、時間、地點文字、強度、時長、當下狀況與目標到 AirMe API，只用於當次推薦；交給量界前將地點文字縮減為操場／公園／道路／室內／戶外等類型。日誌只保存 activity、time、duration、intensity。
 - 帳號 Email 在 API 端先正規化為小寫；密碼最少 12 字元，從不寫入 log、技術事件或公開回應。顯示名稱不應填真名，也不與本機 profile 合併。
 - 路線與地點搜尋可使用較精確座標，但只存在當次 UI/API 記憶體並送往已部署的 Valhalla／Photon；不得加入 PostgreSQL、日誌、analytics 或推薦 AI prompt。

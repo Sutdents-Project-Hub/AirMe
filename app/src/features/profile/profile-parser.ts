@@ -2,14 +2,11 @@ import {
   LocationSchema,
   TaiwanAdministrativeAreaSchema,
   type Location,
-  type Profile,
+  type ProfileDraft,
+  type ProfileUnderstandingResponse,
 } from '@airme/contracts';
 
-export interface ProfileUnderstanding {
-  profile: Profile;
-  location: Location | null;
-  missing: ('ageGroup' | 'commuteMode' | 'location')[];
-}
+export type ProfileUnderstanding = ProfileUnderstandingResponse;
 
 const KNOWN_LOCATIONS: { pattern: RegExp; location: Location }[] = [
   {
@@ -45,23 +42,29 @@ function unique<T>(values: T[]): T[] {
   return [...new Set(values)];
 }
 
+export function resolveKnownLocation(areaHint: string | null): Location | null {
+  if (!areaHint) return null;
+  return KNOWN_LOCATIONS.find(({ pattern }) => pattern.test(areaHint))?.location ?? null;
+}
+
 export function parseProfileDescription(text: string): ProfileUnderstanding {
   const age = Number(text.match(/(?:我|今年)?\s*(\d{1,2})\s*歲/u)?.[1] ?? 0);
-  const ageGroup: Profile['ageGroup'] =
+  const ageGroup: ProfileDraft['ageGroup'] =
     age > 0 && age <= 12
       ? 'child'
       : age >= 18 || /成人|大學生|上班族/iu.test(text)
         ? 'adult'
-        : 'teen';
-  const ageKnown = age > 0 || /小學|國中|高中|青少年|成人|大學生|上班族/iu.test(text);
+        : age > 0 || /小學|國中|高中|青少年/iu.test(text)
+          ? 'teen'
+          : null;
 
-  const sensitiveConditions = unique<Profile['sensitiveConditions'][number]>([
+  const sensitiveConditions = unique<ProfileDraft['sensitiveConditions'][number]>([
     ...(/氣喘|呼吸道|呼吸比較敏感|肺部/iu.test(text) ? ['respiratory-sensitive' as const] : []),
     ...(/心血管|心臟/iu.test(text) ? ['cardiovascular-sensitive' as const] : []),
     ...(/過敏|鼻炎|鼻子容易|花粉/iu.test(text) ? ['allergy-sensitive' as const] : []),
   ]).slice(0, 3);
 
-  const commuteMode: Profile['commuteMode'] = /捷運|公車|火車|大眾運輸/iu.test(text)
+  const commuteMode: ProfileDraft['commuteMode'] = /捷運|公車|火車|大眾運輸/iu.test(text)
     ? 'public-transit'
     : /機車/iu.test(text)
       ? 'scooter'
@@ -69,10 +72,11 @@ export function parseProfileDescription(text: string): ProfileUnderstanding {
         ? 'car'
         : /單車|腳踏車|自行車|騎車/iu.test(text)
           ? 'bike'
-          : 'walk';
-  const commuteKnown = /走路|步行|單車|腳踏車|自行車|騎車|公車|捷運|火車|大眾運輸|機車|汽車|開車|通勤|上學/iu.test(text);
+          : /走路|步行|通勤|上學/iu.test(text)
+            ? 'walk'
+            : null;
 
-  const commonActivities = unique<NonNullable<Profile['commonActivities']>[number]>([
+  const commonActivities = unique<ProfileDraft['commonActivities'][number]>([
     ...(/散步|走路|步行/iu.test(text) ? ['walk' as const] : []),
     ...(/跑步|慢跑|路跑/iu.test(text) ? ['run' as const] : []),
     ...(/單車|腳踏車|自行車|騎車/iu.test(text) ? ['cycle' as const] : []),
@@ -81,15 +85,16 @@ export function parseProfileDescription(text: string): ProfileUnderstanding {
     ...(/通勤|上學|放學/iu.test(text) ? ['commute' as const] : []),
   ]).slice(0, 6);
 
-  const location = KNOWN_LOCATIONS.find(({ pattern }) => pattern.test(text))?.location ?? null;
+  const commonAreaHint = KNOWN_LOCATIONS.find(({ pattern }) => pattern.test(text))?.location.name ?? null;
   return {
     profile: { ageGroup, sensitiveConditions, commuteMode, commonActivities },
-    location,
+    commonAreaHint,
     missing: [
-      ...(!ageKnown ? (['ageGroup'] as const) : []),
-      ...(!commuteKnown ? (['commuteMode'] as const) : []),
-      ...(!location ? (['location'] as const) : []),
+      ...(ageGroup === null ? (['ageGroup'] as const) : []),
+      ...(commuteMode === null ? (['commuteMode'] as const) : []),
+      ...(commonAreaHint === null ? (['location'] as const) : []),
     ],
+    provenance: { aiMode: 'fixture' },
   };
 }
 
@@ -116,7 +121,7 @@ export function createManualLocation(input: {
   return parsed.success ? parsed.data : null;
 }
 
-export const ACTIVITY_LABEL: Record<NonNullable<Profile['commonActivities']>[number], string> = {
+export const ACTIVITY_LABEL: Record<ProfileDraft['commonActivities'][number], string> = {
   walk: '散步',
   run: '跑步',
   cycle: '單車',

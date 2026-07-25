@@ -124,6 +124,17 @@ function createHandlers(overrides: Record<string, unknown> = {}) {
       clarificationQuestion: null,
       provenance: { aiMode: 'fixture' },
     }),
+    understandProfile: vi.fn().mockResolvedValue({
+      profile: {
+        ageGroup: 'teen',
+        sensitiveConditions: ['allergy-sensitive'],
+        commuteMode: 'bike',
+        commonActivities: ['run', 'cycle'],
+      },
+      commonAreaHint: '高科大第一校區周邊',
+      missing: [],
+      provenance: { aiMode: 'fixture' },
+    }),
     createRecommendation: vi.fn().mockResolvedValue(recommendation),
     answerFollowUp: vi.fn().mockResolvedValue(followUp),
     getRoute: vi.fn().mockResolvedValue(route),
@@ -369,6 +380,41 @@ describe('AirMe HTTP handlers', () => {
 
     expect(response.status).toBe(200);
     expect(response.jsonBody).toMatchObject({ intent: { activity: '跑步' } });
+  });
+
+  it('returns a controlled profile understanding without storing the description', async () => {
+    const understandProfile = vi.fn().mockResolvedValue({
+      profile: {
+        ageGroup: null,
+        sensitiveConditions: ['allergy-sensitive'],
+        commuteMode: null,
+        commonActivities: ['run'],
+      },
+      commonAreaHint: null,
+      missing: ['ageGroup', 'commuteMode', 'location'],
+      provenance: { aiMode: 'live' },
+    });
+    const response = await createHandlers({ understandProfile }).profileUnderstandings(
+      request({
+        method: 'POST',
+        body: JSON.stringify({
+          description: '我鼻子容易過敏，放學會慢跑。',
+          locale: 'zh-TW',
+          dataMode: 'live',
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.jsonBody).toMatchObject({
+      profile: { sensitiveConditions: ['allergy-sensitive'] },
+      provenance: { aiMode: 'live' },
+    });
+    expect(understandProfile).toHaveBeenCalledWith({
+      description: '我鼻子容易過敏，放學會慢跑。',
+      locale: 'zh-TW',
+      dataMode: 'live',
+    });
   });
 
   it('returns actionable urgent guidance instead of a generic scope message', async () => {

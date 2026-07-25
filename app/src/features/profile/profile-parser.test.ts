@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createManualLocation, parseProfileDescription } from './profile-parser';
+import { createManualLocation, parseProfileDescription, resolveKnownLocation } from './profile-parser';
 
 describe('profile description parser', () => {
   it('keeps only controlled profile fields and a coarse known location', () => {
@@ -14,8 +14,18 @@ describe('profile description parser', () => {
       commuteMode: 'bike',
       commonActivities: ['run', 'cycle', 'commute'],
     });
-    expect(result.location?.latitude).toBe(22.75);
+    expect(result.commonAreaHint).toBe('高科大第一校區周邊');
+    expect(resolveKnownLocation(result.commonAreaHint)?.latitude).toBe(22.75);
     expect(JSON.stringify(result)).not.toContain('鼻子容易過敏');
+  });
+
+  it('keeps unknown age and commute values unset instead of applying defaults', () => {
+    const result = parseProfileDescription('我平常會運動，也想留意空氣品質。');
+
+    expect(result.profile.ageGroup).toBeNull();
+    expect(result.profile.commuteMode).toBeNull();
+    expect(result.missing).toContain('ageGroup');
+    expect(result.missing).toContain('commuteMode');
   });
 
   it('accepts manually entered coordinates only after rounding to two decimals', () => {

@@ -83,6 +83,7 @@ export function createServer(input: {
   register('GET', '/api/health', input.handlers.health);
   register('POST', '/api/environment', input.handlers.environment);
   register('POST', '/api/activity-intents', input.handlers.activityIntents);
+  register('POST', '/api/profile-understandings', input.handlers.profileUnderstandings);
   register('POST', '/api/recommendations', input.handlers.recommendations);
   register('POST', '/api/follow-ups', input.handlers.followUps);
   register('POST', '/api/auth/register', input.handlers.register);

@@ -51,7 +51,7 @@ export default function SettingsScreen() {
   return (
     <PageShell>
       <Screen maxWidth={1000}>
-        <AppHeader demoMode={app.local.demoMode} />
+        <AppHeader />
         <View style={styles.hero}>
           <View style={[styles.eyebrow, { backgroundColor: palette.accentSoft }]}>
             <AppText variant="body-small" weight="900" tone="accent">
@@ -88,7 +88,7 @@ export default function SettingsScreen() {
                   決賽示範模式
                 </AppText>
                 <AppText variant="body-small" tone="muted">
-                  使用固定、可重播資料，不需要網路或 API 金鑰。畫面會一直清楚標示 DEMO。
+                  使用固定、可重播資料，不需要網路或 API 金鑰。環境與行動卡會清楚標示示範資料來源。
                 </AppText>
                 <AppText variant="caption" weight="800" tone="accent">
                   {app.local.demoMode ? '目前已開啟' : '目前已關閉'}
