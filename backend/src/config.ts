@@ -11,8 +11,8 @@ export interface ApiConfig {
   contextTtlSeconds: number;
   authSessionHmacSecret: string;
   authSessionTtlSeconds: number;
-  valhallaRouteUrl: string;
-  photonSearchUrl: string;
+  mapboxApiBaseUrl: string;
+  mapboxAccessToken: string | null;
   routingMaxRequestsPerMinute: number;
   routingMaxConcurrency: number;
   moenvApiKey: string | null;
@@ -123,8 +123,8 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     contextTtlSeconds: positiveInteger(env.CONTEXT_TTL_SECONDS, 1_800),
     authSessionHmacSecret: readAuthSessionHmacSecret(env, aiMode),
     authSessionTtlSeconds: positiveInteger(env.AUTH_SESSION_TTL_SECONDS, 60 * 60 * 24 * 30),
-    valhallaRouteUrl: (env.VALHALLA_ROUTE_URL?.trim() || 'http://router:8002/route').replace(/\/$/, ''),
-    photonSearchUrl: (env.PHOTON_SEARCH_URL?.trim() || 'http://geocoder:2322/api/').replace(/\/$/, ''),
+    mapboxApiBaseUrl: (env.MAPBOX_API_BASE_URL?.trim() || 'https://api.mapbox.com').replace(/\/$/, ''),
+    mapboxAccessToken: env.MAPBOX_ACCESS_TOKEN?.trim() || null,
     routingMaxRequestsPerMinute: positiveInteger(env.ROUTING_MAX_REQUESTS_PER_MINUTE, 30),
     routingMaxConcurrency: positiveInteger(env.ROUTING_MAX_CONCURRENCY, 4),
     moenvApiKey: env.MOENV_API_KEY?.trim() || null,

@@ -14,7 +14,7 @@
 | 當次 recommendation request | API 記憶體 | 回應後不寫入資料庫或 log；送入量界前移除自訂地點名與座標 |
 | 當次 activity intent request | API 記憶體 | 回應後不寫入資料庫或 log；最多回一個澄清問題 |
 | 當次 profile understanding request | API 記憶體 | 只送原始描述、語系與模式到量界；回傳只含受控列舉與粗略區域提示，回應後不寫入資料庫或 log |
-| 路線起點、終點、時間與方式 | 路線頁與 API request 記憶體 | 僅為當次地點搜尋／自架 Photon、Valhalla 路線請求轉送；AirMe 不持久化、不建立軌跡；使用者主動開啟 OpenStreetMap 路線時才另受該網站政策約束 |
+| 路線起點、終點、時間與方式 | 路線頁與 API request 記憶體 | 僅為當次 Mapbox Search Box／Directions 請求轉送；AirMe 不持久化、不建立軌跡；使用者主動開啟 OpenStreetMap 路線時才另受該網站政策約束 |
 | AQI／天氣 cache | PostgreSQL `environment_cache` | 受控縣市＋粗略座標 key、固定 `AirMe 粗略位置`名稱、正規化公開資料與取得時間；短期使用 |
 | 技術事件 | PostgreSQL `service_events` | request ID、route、status、耗時與時間；不含 IP 或 body |
 | 示範 fixture | Repository | 只能使用虛構、可公開資料並標示時間 |
@@ -40,7 +40,7 @@
 - 個人設定 AI 只接收一次性自我描述；只接受受控列舉與不含座標的粗略區域提示，使用者確認後才可寫入 profile／地點。未知欄位維持 `null` 或空陣列，不以預設值補齊。
 - `confirmedIntent` 可傳活動、時間、地點文字、強度、時長、當下狀況與目標到 AirMe API，只用於當次推薦；交給量界前將地點文字縮減為操場／公園／道路／室內／戶外等類型。日誌只保存 activity、time、duration、intensity。
 - 帳號 Email 在 API 端先正規化為小寫；密碼最少 12 字元，從不寫入 log、技術事件或公開回應。顯示名稱不應填真名，也不與本機 profile 合併。
-- 路線與地點搜尋可使用較精確座標，但只存在當次 UI/API 記憶體並送往已部署的 Valhalla／Photon；不得加入 PostgreSQL、日誌、analytics 或推薦 AI prompt。
+- 路線與地點搜尋可使用較精確座標，但只存在當次 UI/API 記憶體並送往 Mapbox；不得加入 PostgreSQL、日誌、analytics 或推薦 AI prompt。
 - 裝置端最多保存一個粗略地點；新輸入四捨五入到小數二位，舊資料相容上限為三位，且只接受臺灣服務範圍，不保存精確地址或長期軌跡。
 - Schema 版本改變需同步 App、API、fixture、測試與文件。
 - 本機 LocalState version 3 會 migration version 1／2 的 profile、單一地點、歷史與回饋，並新增 `cloudAccountId` 防止共用裝置把前一帳號資料帶到新帳號。舊歷史沒有環境欄位時保留原摘要並顯示資料未保存。舊 `feeling` 回饋保留是否完成與註記，新欄位安全正規化為「不想回答／不確定」，不臆測醫療含義。

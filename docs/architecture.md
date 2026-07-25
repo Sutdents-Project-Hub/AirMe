@@ -48,9 +48,9 @@ flowchart LR
   Env --> Ai["量界智算 Chat Completions"]
   Rules --> Ai
   Guard --> Auth["帳號／session：scrypt + HMAC token digest"]
-  Guard --> Route["Valhalla 路線（自架圖資）"]
-  Guard --> Geocode["Photon 地點搜尋（自架索引）"]
-  Route --> Map["MapLibre + TileServer GL 預覽"]
+  Guard --> Route["Mapbox Directions"]
+  Guard --> Geocode["Mapbox Search Box"]
+  Route --> Map["MapLibre + Mapbox raster tiles 預覽"]
   Geocode --> Map
   Ai --> Validate["JSON／Schema／安全後處理"]
   Api <-->|"Coolify private network"| Pg["PostgreSQL：快取／匿名事件／帳號、session、加密同步"]
@@ -68,7 +68,7 @@ Web 與原生 App 的正式 build 都以完整公開 HTTPS `EXPO_PUBLIC_API_BASE
 5. 量界 adapter 以 `POST /v1/chat/completions`、Bearer key、可設定模型與 JSON object 請求產生草稿。
 6. API 以 Zod 驗證草稿，拒絕醫療因果、安全保證、未經支持的歷史／百分比事實與規則衝突；行動強度以決定性規則底線覆寫，理由則後端使用實際請求與環境事實重建。未來活動不把當前 AQI 假當預報。
 7. 帳號密碼以 scrypt 雜湊；資料庫保存 token 的 HMAC digest、到期與撤銷資訊。設定 `CLOUD_SYNC_ENCRYPTION_KEY` 後，App 將受控 snapshot 以已驗證帳號同步，後端以 AES-256-GCM 加密後才寫入資料庫。
-8. 路線／地點搜尋僅在 request 記憶體中轉送給自架 Valhalla／Photon；可選 `docker-compose.maps.yml` 只供本機／維運建立開源圖資服務。若上線，圖資服務應獨立於 P0 三個 Coolify Resource 部署，並以完整 HTTPS style URL 交給 Web／native；結果可在 MapLibre 顯示，但不宣稱街道級空品、最低污染或 turn-by-turn 導航。
+8. 路線／地點搜尋僅在 request 記憶體中轉送給 Mapbox；`MAPBOX_ACCESS_TOKEN` 只在 API runtime 保存。MapLibre 使用受限的 Mapbox public token 讀取 raster tiles，結果可在 MapLibre 顯示，但不宣稱街道級空品、最低污染或 turn-by-turn 導航。可選 `docker-compose.maps.yml` 只保留本機／維運自架圖資研究。
 9. API 不保存一般 request body、完整活動文字、路線、context token 或模型完整回應；同步 table 只保存無法直接讀取的 schema-validated profile／粗略地點／日誌摘要／回饋 ciphertext。`service_events` request ID 一律由伺服器產生 UUID，只寫入快取與匿名技術事件。
 10. Air 日誌由 client 將確認後的 activity／time／duration／intensity 與環境／建議摘要持久化；明確排除 currentCondition 與自由文字原稿。
 
@@ -106,8 +106,8 @@ Web 與原生 App 的正式 build 都以完整公開 HTTPS `EXPO_PUBLIC_API_BASE
 | `POST` | `/api/auth/logout` | 撤銷當前 session |
 | `DELETE` | `/api/auth/account` | 刪除帳號與所有 server session；不觸及裝置端資料 |
 | `GET` / `PUT` | `/api/account/state` | 已驗證帳號的加密 state snapshot 讀取／寫入 |
-| `POST` | `/api/geocoding/search` | 以自架 Photon 搜尋台灣地點；不持久化查詢 |
-| `POST` | `/api/routes` | 以自架 Valhalla 回傳路線選項；不持久化座標 |
+| `POST` | `/api/geocoding/search` | 以 Mapbox Search Box 搜尋台灣地點與 POI；不持久化查詢 |
+| `POST` | `/api/routes` | 以 Mapbox Directions 回傳路線選項；不持久化座標 |
 
 公開錯誤固定使用 `{ error: { code, message, retryable, requestId } }`。重要代碼為 `INVALID_REQUEST`、`AUTH_EMAIL_EXISTS`、`AUTH_INVALID_CREDENTIALS`、`AUTH_SESSION_EXPIRED`、`AUTH_UNAVAILABLE`、`ROUTING_UNAVAILABLE`、`GEOCODING_UNAVAILABLE`、`OUT_OF_SCOPE`、`MEDICAL_BOUNDARY`、`URGENT_SAFETY`、`ENVIRONMENT_UNAVAILABLE`、`RATE_LIMITED`、`CONTEXT_EXPIRED` 與 `INTERNAL_ERROR`。Fastify 另將 malformed JSON、32KB 以上 body 與未預期錯誤正規化，不回傳 stack。
 
@@ -125,7 +125,7 @@ Web 與原生 App 的正式 build 都以完整公開 HTTPS `EXPO_PUBLIC_API_BASE
 - VPS 的作業系統、Coolify 版本、反向代理、TLS、網域與防火牆。
 - 量界智算指定模型對 JSON mode 的實際支援、額度、429 與延遲。
 - 真實環境部／中央氣象署欄位、額度與 attribution。
-- Valhalla 台灣 OpenStreetMap 圖資的首次建置與更新後 route quality；Photon 索引 archive 的台灣覆蓋、授權、資源與更新策略；目前已驗證 Compose 組態、Photon／TileServer GL image build 與空 MBTiles style endpoint，尚未完成實際圖資服務驗收。
-- 自架 TileServer GL 的正式 canonical URL、attribution、資源用量與行動裝置 style 載入。
+- Mapbox token 的實際額度、rate limit、台灣搜尋／路線品質、繁中步驟與 Web origin restriction；尚未完成真實服務驗收。
+- Mapbox raster tiles 的 attribution、資源用量與行動裝置 style 載入；舊版自架 TileServer GL 路徑若重啟，須重新進行獨立審查。
 - PostgreSQL 容器首次啟動、備份、restore 與磁碟容量。
 - iOS／Android 最終安裝形式與原生 App 的 HTTPS API 網域。

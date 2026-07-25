@@ -19,8 +19,8 @@
 | `POST` | `/api/auth/logout` | 撤銷當前 session |
 | `DELETE` | `/api/auth/account` | 刪除帳號、所有 server session 與加密同步資料；App 同時清除當前裝置 state |
 | `GET` / `PUT` | `/api/account/state` | 驗證 Bearer session 後讀取／寫入 AES-256-GCM 加密的 state snapshot |
-| `POST` | `/api/geocoding/search` | 轉送至已部署 Photon 的台灣地點搜尋 |
-| `POST` | `/api/routes` | 轉送至已部署 Valhalla 的路線選項 |
+| `POST` | `/api/geocoding/search` | 轉送至 Mapbox Search Box 的台灣地點與 POI 搜尋 |
+| `POST` | `/api/routes` | 轉送至 Mapbox Directions 的路線選項 |
 
 輸入與輸出由 `packages/contracts` 的 Zod schema 驗證。個人設定草稿的年齡層、通勤與區域提示可為未知，API 不補預設值、不接受模型輸出的座標或地址；使用者確認後才寫入裝置端 state。已確認的活動強度會送入規則引擎，模型輸出不得降低程式規則風險；未支持的歷史／百分比事實、安全保證與規則衝突都會引發安全降級。活動與個人描述只在請求記憶體處理；AirMe 不寫入資料庫或 log，量界供應商處理依其服務政策；provider 錯誤、stack trace、endpoint 與 secret 不會出現在公開回應。
 
@@ -71,7 +71,7 @@ npm run verify:ai-live --workspace airme-api
 - `ENVIRONMENT_MAX_REQUESTS_PER_MINUTE`、`ENVIRONMENT_MAX_CONCURRENCY`：環境查詢與政府 API 額度保護，預設 120／分鐘、同時 8 個。
 - `AUTH_SESSION_HMAC_SECRET`、`AUTH_SESSION_TTL_SECONDS`：帳號 session token 的 HMAC digest secret 與壽命。live 模式需使用至少 32 bytes 且不同於其他 secret 的值。
 - `CLOUD_SYNC_ENCRYPTION_KEY`：獨立 32-byte base64url key；設定後才啟用帳號跨裝置 state sync，資料以 AES-256-GCM 加密後入庫。
-- `VALHALLA_ROUTE_URL`、`PHOTON_SEARCH_URL`：自架 route／geocoding 服務的 internal URL；可使用根目錄 `docker-compose.maps.yml` 的 `router`／`geocoder`，未完成圖資 bootstrap 時請維持 safe unavailable，而非改用未經同意的公共 routing server。
+- `MAPBOX_API_BASE_URL`、`MAPBOX_ACCESS_TOKEN`：Mapbox API base URL 與僅供 API runtime 使用的自訂 token（通常是沒有 secret write scope 的 `pk` token）；未設定 token 時路線／地點搜尋安全回 unavailable。token 僅放 Coolify secret 或本機忽略 env，不得進入 App、Web、log 或版本控制。
 - `ROUTING_MAX_REQUESTS_PER_MINUTE`、`ROUTING_MAX_CONCURRENCY`：地點搜尋與路線的 per-process 防護。
 - `CONTEXT_SIGNING_SECRET` 設定值少於 32 bytes 時 API 拒絕啟動。
 

@@ -471,7 +471,7 @@ export const RouteResponseSchema = z
     alternatives: z.array(RouteAlternativeSchema).min(1).max(3),
     generatedAt: z.iso.datetime(),
     provenance: z.enum(['live', 'fixture']),
-    provider: z.enum(['valhalla', 'airme-fixture']),
+    provider: z.enum(['mapbox', 'valhalla', 'airme-fixture']),
     attribution: z.string().trim().min(1).max(240),
   })
   .strict();
@@ -497,7 +497,7 @@ export const GeocodingSearchResponseSchema = z
   .object({
     results: z.array(GeocodingResultSchema).max(8),
     provenance: z.enum(['live', 'fixture']),
-    provider: z.enum(['photon', 'airme-fixture']),
+    provider: z.enum(['mapbox', 'photon', 'airme-fixture']),
     attribution: z.string().trim().min(1).max(240),
   })
   .strict();

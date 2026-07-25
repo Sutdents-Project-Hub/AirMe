@@ -46,13 +46,12 @@
 
 ## 路線、地點搜尋與地圖
 
-- 路線 adapter：`backend/src/adapters/routing/valhalla.ts`，呼叫內部 `VALHALLA_ROUTE_URL` 的 Valhalla `/route`。它只傳送當次座標與移動方式，回傳距離、預估時間、polyline 與機器可讀 maneuver；請求／回應不持久化。
-- 地點搜尋 adapter：`backend/src/adapters/geocoding/photon.ts`，呼叫內部 `PHOTON_SEARCH_URL`，只接受台灣範圍結果。它不保存查詢文字或座標。
-- UI：MapLibre React Native／MapLibre GL 顯示路線。`EXPO_PUBLIC_MAP_STYLE_URL` 可指向自架 TileServer GL 的 style JSON；Demo 才使用公開示範 style。Map data／style 必須保留 OpenStreetMap 與其供應者要求的 attribution。
-- [docker-compose.maps.yml](../docker-compose.maps.yml) 是本機／維運用的可選 overlay：Valhalla 使用 Taiwan OSM PBF 建圖，Photon 使用已審查的 `photon_data` archive，Planetiler 產生 `taiwan.mbtiles`，TileServer GL 提供 AirMe MapLibre style。它不需要地圖 API key，也不在一般 `up` 時下載大量資料；若上線，這些服務與 style HTTPS 網域必須獨立規劃，不混入 P0 三個 Coolify Resource。bootstrap、磁碟、授權、更新與驗收步驟見 [部署文件](deployment.md#自架開源地圖服務)。
-- TileServer GL 必須設定 canonical `MAP_PUBLIC_BASE_URL`（正式環境為 HTTPS）與 `MAP_ALLOWED_HOSTS`，避免由未受信任的 Host header 生成圖磚／style URL。這些值都不是 secret。
+- 路線 adapter：`backend/src/adapters/routing/mapbox.ts`，以僅供 API runtime 使用的 `MAPBOX_ACCESS_TOKEN` 呼叫 Mapbox Directions；只傳送當次精確座標與移動方式，要求 GeoJSON、替代方案與 `zh-TW` 指示，回傳距離、預估時間與文字步驟；請求／回應不持久化。
+- 地點搜尋 adapter：`backend/src/adapters/geocoding/mapbox.ts`，以同一 API runtime token 呼叫 Mapbox Search Box `/forward`，支援車站、公園、學校等 POI；強制 `country=tw`、`language=zh-TW`、關閉 autocomplete，並在後端再次剔除台灣範圍外結果。它不保存查詢文字或座標。
+- UI：MapLibre React Native／MapLibre GL 顯示路線。若未指定 `EXPO_PUBLIC_MAP_STYLE_URL`，使用 `EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN` 建立 Mapbox Streets raster style；這是可見的 read-only public token，必須最小權限，Web token 必須限制至 AirMe HTTPS origin。Map data／style 必須保留 Mapbox 與 OpenStreetMap attribution。
+- 既有 [docker-compose.maps.yml](../docker-compose.maps.yml) 保留為未來自架圖資的本機／維運選項，不是目前 Mapbox production 路徑，也不應與 Mapbox key 混用。
 - route provider 不可用時 API 回傳安全的 unavailable 錯誤，App 顯示降級訊息與使用者主動開啟的 OpenStreetMap 路線交接。功能不計算沿途空品、不宣稱最低污染或安全路線，也不是 turn-by-turn 導航。
-- 參考： [Valhalla](https://valhalla.github.io/valhalla/) 是開源 OSM 路線引擎；[Photon](https://github.com/komoot/photon) 是 Apache-2.0 開源地理編碼器；[Planetiler](https://github.com/onthegomap/planetiler) 產生 MBTiles／PMTiles；[TileServer GL](https://github.com/maptiler/tileserver-gl) 服務 MapLibre style／tiles；[MapLibre React Native Expo 設定](https://maplibre.org/maplibre-react-native/docs/setup/expo/) 說明原生地圖需要 development build，不能在 Expo Go 執行。
+- 參考： [Mapbox Directions](https://docs.mapbox.com/api/navigation/directions/)、[Mapbox Search Box](https://docs.mapbox.com/api/search/search-box/)、[Mapbox Static Tiles](https://docs.mapbox.com/api/maps/static-tiles/)；[MapLibre React Native Expo 設定](https://maplibre.org/maplibre-react-native/docs/setup/expo/) 說明原生地圖需要 development build，不能在 Expo Go 執行。
 
 ## 官方規則
 

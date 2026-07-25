@@ -33,14 +33,14 @@ AirMe 以 Email 帳號作為 App／Web 產品入口；使用者完成註冊或�
 
 ## 路線、地圖與外部服務
 
-- AirMe 會將使用者當次輸入的起終點座標與移動方式傳給已部署的 Valhalla，用來取得路線；地點關鍵字會送到已部署的 Photon。開源地圖 overlay 只供本機／維運；若另行上線，router、geocoder 與 tiles 必須使用受限的 private network 或單獨審查的公開 HTTPS endpoint，兩類資料都不由 AirMe 寫入資料庫或 application log。
-- 路線可在 MapLibre 顯示；多 Resource 部署的自架圖磚使用獨立 HTTPS style URL，production 必須設定 canonical `MAP_PUBLIC_BASE_URL` 與 `MAP_ALLOWED_HOSTS`，並保留 OSM attribution。Demo 的 MapLibre style 只可作展示，不是 production tile SLA。
+- AirMe 會將使用者當次輸入的起終點座標與移動方式傳給 Mapbox Directions，用來取得路線；地點關鍵字會送到 Mapbox Search Box，以支援車站、公園、學校等 POI。兩類資料都不由 AirMe 寫入資料庫或 application log，Mapbox 對當次資料的處理另受其服務條款與隱私政策約束。
+- 路線可在 MapLibre 顯示；Mapbox `MAPBOX_ACCESS_TOKEN` 只存在 API runtime。`EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN` 是可見的 read-only public token，僅可用於 tiles，Web 必須設 URL allowlist，native token 另建、最小權限並監控用量；Mapbox 與 OSM attribution 必須可見。
 - AirMe 不保存或追蹤路線；使用者按「在 OpenStreetMap 查看路線」後，當次起終點才會傳給該外部網站，此交接受其隱私政策約束。AirMe 不讀取外部帳號、地圖歷史、cookie 或位置權限。
 - 路線功能不會顯示沿途污染、最低污染、街道級 AQI 或 turn-by-turn 導航；route provider 未完成圖資 bootstrap 或不可用時，介面會安全降級為無地圖／OpenStreetMap 路線交接。
 
 ## Secrets
 
-- `.env`、Coolify secret、PostgreSQL password／URL、量界 token、環境部／中央氣象署 key、備份檔都不提交。
+- `.env`、Coolify secret、PostgreSQL password／URL、量界 token、Mapbox API runtime token、環境部／中央氣象署 key、備份檔都不提交。
 - `AUTH_SESSION_HMAC_SECRET` 與 `CONTEXT_SIGNING_SECRET` 都要使用不同的至少 32 bytes 高熵隨機值；不得重複使用 PostgreSQL 密碼或 AI token。
 - `CLOUD_SYNC_ENCRYPTION_KEY` 必須是獨立的 32-byte base64url 高熵值；輪替前需完成既有 snapshot 的 re-encryption／使用者重設策略，不能直接遺失舊 key。
 - `EXPO_PUBLIC_*` 永遠視為公開資訊；不得放任何 secret。

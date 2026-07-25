@@ -157,8 +157,8 @@ App 與 Web 是相同 AirMe 的不同輸出：
 ### 7.7 通勤與戶外時間
 
 - 使用者以地點搜尋選擇起點與終點，再選擇步行、單車或開車／機車；精確座標只進入當次 API request，不持久化。
-- API 在 Live 模式透過自架 Valhalla 取得替代路線、距離、估算時間與文字 steps；App 以 MapLibre 預覽。可選 Compose overlay 使用 Photon、Planetiler 與 TileServer GL 補足搜尋與自有圖磚。Demo 模式只可顯示明確標示的 fixture。
-- 未完成 route／geocoder／map style 的圖資 bootstrap 或服務健康驗收時，不假裝可導航；保留使用者主動開啟的 OpenStreetMap 路線交接與文字化路線 fallback。交接前明示精確起終點將交給外部地圖服務。
+- API 在 Live 模式透過 Mapbox Search Box 與 Directions 取得台灣地點、POI、替代路線、距離、繁體中文文字 steps；App 以 MapLibre 搭配 Mapbox read-only raster tiles 預覽。Mapbox key 由後端呼叫搜尋與路線，只有受限的 public map token 可進入 bundle。Demo 模式只可顯示明確標示的 fixture。
+- Mapbox 未設定、逾時、限流或服務健康驗收未完成時，不假裝可導航；保留使用者主動開啟的 OpenStreetMap 路線交接與文字化路線 fallback。交接前明示精確起終點將交給外部地圖服務。
 - 出發地環境判斷只能解釋起點／選定區域 AQI；禁止使用「最低污染」「最安全」、街道級濃度或沒有研究依據的健康分數。
 
 ### 7.8 示範與錯誤狀態

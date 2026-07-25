@@ -30,7 +30,7 @@ AirMe 讓使用者用自然語言描述想做的活動，再把 AQI、天氣、�
 - 程式規則先決定不可突破的風險底線，後端再次驗證模型輸出、資料引用與未經支持的保證，決定性規則會取代衝突建議。
 - 限定在空品、活動安全與一般自我保護範圍內追問；醫療、緊急、離題與提示注入有固定處理。
 - Air 日誌整合最多 20 筆活動、環境、建議摘要與最多 50 筆活動後回饋（是否進行、不舒服程度、建議是否有幫助、選填註記）；可按日期／風險篩選、開啟詳情及補填或更新同一筆回饋。本機保存後會在已設定的加密雲端同步中更新。
-- 路線頁可搜尋臺灣地點、以開源 Valhalla 規劃步行／單車／道路方案，並以 MapLibre 預覽路線、比較估算、起終點摘要與文字步驟。`docker-compose.maps.yml` 提供自架 Valhalla、Photon、Planetiler 與 TileServer GL 的可選部署路徑；台灣圖資與 Photon 索引必須經明確 bootstrap 建立，尚未在 VPS 驗證前仍安全降級，且不捏造即時導航或街道級空品。
+- 路線頁可搜尋臺灣地點與 POI、以 Mapbox Search Box／Directions 規劃步行／單車／道路方案，並以 MapLibre + Mapbox raster tiles 預覽路線、比較估算、起終點摘要與繁體中文文字步驟。搜尋與路線 key 僅存在後端；公開地圖 token 僅具讀取權限並限制 Web origin，未設定時仍安全降級，且不捏造即時導航或街道級空品。
 - 全面採用淺綠、白色、柔和圓角與留白的亮色介面，AQI 黃／橙／紅只保留為風險語意。
 - PostgreSQL 保存共享環境快取、不含 payload 的技術事件、最小化帳號／session 驗證資料與可選的 AES-256-GCM 加密帳號同步 snapshot；不保存完整活動內容、精確路線、context token 或模型全文。
 - 清楚標示的離線示範模式；外部服務不可用時不冒充即時 AI 結果。
@@ -46,7 +46,7 @@ AirMe/
 ├── packages/contracts/      # 前後端共用 Zod 資料契約
 ├── docker-compose.yml       # 本機 Compose：Web、API、PostgreSQL
 ├── docker-compose.maps.yml  # 可選的自架開源地圖 overlay
-├── docker/maps/             # Photon bootstrap runtime
+├── docker/maps/             # 舊版自架地圖 bootstrap runtime（非目前 production 路徑）
 └── docs/                    # 產品、架構、安全、競賽與部署文件
 ```
 
@@ -59,7 +59,7 @@ flowchart LR
   F --> R["版本化官方規則"]
   F --> E["環境部／中央氣象署"]
   F --> A["量界智算 API"]
-  F --> M["可選自架地圖：Valhalla／Photon"]
+  F --> M["Mapbox：Search Box／Directions"]
   F --> P["PostgreSQL：環境快取／匿名事件／加密帳號同步"]
   R --> V["Schema 與安全驗證"]
   E --> V
@@ -111,8 +111,8 @@ npm run evaluate
 - 固定安全評估 30/30 通過。
 - `npm run lint`、三個 workspace typecheck、production Web build、安全評估 30/30 與 Playwright fixture E2E 已於本輪通過。
 - Node 22.22.3 下的 Playwright fixture E2E 已通過：首次設定、活動理解、行動卡、醫療與緊急邊界、回饋與 Air 日誌皆可在無後端時完成。
-- Node 22 隔離 Compose 已完成 image build、PostgreSQL migration、API health、虛構帳號的加密同步寫入／讀回、密文檢查與刪帳 cascade 驗證；本輪另驗證可選地圖 overlay 的 Compose 組態、Photon／TileServer GL image build，以及以空 MBTiles 提供 AirMe style endpoint 與 OSM attribution。尚未下載台灣正式圖資、驗證 Valhalla／Photon／TileServer GL 實際資料流程或 VPS。
-- 已驗證 Coolify production 的 `airme-api`／`airme-postgres` migration、container healthcheck 與公開 API health；真實量界／政府 key、已建立台灣圖資的 Valhalla／Photon／TileServer GL、Web→API CORS 與實體 iOS／Android 仍待驗收。
+- Node 22 隔離 Compose 已完成 image build、PostgreSQL migration、API health、虛構帳號的加密同步寫入／讀回、密文檢查與刪帳 cascade 驗證；Mapbox adapter 有契約／錯誤處理測試，尚待以團隊 token 完成台灣地點、三種路線與 MapLibre raster tiles 的端到端驗收。
+- 已驗證 Coolify production 的 `airme-api`／`airme-postgres` migration、container healthcheck 與公開 API health；真實量界／政府 key、Mapbox、Web→API CORS 與實體 iOS／Android 仍待驗收。
 
 ## 環境變數
 
@@ -137,8 +137,8 @@ API 的核心設定：
 - `CONTEXT_SIGNING_SECRET`、`CONTEXT_TTL_SECONDS`
 - `AUTH_SESSION_HMAC_SECRET`、`AUTH_SESSION_TTL_SECONDS`
 - `CLOUD_SYNC_ENCRYPTION_KEY`：32-byte base64url 的雲端同步 AES-256-GCM key；未設定不啟用同步
-- `VALHALLA_ROUTE_URL`、`PHOTON_SEARCH_URL`、`ROUTING_MAX_REQUESTS_PER_MINUTE`、`ROUTING_MAX_CONCURRENCY`
-- `MAP_PUBLIC_BASE_URL`、`MAP_ALLOWED_HOSTS`、`EXPO_PUBLIC_MAP_STYLE_URL`：可選自架圖磚的公開 URL／Host allowlist／前端 style URL；均非秘密
+- `MAPBOX_API_BASE_URL`、`MAPBOX_ACCESS_TOKEN`、`ROUTING_MAX_REQUESTS_PER_MINUTE`、`ROUTING_MAX_CONCURRENCY`
+- `EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN`、`EXPO_PUBLIC_MAP_STYLE_URL`：MapLibre 使用的 read-only public token／可選自訂 style URL；public token 不具寫入權限，Web token 必須限制為正式 origin
 
 所有 `EXPO_PUBLIC_*` 都會進入 bundle，不能放 secret。正式值只放 Coolify Environment Variables 或本機忽略的 `.env`。
 
@@ -157,8 +157,8 @@ API 的核心設定：
 | `GET` | `/api/auth/session` | 驗證目前 Bearer session |
 | `POST` / `DELETE` | `/api/auth/logout`、`/api/auth/account` | 登出目前裝置／刪除帳號及全部 sessions |
 | `GET` / `PUT` | `/api/account/state` | 讀取／寫入已驗證帳號的加密同步 snapshot |
-| `POST` | `/api/geocoding/search` | 僅當次的臺灣地點搜尋 |
-| `POST` | `/api/routes` | 僅當次的 Valhalla 路線比較 |
+| `POST` | `/api/geocoding/search` | 僅當次的 Mapbox 臺灣地點搜尋 |
+| `POST` | `/api/routes` | 僅當次的 Mapbox 路線比較 |
 
 Request／response 型別由 `packages/contracts` 共用；HTTP 錯誤使用穩定代碼，不回傳 stack trace、provider 原始錯誤或秘密。
 
@@ -166,7 +166,7 @@ Request／response 型別由 `packages/contracts` 共用；HTTP 錯誤使用穩�
 
 Coolify 以三個獨立 Resource 部署：`airme-web`（`app/Dockerfile`）、`airme-api`（`backend/Dockerfile`）與 `airme-postgres`（Coolify PostgreSQL 17）。兩個 Application 的 Base Directory 都是 `/`，Dockerfile Location 分別為 `/app/Dockerfile`、`/backend/Dockerfile`。Web 在 build 時以 `EXPO_PUBLIC_API_BASE_URL=https://api.<your-domain>/api` 注入 API URL，API 的 `ALLOWED_ORIGINS` 必須包含 Web 的完整 HTTPS origin。因 API 啟動前會跑 migration，Coolify 的 `/api/health` Start Period 固定為 90 秒。根目錄 [docker-compose.yml](docker-compose.yml) 僅供本機三容器驗證。
 
-Coolify + 量界智算是競賽展示的部署路徑。`airme-api` 與 `airme-postgres` 已在 Coolify 的 production environment 部署，且 API health 已由公開 HTTPS URL 驗證；Web、真實 AI／政府資料、跨網域 CORS、備份與完整決賽設備流程仍待端到端驗證。API Resource 的 runtime variables 使用 Coolify PostgreSQL 的 internal `DATABASE_URL`、context／session signing secret、量界與政府 API key；前端只填公開 build variables。可選地圖不屬於這三個 P0 Resource，必須另建受資源限制的服務與完整 HTTPS style URL 後才可啟用。GitHub Actions 已設定 Node 22 的品質與 fixture E2E 檢查。
+Coolify + 量界智算 + Mapbox 是競賽展示的部署路徑。`airme-api` 與 `airme-postgres` 已在 Coolify 的 production environment 部署，且 API health 已由公開 HTTPS URL 驗證；Web、真實 AI／政府資料、Mapbox、跨網域 CORS、備份與完整決賽設備流程仍待端到端驗證。API Resource 的 runtime variables 使用 Coolify PostgreSQL 的 internal `DATABASE_URL`、context／session signing secret、量界／Mapbox／政府 API key；前端只填公開 build variables。GitHub Actions 已設定 Node 22 的品質與 fixture E2E 檢查。
 
 本機 Docker fixture 測試使用同一個 Compose 專案的三個服務，不會碰觸其他專案：
 

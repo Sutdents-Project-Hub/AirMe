@@ -15,7 +15,7 @@
 - M2 本機完成、live 待驗證：MOENV／CWA adapter、來源時間、timeout、cache、partial／stale／fixture 降級已完成；PostgreSQL cache migration 已加入。
 - M3 完成：淺綠白設計系統、輸入式裝置個人檔案、活動理解確認／800 字內補充／單一澄清、行動卡、限定追問、五秒回饋、可篩選與更新回饋的整合 Air 日誌、reduced-motion 友善動效與 responsive Web 已完成。
 - M4 完成：30 個固定案例、安全錯誤路徑與離線示範 fixture 已完成；緊急狀況在離線 Demo 也會停止一般建議。
-- M4.1 完成：必要帳號 session（scrypt + token digest）與登入入口、AES-256-GCM 受控 state 同步、MapLibre 路線預覽、Valhalla／Photon adapter 與安全降級已完成；`docker-compose.maps.yml` 已提供 Valhalla、Photon、Planetiler、TileServer GL 的可選自架路徑。起終點不持久化；圖資 bootstrap 與 live provider 尚待驗證。
+- M4.1 完成：必要帳號 session（scrypt + token digest）與登入入口、AES-256-GCM 受控 state 同步、MapLibre 路線預覽、Mapbox Search Box／Directions adapter 與安全降級已完成；`docker-compose.maps.yml` 保留為未來自架研究。起終點不持久化；Mapbox live provider、Web token origin 限制與 native 地圖尚待驗證。
 - M5 進行中：Coolify 的 `airme-api`／`airme-postgres` 已部署並以公開 health 驗證；真實量界／政府 API、`airme-web`、跨網域 CORS、備份、實體 mobile 與完整線上流程仍待驗證。
 
 ## 剩餘里程碑
@@ -29,7 +29,7 @@
 5. 以真實政府資料驗證來源、欄位、更新時間、cache、stale、partial、timeout、429。
 6. 確認應用 log／PostgreSQL 沒有 activity text、profile、prompt、模型全文、IP 或 secret，並檢查 Coolify／VPS 外層 proxy 的 IP log 保存政策。
 7. Playwright fixture 瀏覽器核心流程已通過；仍須在至少一台 Android 實機與決賽 Web 瀏覽器重跑核心流程。
-8. 若決賽要展示 live 路線，依 `docker-compose.maps.yml` 完成 Valhalla、Photon、Planetiler、TileServer GL 的台灣圖資 bootstrap，驗證 attribution、canonical HTTPS style URL、timeout、資源與隱私；否則維持安全降級與 OpenStreetMap 路線交接。
+8. 若決賽要展示 live 路線，在 Coolify 設定僅供 API runtime 使用的 Mapbox 自訂 token（不給 secret write scope）與受 Web origin 限制的 public tiles token，重新部署後驗證台灣搜尋、三種路線、繁中步驟、attribution、timeout、503 降級與隱私；否則維持安全降級與 OpenStreetMap 路線交接。
 
 完成條件：決賽設備與網路能完成線上流程；資料庫與 API health 正常；備援流程也已演練。
 

@@ -9,7 +9,7 @@
 - 資料來源、觀測／發布時間、fixture／live／partial／stale 狀態。
 - 受限追問、醫療／離題／緊急情境處理。
 - 五秒回饋（是否進行、不舒服程度、建議是否有幫助）與最多 20 筆整合式 Air 日誌；支援日期／風險篩選、詳情及同一筆回饋更新，原始自我描述及當下狀況不寫入歷史。
-- 安全路線頁：起終點不持久化、Photon 地點搜尋、Valhalla 路線選項、MapLibre 預覽、起終點摘要、文字步驟、使用者主動開啟的 OpenStreetMap 路線交接與資料不足聲明；不宣稱街道級空品或 turn-by-turn 導航。
+- 安全路線頁：起終點不持久化、Mapbox Search Box 地點與 POI 搜尋、Mapbox Directions 路線選項、MapLibre 預覽、起終點摘要、繁體中文文字步驟、使用者主動開啟的 OpenStreetMap 路線交接與資料不足聲明；不宣稱街道級空品或 turn-by-turn 導航。
 - 手機與桌面 responsive layout：手機首屏優先活動輸入，桌面保留環境／輸入雙欄；淺綠白固定亮色主題、鍵盤 focus 與至少 44pt 觸控目標。
 - AirMe 原創 icon、splash、favicon 與繁體中文 Web metadata。
 
@@ -21,7 +21,7 @@
 - 共用頁面以低幅度呼吸背景與淡入位移提示層級，系統開啟 reduced motion 時停用循環及進場動畫。
 - 個人檔案、今日、行動卡、追問、回饋、Air 日誌、路線與設定使用相同資訊層級與狀態語言。
 
-裝置暱稱、個人設定、歷史與回饋先使用 AsyncStorage；已登入且後端啟用同步時會以帳號 API 同步經 schema 限制的 snapshot。登入 token 在 iOS／Android 使用 Expo SecureStore，在 Web 只留於目前瀏覽器 tab 的 sessionStorage。個人描述原稿、追問 token 與路線起終點只留在當次 UI／API request 記憶體；在線個人描述會經後端送往量界，供應商處理依其服務政策。前端不直接呼叫量界智算、環境部、中央氣象署、Valhalla、Photon 或 PostgreSQL。
+裝置暱稱、個人設定、歷史與回饋先使用 AsyncStorage；已登入且後端啟用同步時會以帳號 API 同步經 schema 限制的 snapshot。登入 token 在 iOS／Android 使用 Expo SecureStore，在 Web 只留於目前瀏覽器 tab 的 sessionStorage。個人描述原稿、追問 token 與路線起終點只留在當次 UI／API request 記憶體；在線個人描述會經後端送往量界，供應商處理依其服務政策。前端不直接呼叫量界智算、環境部、中央氣象署、Mapbox Directions／Search Box 或 PostgreSQL；僅以公開、受限 token 載入 Mapbox 地圖圖磚。
 
 ## 執行
 
@@ -68,6 +68,7 @@ npx eas-cli@latest build --platform ios --profile production
 
 - `EXPO_PUBLIC_API_BASE_URL`：本機或 Coolify HTTPS API 的完整 `/api` base URL。Coolify Web 與 API 是獨立 Resource，例如 `https://api.example.com/api`；它必須在 Docker build 時設定。
 - `EXPO_PUBLIC_API_TIMEOUT_MS`：前端逾時毫秒數。
+- `EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN`：僅供 MapLibre 讀取 Mapbox raster tiles 的 read-only public token；它會進入 bundle，Web token 必須限制為正式 HTTPS origin，不能使用 API runtime token。
 - `EXPO_PUBLIC_MAP_STYLE_URL`：production MapLibre style URL；多 Resource 部署時必須是完整 HTTPS URL。自架建置見根目錄 `docker-compose.maps.yml` 與部署文件。Demo 可使用內建示範 style，不可視為 production 服務。
 
 所有 `EXPO_PUBLIC_*` 都會進入 App／Web bundle，不得放 secret。新裝置預設使用 Live；使用者可在設定開啟明確標示的示範模式，該模式不需要任何 AI API key。MapLibre 原生地圖需要 Expo development build 或正式 build，不能在 Expo Go 中驗收。

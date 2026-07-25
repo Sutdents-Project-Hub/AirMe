@@ -8,7 +8,7 @@
 
 - 單一 Expo 專案支援 iOS、Android、Web。
 - 必要帳號登入後的輸入式個人檔案、加密受控 state 同步、活動理解確認、真實 AQI／天氣、行動卡、追問、五秒回饋與整合 Air 日誌。
-- 淺綠白跨平台 UI；MapLibre 地圖預覽、Photon 地點搜尋與 Valhalla 路線 adapter。可選 Compose overlay 已配置 Planetiler／TileServer GL 與自架服務啟動路徑；圖資未 bootstrap 時明示 fixture／資料不足並保留 OpenStreetMap 路線交接。
+- 淺綠白跨平台 UI；MapLibre 地圖預覽、Mapbox Search Box 地點與 POI 搜尋與 Mapbox Directions 路線 adapter。可選 Compose overlay 只保留未來自架研究；Mapbox token 未設定或 provider 不可用時明示資料不足並保留 OpenStreetMap 路線交接。
 - Coolify Web + Node.js/Fastify API + PostgreSQL + 量界智算的真實核心流程。
 - JSON runtime schema、領域限制、醫療界線、資料新鮮度與錯誤處理。
 - 30 個 AI／安全測試案例與清楚標示的離線備援。
@@ -25,7 +25,7 @@
 | 元件 | 路徑 | 現況 | 下一個外部驗收結果 |
 |---|---|---|---|
 | AirMe App／Web | `app` | 可略過的 AI 個人檔案、帳號頁、理解確認、Air 日誌、MapLibre 路線預覽、LIVE API client、responsive UI、Nginx image | Coolify preview URL／實體 iOS、Android development build |
-| Fastify API | `backend` | 帳號 session、AI 個人設定整理、既有流程加地點搜尋／路線 adapter、政府資料、規則、量界、安全與評估 | 真實量界／MOENV／CWA／自架 Valhalla／Photon／PostgreSQL 端到端呼叫 |
+| Fastify API | `backend` | 帳號 session、AI 個人設定整理、Mapbox 地點搜尋／路線 adapter、政府資料、規則、量界、安全與評估 | 真實量界／MOENV／CWA／Mapbox／PostgreSQL 端到端呼叫 |
 | PostgreSQL | `backend/database` | 環境快取、匿名事件、帳號／session digest 與 AES-256-GCM 同步 ciphertext 的 versioned migration | Coolify volume、backup、restore 驗證 |
 | 共用契約 | `packages/contracts` | Zod runtime schema 與 TypeScript 型別 | 部署前契約相容性複驗 |
 

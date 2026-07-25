@@ -10,7 +10,7 @@
 | 醫療拒答、追問、回饋與 Air 日誌 | 通過 | 自動化測試與 390px 完整瀏覽器回饋／日誌流程 |
 | 必要帳號註冊／登入／登出／刪除 | 通過（自動化） | 未登入會導向帳號入口；scrypt／session HMAC、API handler 與 App 元件測試；真實 SMTP／Email 驗證尚未建立 |
 | 加密帳號同步 | 通過（自動化＋隔離整合） | `account_cloud_states` migration、AES-256-GCM service、GET／PUT API、App 同步與跨帳號隔離測試；Node 22 Compose 已驗證帳號寫入／讀回、密文不含測試顯示名稱與刪帳 cascade；production key／backup／restore 尚未驗證 |
-| 路線規劃與地圖安全降級 | 通過（fixture／元件／Compose／容器組態） | Valhalla／Photon adapter、MapLibre route 元件、OpenStreetMap fallback、自架地圖 overlay、Photon／TileServer GL image build 與空 MBTiles style endpoint；尚未建立台灣圖資或驗證 live provider |
+| 路線規劃與地圖安全降級 | 通過（fixture／元件／adapter） | Mapbox Search Box／Directions adapter、MapLibre route 元件、Mapbox raster style、OpenStreetMap fallback 與 provider 錯誤降級測試；尚未以團隊 token 驗證 live provider、Web origin restriction 或實體 native 地圖 |
 | Responsive Web | 部分通過（本機） | Web static export、390px／桌面版面與元件測試已通過；Desktop Chromium 的 Playwright fixture 核心流程 E2E 已通過，實體決賽設備待驗證 |
 | 共用資料契約 | 通過 | Zod runtime schema 與契約測試 |
 | API orchestration、規則與安全處理 | 通過 | fixture／mock 自動化測試；本機 Docker 五 endpoint、緊急 422 與 malformed JSON 400 已實際驗證 |
@@ -55,7 +55,7 @@
 - 依 Coolify／量界部署路徑完成 preview，驗證線上 AI、環境資料、Web→API CORS 與 provenance。
 - 以真實 MOENV／CWA 帳號驗證欄位、額度、attribution、更新頻率與 fallback。
 - 部署正式網域與 SMTP／Email 驗證、忘記密碼／重設與適合未成年人的帳號流程後，才宣稱帳號可以作為 production identity。
-- 若要啟用 live 地圖，依 `docker-compose.maps.yml` bootstrap 並驗證 Valhalla／Photon、台灣 OSM 圖資、Planetiler MBTiles、TileServer GL canonical URL／attribution、資源用量與行動裝置 development build。
+- 若要啟用 live 地圖，建立兩把 Mapbox token：僅供 API runtime 使用的自訂 token（不給 secret write scope）與受正式 Web origin 限制的 public tiles token；部署後驗證台灣搜尋、三種路線、繁中步驟、attribution、503 降級與行動裝置 development build。
 - 部署 preview 後驗證 Web→API HTTPS／CORS、API／PostgreSQL healthcheck、P50／P95、429、timeout 與 log／資料庫 redaction。
 - 在至少一台 Android 實機與決賽 Web 瀏覽器重跑核心流程。
 - 完成素材、字型、開放資料、競賽規則與第三方授權人工審查；原始碼 MIT License 已加入，個別資料與素材授權仍須逐項確認。

@@ -56,17 +56,17 @@ describe('readApiConfig', () => {
     expect(config.environmentMaxConcurrency).toBe(6);
   });
 
-  it('uses internal mapping defaults and applies their independent limits', () => {
+  it('reads Mapbox settings and applies independent mapping limits', () => {
     const config = readApiConfig({
       AI_MODE: 'fixture',
-      VALHALLA_ROUTE_URL: 'http://routing.internal/route/',
-      PHOTON_SEARCH_URL: 'http://places.internal/api/',
+      MAPBOX_API_BASE_URL: 'https://maps.example.invalid/',
+      MAPBOX_ACCESS_TOKEN: 'mapbox-token',
       ROUTING_MAX_REQUESTS_PER_MINUTE: '18',
       ROUTING_MAX_CONCURRENCY: '2',
     });
 
-    expect(config.valhallaRouteUrl).toBe('http://routing.internal/route');
-    expect(config.photonSearchUrl).toBe('http://places.internal/api');
+    expect(config.mapboxApiBaseUrl).toBe('https://maps.example.invalid');
+    expect(config.mapboxAccessToken).toBe('mapbox-token');
     expect(config.routingMaxRequestsPerMinute).toBe(18);
     expect(config.routingMaxConcurrency).toBe(2);
   });

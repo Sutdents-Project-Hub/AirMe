@@ -2,7 +2,7 @@
 
 ## 現況
 
-部署目標為自有 VPS 的 Coolify。正式環境採三個獨立 Resource：Web Application、API Application、PostgreSQL Database。repository 的 `docker-compose.yml` 與可選 `docker-compose.maps.yml` 僅供本機容器驗證；它們不是 Coolify 的部署設定。2026-07-24 已在 Coolify production environment 驗證 `airme-api` 與 `airme-postgres`：公開 API health 回應 HTTP 200，且 migration 與 container healthcheck 成功。`airme-web`、真實量界／政府資料、跨網域 CORS、備份、監控與完整使用流程仍尚未驗證。
+部署目標為自有 VPS 的 Coolify。正式環境採三個獨立 Resource：Web Application、API Application、PostgreSQL Database；Live 地圖使用 Mapbox，不另建 Photon／Valhalla／TileServer GL production Resource。repository 的 `docker-compose.yml` 與可選 `docker-compose.maps.yml` 僅供本機容器驗證／未來自架研究；它們不是 Coolify 的部署設定。2026-07-24 已在 Coolify production environment 驗證 `airme-api` 與 `airme-postgres`：公開 API health 回應 HTTP 200，且 migration 與 container healthcheck 成功。`airme-web`、真實量界／政府／Mapbox 資料、跨網域 CORS、備份、監控與完整使用流程仍尚未驗證。
 
 ## 命名契約
 
@@ -22,9 +22,9 @@
 
 兩個 Application 都必須使用 repository 根目錄作為 **Base Directory**，因為 Dockerfile 需要讀取根目錄的 `package-lock.json` 與 `packages/contracts/`。在 Coolify 的 Dockerfile Location 分別設定 `/app/Dockerfile` 與 `/backend/Dockerfile`。Web 與 API 各有自己的 HTTPS 網域，例如 `https://airme.example.com`、`https://api.airme.example.com`；Web 不再反向代理 `/api`，因此 API URL 必須在 Web build 時明確注入，且 API 必須設定精確 CORS origin。
 
-### 可選自架地圖 overlay
+### 舊版可選自架地圖 overlay
 
-`docker-compose.maps.yml` 是本機／維運用的可選 overlay，只有指定 `maps` profile 才會啟動下列服務。它不是目前三個 Coolify Resource 的一部分。若決定上線地圖，應先將 Valhalla、Photon 與 TileServer GL 規劃為獨立、受資源限制的 Resource，並為 TileServer GL 配置自己的 HTTPS 網域；完成前 AirMe 安全降級，不把 Demo 地圖當成線上導航。
+`docker-compose.maps.yml` 是未來自架路線與圖資的本機／維運選項，只有指定 `maps` profile 才會啟動下列服務。它不是目前 Mapbox production 路徑；若未來改回自架，必須另行進行容量、授權、隱私與部署審查。
 
 | Service | 責任 | 持久資料 |
 |---|---|---|
@@ -54,6 +54,7 @@
 |---|---|
 | `EXPO_PUBLIC_API_BASE_URL` | `https://api.<your-domain>/api` |
 | `EXPO_PUBLIC_API_TIMEOUT_MS` | `22000` |
+| `EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN` | 只具讀取地圖 scope 的 Mapbox public token；Web token 限制為正式 HTTPS origin |
 | `EXPO_PUBLIC_MAP_STYLE_URL` | 可選的完整 HTTPS style URL；未部署地圖時留空 |
 
 `airme-postgres` 的資料庫名稱、使用者與密碼由 Coolify Database Resource 管理。以下是 **airme-api runtime variables**；秘密必須標記為 secret／masked，且不可勾選為 build variable。
@@ -68,6 +69,8 @@
 | `CLOUD_SYNC_ENCRYPTION_KEY` | 獨立 32-byte base64url key；啟用 AES-256-GCM 帳號同步 | 是 |
 | `AUTH_SESSION_TTL_SECONDS` | session 壽命，預設 30 天 | 否 |
 | `LIANGJIE_AI_BASE_URL` | `https://liangjiewis.com` | 否 |
+| `MAPBOX_API_BASE_URL` | `https://api.mapbox.com` | 否 |
+| `MAPBOX_ACCESS_TOKEN` | 僅 API runtime 使用的 Mapbox 自訂 token（通常為無 secret write scope 的 `pk` token） | 是 |
 | `LIANGJIE_AI_MODEL` | 量界控制台中已驗證的 model ID | 否 |
 | `LIANGJIE_AI_API_KEY` | 量界 token | 是 |
 | `LIANGJIE_AI_JSON_MODE` | `auto`；不相容時改 `disabled` | 否 |
@@ -80,13 +83,6 @@
 | `AI_MAX_CONCURRENCY` | 每 API process 預設同時 `4` 個 AI 作業 | 否 |
 | `ENVIRONMENT_MAX_REQUESTS_PER_MINUTE` | 每 API process 預設 `120` 次環境查詢 | 否 |
 | `ENVIRONMENT_MAX_CONCURRENCY` | 每 API process 預設同時 `8` 個環境查詢 | 否 |
-| `VALHALLA_ROUTE_URL` | 已部署、僅 internal network 可達的 Valhalla `/route` URL | 否 |
-| `PHOTON_SEARCH_URL` | 已部署、僅 internal network 可達的 Photon `/api/` URL | 否 |
-| `MAP_PUBLIC_BASE_URL` | TileServer GL 回傳 style／tile URL 的 canonical base；若另建地圖 Resource，使用其 HTTPS 網域 | 否 |
-| `MAP_ALLOWED_HOSTS` | TileServer GL 接受的公開 host，逗號分隔 | 否 |
-| `VALHALLA_TILE_URL` | Taiwan OSM PBF URL；預設 Geofabrik 台灣 extract | 否 |
-| `PHOTON_DATABASE_URL` | 已審查且與 Photon jar 相容的 `photon_data` archive；只在明確 bootstrap 時使用 | 否 |
-| `MAP_TILE_BUILD_MAX_HEAP` | Planetiler 建圖 JVM heap，例如 `4g` | 否 |
 | `ROUTING_MAX_REQUESTS_PER_MINUTE` | 每 API process 路線／搜尋啟動頻率上限 | 否 |
 | `ROUTING_MAX_CONCURRENCY` | 每 API process 路線／搜尋同時數上限 | 否 |
 | `CONTEXT_TTL_SECONDS` | 預設 `1800` | 否 |
@@ -107,9 +103,9 @@ docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.loc
 
 測試網址是 `http://localhost:8080`，API health 是 `http://localhost:3000/api/health`。停止本機 AirMe stack 時使用同一組檔案執行 `down`；除非你刻意要清除 fixture 資料庫，否則不要加 `-v`。
 
-## 自架開源地圖服務
+## 歷史自架地圖研究資料（非目前可用部署路徑）
 
-此路徑不使用 Google、Mapbox、MapTiler Cloud 或任何地圖 API key。圖資來源為 OpenStreetMap；請保留 OSM attribution，並在正式頁面檢查 style 是否確實顯示 attribution。MapLibre 只是渲染器，路線、搜尋與圖磚分別由 Valhalla、Photon、Planetiler／TileServer GL 處理。
+以下內容只保留為曾評估的自架方案背景。現在的 API adapter 已改用 Mapbox，不能僅啟動這些容器就讓 AirMe 的路線功能改走自架服務；若未來要重啟此方案，必須先恢復並審查對應 adapter、設定、測試與部署設計。
 
 1. 確認主機有足夠可用 CPU、RAM、SSD 與備份空間。Planetiler 除 OSM extract 外還會下載 basemap 來源；Photon planet index 很大，更新時還需要可安全切換的額外空間。先用 `.env.maps.example` 選定限制與資料來源，不要在未知容量的 VPS 直接執行。
 2. 建立本機忽略的 `.env.maps.local`。若未來將 TileServer GL 獨立部署，`MAP_PUBLIC_BASE_URL` 設為它自己的 `https://maps.<your-domain>/`、`MAP_ALLOWED_HOSTS` 設為該 host，Web／iOS／Android 的 `EXPO_PUBLIC_MAP_STYLE_URL` 都使用同一完整 HTTPS URL。這些都不是 secret。
@@ -154,14 +150,14 @@ EXPO_PUBLIC_API_BASE_URL=https://<your-domain>/api npm run build:web --workspace
 
 前端 `EXPO_PUBLIC_API_TIMEOUT_MS` 預設為 `22000`，覆蓋環境資料與 AI 串接的正常上限；依線上 P95 調整時必須同步 App Docker build arg 與元件 README。
 
-`EXPO_PUBLIC_MAP_STYLE_URL` 是公開的 MapLibre style URL，不是 secret。多 Resource 部署時 Web 與 native 都必須用完整的 HTTPS URL；native 地圖需使用 Expo development build 或正式 build，不能以 Expo Go 驗收。
+`EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN` 是刻意公開的 read-only Mapbox map token，不是 server secret；Web 必須設定 URL restriction，native 必須使用另一把最小權限 token 並監控用量。若設定 `EXPO_PUBLIC_MAP_STYLE_URL`，它會覆寫 Mapbox Streets raster style。native 地圖需使用 Expo development build 或正式 build，不能以 Expo Go 驗收。
 
 ## 上線驗收與觀測
 
 - `https://api.<your-domain>/`：確認 API 狀態入口；`https://api.<your-domain>/api/health`：確認 API 及必要 PostgreSQL 連線。API 有自己的公開 HTTPS 網域，PostgreSQL 不可公開。
 - Web：檢查未登入一律導向註冊／登入、帳號建立後才可建立個人檔案、登出／刪除帳號、加密 state 同步與刪帳 cascade、首頁理解確認、路線降級、Air 日誌、fixture／live／partial 標籤、推薦、追問、回饋與資料清除。
 - API：除既有 health／environment／recommendations／follow-ups 外，驗證 `POST /api/activity-intents` 不寫入 request body，帳號 token 不進 log，live／fixture provenance 正確。
-- Maps：驗證 Valhalla／Photon／TileServer GL 的實際 health、台灣搜尋、三種移動方式、獨立 style 網域的 canonical HTTPS URL、timeout／限流／503 降級、MapLibre attribution，以及不顯示街道級 AQI、最低污染或 turn-by-turn 導航。
+- Maps：驗證 Mapbox Search Box 的台灣地點與 POI 搜尋、Mapbox Directions 三種移動方式、繁中 steps、MapLibre raster tiles、Mapbox／OSM attribution、token URL restriction、timeout／限流／503 降級，以及不顯示街道級 AQI、最低污染或 turn-by-turn 導航。
 - Live：確認量界模型 ID、JSON output、429、timeout、無效輸出與 provider 失敗都不會洩漏 provider body。
 - Abuse：驗證 32KB body 上限、malformed JSON、`AI_MAX_REQUESTS_PER_MINUTE`、`AI_MAX_CONCURRENCY` 與 429 UI。多 replica 部署前需再於 reverse proxy 或共用 store 加上全域 limiter。
 - Data：確認環境部／中央氣象署優先順序、Open-Meteo 模型 fallback 的 attribution、時間、stale 與 partial／fixture 狀態。
@@ -171,7 +167,7 @@ EXPO_PUBLIC_API_BASE_URL=https://<your-domain>/api npm run build:web --workspace
 ## 備份、回滾與維運
 
 - 先在 Coolify 或 VPS 層建立 PostgreSQL volume 的排程備份，再宣稱正式資料庫可用；備份必須加密、限制存取並演練 restore。
-- 若啟用地圖，將 `airme-valhalla`、`airme-photon`、`airme-map-tiles` 納入容量與備份／重建計畫。MBTiles 與 OSM graph 可從來源重建，Photon index 更新必須先完成新資料驗證並以目錄或 volume 原子切換，不能直接覆寫正在服務的 `photon_data`。
+- 若未來重新啟用自架地圖，才將 `airme-valhalla`、`airme-photon`、`airme-map-tiles` 納入容量與備份／重建計畫。MBTiles 與 OSM graph 可從來源重建，Photon index 更新必須先完成新資料驗證並以目錄或 volume 原子切換，不能直接覆寫正在服務的 `photon_data`。
 - 保留上一次成功 Docker image／deployment。程式回滾可使用 Coolify 的既有版本；資料庫 migration 不可直接假設可逆，新的 migration 需先設計相容或 rollback SQL。
 - `CONTEXT_SIGNING_SECRET` 輪替會使既有追問 token 失效，應在低流量時進行並接受使用者重新產生行動卡。
 - `AUTH_SESSION_HMAC_SECRET` 輪替會使所有登入 session 失效；公告後安排使用者重新登入，並保持舊值不可回復的風險紀錄。
@@ -183,6 +179,6 @@ EXPO_PUBLIC_API_BASE_URL=https://<your-domain>/api npm run build:web --workspace
 - Coolify Dockerfile Resource 的 Base Directory、Dockerfile Location、build variable 與 private PostgreSQL URL 在目標 VPS 的實際行為。
 - 量界與政府 API 真實 key 的 quota、rate limit、JSON 相容性與服務條款。
 - PostgreSQL 備份、restore、監控與 retention。
-- Valhalla Taiwan PBF、Photon 台灣索引、Planetiler MBTiles 與 TileServer GL 的實際首次 bootstrap、資源需求、更新週期、route／search quality、監控、canonical URL 與 attribution。
+- Mapbox token 的實際額度、rate limit、台灣搜尋／路線品質、繁中步驟、Web origin restriction 與 Mapbox／OSM attribution；歷史自架圖資若要重啟，則另行評估其 bootstrap、資源與維運。
 - 正式 mobile build 與實體裝置流程。
 - Coolify preview、真實量界／政府 API、VPS 資源與決賽設備的端到端驗證；完成前不得把 fixture 結果說成線上展示。

@@ -29,7 +29,7 @@
 - VPS backup、restore、監控、disk capacity 與防火牆。
 - iOS／Android 實體裝置與最終安裝包形式。
 - Coolify preview、真實量界／政府 API 與完整 provenance 的端到端驗證。
-- Valhalla／Photon、台灣圖資、MapLibre production style／tiles 與 native development build。
+- Mapbox server／public token、Web origin 限制、台灣搜尋／路線 live 驗收，以及 native development build。
 
 ## 尚未建立且不是本次已完成範圍
 

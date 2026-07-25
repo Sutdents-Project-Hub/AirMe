@@ -5,6 +5,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { borders, radii, spacing, usePalette } from '../design/tokens';
 import { formatDistance, formatDuration } from './route-format';
+import { createMapboxRasterStyle } from './mapbox-style';
 import { AppText } from './ui/app-text';
 import { Card } from './ui/card';
 
@@ -20,6 +21,7 @@ type RouteAlternative = RouteResponse['alternatives'][number];
 type LngLat = [number, number];
 
 const MAP_STYLE_URL = process.env.EXPO_PUBLIC_MAP_STYLE_URL?.trim() || null;
+const MAPBOX_PUBLIC_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN?.trim() || null;
 const DEMO_MAP_STYLE_URL = 'https://demotiles.maplibre.org/style.json';
 
 export function RouteMap({ route, selectedRouteId, onSelectRoute }: RouteMapProps) {
@@ -37,7 +39,9 @@ export function RouteMap({ route, selectedRouteId, onSelectRoute }: RouteMapProp
     [route],
   );
   const resolvedMapStyle =
-    MAP_STYLE_URL ?? (route?.provenance === 'fixture' ? DEMO_MAP_STYLE_URL : null);
+    MAP_STYLE_URL
+    ?? (MAPBOX_PUBLIC_TOKEN ? createMapboxRasterStyle(MAPBOX_PUBLIC_TOKEN) : null)
+    ?? (route?.provenance === 'fixture' ? DEMO_MAP_STYLE_URL : null);
 
   useEffect(() => {
     if (!route || !activeRouteId || !geometry || !containerRef.current || !resolvedMapStyle) return;
@@ -168,7 +172,7 @@ export function RouteMap({ route, selectedRouteId, onSelectRoute }: RouteMapProp
           </View>
         ) : null}
         <div style={attributionStyle}>
-          MapLibre 地圖預覽
+          {MAPBOX_PUBLIC_TOKEN ? '© Mapbox © OpenStreetMap contributors' : 'MapLibre 地圖預覽'}
         </div>
       </View>
 

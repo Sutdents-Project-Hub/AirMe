@@ -20,7 +20,7 @@
 | R-08 | Air 日誌 | 最多 20 筆活動／環境／建議摘要與 50 筆回饋以 recommendation ID 整合；可依日期／風險篩選、閱讀詳情、補填或更新回饋、全部清除，且不保存 currentCondition |
 | R-09 | 可重播備援 | 沒有網路或外部服務時仍能展示完整流程，並清楚標示 fixture／非即時 AI |
 | R-10 | API 邊界 | 所有秘密與外部呼叫只在 Coolify API 後端，公開錯誤不含 provider 細節 |
-| R-11 | 開源路線規劃 | 起終點精確座標只存在當次 request；Live 使用自架 Valhalla／Photon、Planetiler 圖資與 TileServer GL，Demo 明確標示 fixture，MapLibre 僅預覽且可由使用者交接 OpenStreetMap 路線 |
+| R-11 | 路線規劃與地圖 | 起終點精確座標只存在當次 request；Live 使用 Mapbox Search Box／Directions 與受限 public tiles token，Demo 明確標示 fixture，MapLibre 僅預覽且可由使用者交接 OpenStreetMap 路線 |
 | R-12 | 帳號與登入 | App／Web 首次進入必須先以 Email、顯示名稱、至少 12 字元密碼註冊或登入；密碼只保存 scrypt verifier，session token 僅在裝置安全儲存與資料庫 HMAC digest 中出現 |
 | R-13 | 加密帳號同步 | 已登入帳號可同步受控設定、粗略地點、日誌摘要與回饋；資料必須以 AES-256-GCM ciphertext 入庫，刪帳 cascade 刪除，同步不含完整活動文字、追問、模型全文或路線 |
 

@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { borders, radii, spacing, usePalette } from '../design/tokens';
 import { formatDistance, formatDuration } from './route-format';
+import { createMapboxRasterStyle } from './mapbox-style';
 import { AppText } from './ui/app-text';
 import { Card } from './ui/card';
 
@@ -19,6 +20,7 @@ type RouteAlternative = RouteResponse['alternatives'][number];
 type LngLat = [number, number];
 
 const MAP_STYLE_URL = process.env.EXPO_PUBLIC_MAP_STYLE_URL?.trim() || null;
+const MAPBOX_PUBLIC_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN?.trim() || null;
 const DEMO_MAP_STYLE_URL = 'https://demotiles.maplibre.org/style.json';
 
 export function RouteMap({ route, selectedRouteId, onSelectRoute }: RouteMapProps) {
@@ -50,7 +52,9 @@ export function RouteMap({ route, selectedRouteId, onSelectRoute }: RouteMapProp
     () => (route ? createRouteFeatureCollection(route) : null),
     [route],
   );
-  const mapStyle = MAP_STYLE_URL ?? (route?.provenance === 'fixture' ? DEMO_MAP_STYLE_URL : null);
+  const mapStyle = MAP_STYLE_URL
+    ?? (MAPBOX_PUBLIC_TOKEN ? JSON.stringify(createMapboxRasterStyle(MAPBOX_PUBLIC_TOKEN)) : null)
+    ?? (route?.provenance === 'fixture' ? DEMO_MAP_STYLE_URL : null);
 
   if (!route || alternatives.length === 0 || !activeRouteId || !geometry) {
     return <RouteUnavailable />;

@@ -10,8 +10,8 @@ import {
 import { EnvironmentService } from './adapters/environment/service';
 import { getEnvironmentFixture } from './adapters/environment/fixture';
 import { createMoenvLoader } from './adapters/environment/moenv';
-import { createPhotonGeocodingAdapter } from './adapters/geocoding/photon';
-import { createValhallaRoutingAdapter } from './adapters/routing/valhalla';
+import { createMapboxGeocodingAdapter } from './adapters/geocoding/mapbox';
+import { createMapboxRoutingAdapter } from './adapters/routing/mapbox';
 import { readApiConfig } from './config';
 import { PostgresStore } from './database/postgres-store';
 import type { OperationalStore } from './database/types';
@@ -111,14 +111,16 @@ export function createApplication(): AirMeApplication {
         })
       : null;
   const routingService = createRoutingService({
-    live: createValhallaRoutingAdapter({
-      endpoint: config.valhallaRouteUrl,
+    live: createMapboxRoutingAdapter({
+      apiBaseUrl: config.mapboxApiBaseUrl,
+      accessToken: config.mapboxAccessToken,
       timeoutMs: config.requestTimeoutMs,
     }),
   });
   const geocodingService = createGeocodingService({
-    live: createPhotonGeocodingAdapter({
-      endpoint: config.photonSearchUrl,
+    live: createMapboxGeocodingAdapter({
+      apiBaseUrl: config.mapboxApiBaseUrl,
+      accessToken: config.mapboxAccessToken,
       timeoutMs: config.requestTimeoutMs,
     }),
   });
