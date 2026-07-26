@@ -8,6 +8,7 @@ import { PageShell } from '../components/page-shell';
 import { AppButton } from '../components/ui/app-button';
 import { AppText } from '../components/ui/app-text';
 import { Card } from '../components/ui/card';
+import { PageHero } from '../components/ui/page-hero';
 import { Screen } from '../components/ui/screen';
 import { radii, spacing, usePalette } from '../design/tokens';
 import { useApp } from '../state/app-provider';
@@ -66,23 +67,17 @@ export default function HomeScreen() {
     <PageShell>
       <Screen>
         <AppHeader />
-        <View style={styles.intro}>
-          <View style={[styles.eyebrow, { backgroundColor: palette.accentSoft }]}>
-            <AppText variant="body-small" weight="900" tone="accent">
-              今日空氣行動
-            </AppText>
-          </View>
-          <AppText variant="display" weight="900">
-            先理解你，{`\n`}再決定今天怎麼動。
-          </AppText>
-          <AppText tone="muted">
-            嗨，{app.local.deviceProfile?.displayName ?? '今天的你'}。直接說出活動計畫，AirMe 會結合官方環境資料與安全底線整理下一步。
-          </AppText>
+        <PageHero
+          eyebrow="今日空氣行動"
+          title={<>先理解你，{`\n`}再決定今天怎麼動。</>}
+          description={
+            <>嗨，{app.local.deviceProfile?.displayName ?? '今天的你'}。直接說出活動計畫，AirMe 會結合官方環境資料與安全底線整理下一步。</>
+          }>
           <View style={styles.signalBars}>
             <View style={[styles.signalBar, { backgroundColor: palette.primary }]} />
             <View style={[styles.signalBarSoft, { backgroundColor: palette.sky }]} />
           </View>
-        </View>
+        </PageHero>
         {app.error ? (
           <Card
             accessibilityRole="alert"
@@ -133,13 +128,6 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   center: { alignItems: 'center', flex: 1, gap: spacing.md, justifyContent: 'center' },
-  intro: { alignSelf: 'center', gap: spacing.md, maxWidth: 760, width: '100%' },
-  eyebrow: {
-    alignSelf: 'flex-start',
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
   signalBars: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
   signalBar: { borderRadius: radii.pill, height: 6, width: 72 },
   signalBarSoft: { borderRadius: radii.pill, height: 6, width: 28 },

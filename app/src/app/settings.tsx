@@ -7,6 +7,7 @@ import { PageShell } from '../components/page-shell';
 import { AppButton } from '../components/ui/app-button';
 import { AppText } from '../components/ui/app-text';
 import { Card } from '../components/ui/card';
+import { PageHero } from '../components/ui/page-hero';
 import { Screen } from '../components/ui/screen';
 import { radii, spacing, usePalette } from '../design/tokens';
 import { useApp } from '../state/app-provider';
@@ -52,15 +53,9 @@ export default function SettingsScreen() {
     <PageShell>
       <Screen maxWidth={1000}>
         <AppHeader />
-        <View style={styles.hero}>
-          <View style={[styles.eyebrow, { backgroundColor: palette.accentSoft }]}>
-            <AppText variant="body-small" weight="900" tone="accent">
-              我的 AirMe
-            </AppText>
-          </View>
-          <AppText variant="display" weight="900">
-            這是你的裝置檔案，{`\n`}資料去留由你決定。
-          </AppText>
+        <PageHero
+          eyebrow="我的 AirMe"
+          title={<>這是你的裝置檔案，{`\n`}資料去留由你決定。</>}>
           <View style={styles.stats}>
             <StatBadge label="Air 日誌" value={`${app.local.history.length} 筆`} />
             <StatBadge
@@ -76,7 +71,7 @@ export default function SettingsScreen() {
               }
             />
           </View>
-        </View>
+        </PageHero>
         <View style={styles.grid}>
           <Card
             pattern="dots"
@@ -182,7 +177,6 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  hero: { gap: spacing.md, maxWidth: 680 },
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   statBadge: {
     borderRadius: radii.md,
@@ -191,12 +185,6 @@ const styles = StyleSheet.create({
     minWidth: 116,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-  },
-  eyebrow: {
-    alignSelf: 'flex-start',
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xl },
   cardWide: { flexBasis: '46%', flexGrow: 1 },

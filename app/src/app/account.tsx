@@ -8,13 +8,13 @@ import { PageShell } from '../components/page-shell';
 import { AppButton } from '../components/ui/app-button';
 import { AppText } from '../components/ui/app-text';
 import { Card } from '../components/ui/card';
+import { PageHero } from '../components/ui/page-hero';
 import { Screen } from '../components/ui/screen';
-import { radii, spacing, usePalette } from '../design/tokens';
+import { spacing } from '../design/tokens';
 import { useApp } from '../state/app-provider';
 
 export default function AccountScreen() {
   const app = useApp();
-  const palette = usePalette();
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -28,16 +28,10 @@ export default function AccountScreen() {
       <PageShell>
         <Screen maxWidth={760}>
           <AppHeader />
-          <View style={styles.hero}>
-            <View style={[styles.eyebrow, { backgroundColor: palette.accentSoft }]}>
-              <AppText variant="body-small" weight="900" tone="accent">
-                AIRME 帳號
-              </AppText>
-            </View>
-            <AppText variant="display" weight="900">
-              歡迎回來，{`\n`}{app.account.displayName}。
-            </AppText>
-          </View>
+          <PageHero
+            eyebrow="AIRME 帳號"
+            title={<>歡迎回來，{`\n`}{app.account.displayName}。</>}
+          />
           <Card>
             <View style={styles.stack}>
               <AppText variant="title-small" weight="800">
@@ -76,19 +70,11 @@ export default function AccountScreen() {
     <PageShell>
       <Screen maxWidth={760}>
         <AppHeader />
-        <View style={styles.hero}>
-          <View style={[styles.eyebrow, { backgroundColor: palette.accentSoft }]}>
-            <AppText variant="body-small" weight="900" tone="accent">
-              AIRME 帳號
-            </AppText>
-          </View>
-          <AppText variant="display" weight="900">
-            先登入，{`\n`}再建立你的 AirMe。
-          </AppText>
-          <AppText tone="muted">
-            建立帳號後才能使用 AirMe。設定、粗略地點、日誌摘要與回饋會先留在裝置；後端啟用同步後才會加密儲存在雲端。完整活動文字、追問與路線不會同步。
-          </AppText>
-        </View>
+        <PageHero
+          eyebrow="AIRME 帳號"
+          title={<>先登入，{`\n`}再建立你的 AirMe。</>}
+          description="建立帳號後才能使用 AirMe。設定、粗略地點、日誌摘要與回饋會先留在裝置；後端啟用同步後才會加密儲存在雲端。完整活動文字、追問與路線不會同步。"
+        />
         <AccountForm />
       </Screen>
     </PageShell>
@@ -96,12 +82,5 @@ export default function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
-  hero: { gap: spacing.md, maxWidth: 620 },
-  eyebrow: {
-    alignSelf: 'flex-start',
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
   stack: { gap: spacing.md },
 });
